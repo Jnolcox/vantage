@@ -371,6 +371,16 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
 
 ### Fixed
 
+- Cyber HUD: voice help/error popups and the Location/Visual Presets pins are
+  no longer clipped by their decorative frames, and the lower-left telemetry
+  card leaves room for the attribution's full logo row. Panels can opt into a
+  shared surface (`src/ui/styles/panel-surfaces.css`,
+  `docs/panel-surfaces.md`) for theme tokens, rail input and a fixed header over
+  a bounded scroll body, without changing disclosure or visibility policies.
+  An explicit switch from Cyber to another HUD layout restores the visual preset
+  used before Cyber; scene and share-link state still win. On desktop the
+  Cyber side rails sit higher so the left stack clears the lower coordinate
+  card; Cockpit keeps its own visor layout (ported from upstream, Manjunath).
 - The Cyber HUD's voice-control styling (scan scope, mic orbit, speaker
   states and their reduced-motion fallback) applies again: its selectors still
   named the pre-rename `#gev-voice-*` / `.gev-*` ids, so none matched the

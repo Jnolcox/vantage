@@ -958,5 +958,6 @@
   "src/ui/cyberSonarControls.test.mjs",
   "src/ui/cyberTheme.test.mjs",
   "src/ui/radioPanelPlacement.test.mjs",
-  "src/ui/styles/cyber.css"
+  "src/ui/styles/cyber.css",
+  "src/ui/styles/panel-surfaces.css"
 ]

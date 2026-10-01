@@ -709,7 +709,7 @@ export function createVantageActionRunner({
       const style = normalizeStyle(args.style);
       if (!style)
         throw new Error(`Unknown visual style: ${args.style || 'missing'}`);
-      styleManager.setStyle(style);
+      styleManager.setStyle(style, { userInitiated: true });
       return { ok: true, action: 'set_visual_style', style };
     }
 

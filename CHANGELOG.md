@@ -371,12 +371,19 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
 
 ### Fixed
 
+- Cockpit enters on the matching map style and its vision carousel is one
+  fixed, duplicate-free sequence: Normal, CRT, NVG, FLIR, Anime, Noir and Snow.
+  Normal is a real unfiltered option, and both Exit Cockpit and Reset restore
+  the captured map style. Cyber's compact right-rail and Cockpit utility
+  buttons center their glyphs and share one inset and edge alignment (ported
+  from upstream, Manjunath).
 - Cyber HUD: voice help/error popups and the Location/Visual Presets pins are
   no longer clipped by their decorative frames, and the lower-left telemetry
-  card leaves room for the attribution's full logo row. Panels can opt into a
-  shared surface (`src/ui/styles/panel-surfaces.css`,
+  card leaves room for the attribution's full logo row. New panels can opt into
+  a shared surface (`src/ui/styles/panel-surfaces.css`,
   `docs/panel-surfaces.md`) for theme tokens, rail input and a fixed header over
-  a bounded scroll body, without changing disclosure or visibility policies.
+  a bounded scroll body, without changing disclosure or visibility policies; no
+  existing panel uses it yet.
   An explicit switch from Cyber to another HUD layout restores the visual preset
   used before Cyber; scene and share-link state still win. On desktop the
   Cyber side rails sit higher so the left stack clears the lower coordinate

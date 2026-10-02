@@ -25,6 +25,11 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   body the client read as an empty track. The failure is cached like other
   upstream errors, so retries inside the 60-second window do not spend OpenSky
   credits (ported from upstream, Raushankumar0720).
+- Saving a key from Provider Settings works on Macs where Nix or Homebrew
+  coreutils sit ahead of `/bin` on `PATH`. The credential hardener now spawns
+  Apple's `/bin/chmod -N` by absolute path; GNU `chmod` has no `-N`, so every
+  save was refused with "could not restrict the credential file" (ported from
+  upstream, Arthur Bogaart).
 
 ## [1.0.0] - 2026-10-02
 

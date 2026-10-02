@@ -4,8 +4,9 @@ All notable changes to Vantage are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-For the authoritative description of current runtime behavior, see
-[`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
+[`docs/RELEASING.md`](docs/RELEASING.md) defines what counts as a major, minor
+or patch change and how a release is cut. For the authoritative description of
+current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
 
 ## [Unreleased]
 
@@ -38,6 +39,11 @@ history is kept under [Pre-fork history](#pre-fork-history-gods-eye-view).
 - A README Network & privacy inventory of every outbound destination
   (automatic or user-triggered, browser or server, what each request carries
   and how to switch it off), with the controls behind it in `SECURITY.md`.
+- Semantic versioning with `package.json` as the only version source:
+  `npm version` regenerates `src/sources/version.js`, which the outbound
+  User-Agent reads, and `docs/RELEASING.md` sets the major/minor/patch rules
+  for storage, settings, `/api` and export changes and the steps for cutting,
+  tagging and publishing a release.
 - `npm run fonts:fetch` regenerates the self-hosted font subsets and their
   license texts from `src/ui/materialSymbolsGlyphs.json`.
 

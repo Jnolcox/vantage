@@ -116,7 +116,7 @@ ownership and adoption process.
 
 1. Branch off `main`.
 2. Keep `npm run build`, `npm test`, and `npm run test:track` green and avoid new console errors, plus the [feature gate](#feature-regression-gates) for the area you touched.
-3. If you change runtime behavior, update `docs/CURRENT-STATE.md` and `CHANGELOG.md` in the same PR.
+3. If you change runtime behavior, update `docs/CURRENT-STATE.md` and add an entry under `## [Unreleased]` in `CHANGELOG.md` in the same PR. Leave the version alone; [docs/RELEASING.md](docs/RELEASING.md) explains how changes map to major, minor and patch releases.
 4. If you add or change a data source, update [DATA_SOURCES.md](DATA_SOURCES.md) with its license and attribution. **Don't add data you don't have the right to redistribute** — fetch it at runtime instead.
 5. Describe what you changed and how you verified it (screenshots welcome for anything visual).
 

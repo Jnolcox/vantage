@@ -23,6 +23,7 @@
   "src/annotations/drawTool.test.mjs",
   "src/data/inputOwnership.test.mjs",
   "docs/CODE-BOUNDARIES.md",
+  "docs/RELEASING.md",
   "src/main.js",
   "docs/APPLICATION.md",
   "scripts/qa-application.mjs",

@@ -752,5 +752,6 @@
   "src/storageMigration.test.mjs",
   "src/vantageEnv.test.mjs",
   "src/legacyDirectories.test.mjs",
-  "src/tooling/networkExposure.test.mjs"
+  "src/tooling/networkExposure.test.mjs",
+  "src/tooling/apiRequestGuard.test.mjs"
 ]

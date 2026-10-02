@@ -23,6 +23,9 @@ export function createBrowserViteConfig({
       allowedHosts: [
         ...new Set(['localhost', '127.0.0.1', '.local', ...allowedHosts]),
       ],
+      // No cross-origin reads: Vite's default would let any localhost page
+      // read served modules, which carry the browser keys defined below.
+      cors: false,
       fs: {
         deny: ['.env', '.env.*', '*.{crt,pem}', '**/.git/**', '**/ENVIRONMENT'],
       },
@@ -32,6 +35,7 @@ export function createBrowserViteConfig({
         'Content-Security-Policy': "frame-ancestors 'none'",
       },
     },
+    preview: { cors: false },
     define: {
       'import.meta.env.GOOGLE_MAPS_API_KEY': JSON.stringify(googleApiKey),
       'import.meta.env.CESIUM_ION_TOKEN': JSON.stringify(cesiumToken),

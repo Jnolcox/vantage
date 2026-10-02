@@ -22,6 +22,8 @@ test('explicit build inputs preserve browser-only defines, plugin order and loop
   ]);
   assert.ok(config.server.fs.deny.includes('**/ENVIRONMENT'));
   assert.ok(config.server.fs.deny.includes('.env.*'));
+  assert.equal(config.server.cors, false);
+  assert.equal(config.preview.cors, false);
   assert.equal(config.server.headers['X-Frame-Options'], 'DENY');
   assert.equal(
     config.server.headers['Content-Security-Policy'],
@@ -65,8 +67,10 @@ test('root config retains existing named exports and standalone provider order',
   for (const [name, value] of Object.entries(providers))
     assert.equal(compatibility[name], value, name);
   const config = standaloneConfig({ mode: 'test' });
+  assert.equal(config.plugins[2].name, 'vantage-api-request-guard');
+  assert.equal(config.plugins[2].enforce, 'pre');
   assert.deepEqual(
-    config.plugins.slice(2, -1).map((plugin) => plugin.name),
+    config.plugins.slice(3, -1).map((plugin) => plugin.name),
     providers.localProviderPlugins().map((plugin) => plugin.name),
   );
   assert.equal(config.plugins.at(-2).name, 'vantage-key-setup');

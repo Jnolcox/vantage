@@ -28,6 +28,8 @@ How to read this:
 | **USGS**                                                              | Earthquakes                                                                                                                         | U.S. public domain                                                                                                                                                                                                                                                                                                                                    | "Data courtesy of the U.S. Geological Survey"                                                                                               |
 | **NIFC WFIGS** (Wildland Fire Interagency Geospatial Services, ArcGIS feature service) | Fire Perimeters layer: current interagency wildfire incident perimeters, containment, and incident facts | U.S. public domain (interagency wildland-fire data published through the [NIFC Open Data portal](https://data-nifc.opendata.arcgis.com/)); fetched keyless by the server through `/api/fire-perimeters` (5-minute cache), paged past the 2,000-feature limit in `OBJECTID` order | "Wildfire perimeters: National Interagency Fire Center (WFIGS)" |
 | **InciWeb** (inciweb.wildfire.gov)                                    | Per-incident "InciWeb ↗" card links to official incident pages (narratives, evacuation/closure notices) | U.S. government public incident information. Links are matched best-effort by incident name and state, with incident page origin and update times checked on selection. Same-origin `/api/fire-perimeters/inciweb` routes cache the catalog for 1 hour and incident-page times for 30 minutes; linked pages remain InciWeb content | "Incident information: InciWeb (inciweb.wildfire.gov)" |
+| **NOAA GFS** (Global Forecast System, NOAA Open Data on AWS)          | Wind layer: global 10 m wind, optional 2 m temperature and mean sea-level pressure | U.S. public domain (NOAA); fetched keyless by the server through `/api/wind` from the `noaa-gfs-bdp-pds` S3 bucket | "NOAA Global Forecast System (GFS)" (courtesy; not an endorsement) |
+| **ECMWF IFS** (ECMWF Open Data)                                         | Wind layer, ECMWF model: global 10 m wind, optional 2 m temperature and mean sea-level pressure | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) plus the [ECMWF Terms of Use](https://apps.ecmwf.int/datasets/licences/general/); fetched keyless by the server through `/api/wind` from `data.ecmwf.int` | "Based on data and products of the European Centre for Medium-Range Weather Forecasts (ECMWF)", with the CC BY 4.0 link, the modification notice and the ECMWF liability disclaimer |
 | **OpenStreetMap (Overpass API)**                                      | Road geometry for traffic                                                                                                           | ODbL 1.0                                                                                                                                                                                                                                                                                                                                              | "© OpenStreetMap contributors"                                                                                                              |
 | **TomTom Traffic API** (flow vector tiles)                            | Live congestion coloring for the traffic layer (optional, BYOK)                                                                     | [TomTom for Developers terms](https://developer.tomtom.com) (proprietary, your own key; free tier currently 200K tile requests/month — see [current pricing](https://docs.tomtom.com/pricing/))                                                                                                                                                       | "Traffic flow data © TomTom" — registered when live mode activates                                                                          |
 | **OpenStreetMap (Overpass API)**                                      | Viewport-bounded mapped installation context for Global Context                                                                     | ODbL 1.0                                                                                                                                                                                                                                                                                                                                              | "© OpenStreetMap contributors" (incomplete mapped context)                                                                                  |
@@ -154,6 +156,43 @@ Suomi-NPP) and MODIS NRT (Terra + Aqua), clamped to the trailing 24 h, cached 30
 transaction quota. Requires a free `FIRMS_MAP_KEY`
 (https://firms.modaps.eosdis.nasa.gov/api/map_key/); the layer is empty without it.
 The former bundled 2026-05-25 snapshot was removed 2026-07-16.
+
+### NOAA GFS and ECMWF IFS wind
+
+The optional **Wind** layer animates the global 10 m wind field from NOAA's
+Global Forecast System (GFS) or, when the ECMWF model is chosen, from the
+keyless [ECMWF Open Data](https://www.ecmwf.int/en/forecasts/datasets/open-data)
+IFS forecast. Both are **forecasts, not observations**: the curves show model
+flow through one forecast time, not measured wind, and the animation does not
+advance forecast time.
+
+The same-origin `/api/wind` proxy is the only client of either service. For the
+model asked for it selects the latest cycle that should be published (GFS 0.25°,
+5 h availability lag; IFS 0.25° oper, 6 h lag) and the forecast step valid
+closest to now, reads that step's inventory (GFS `.idx`, IFS JSON Lines
+`.index`, at most 2 MiB) and byte-range fetches only the 10 m U and V GRIB2
+messages (GFS `UGRD`/`VGRD`, IFS `10u`/`10v`, at most 8 MiB each), plus 2 m
+temperature (`TMP` / `2t`) or mean sea-level pressure (`PRMSL` / `msl`) from the
+same run and step when that field is selected. Every request sends the
+`vantage-wind-proxy` User-Agent and refuses redirects. The messages are decoded
+in memory by ecCodes compiled to WebAssembly
+([`@meri-imperiumi/eccodes-wasm`](https://github.com/meri-imperiumi/eccodes-wasm),
+Apache-2.0), which the server loads only on the first wind request, and
+resampled to a 1° global grid (360 × 181 points). Temperature is converted from
+K to °C and pressure from Pa to hPa. A missing, malformed or timed-out companion
+field does not discard valid wind: the manifest marks the field unavailable.
+
+Caching is bounded: one entry per model and field (at most six), each holding
+the current and the previous issued grid, refreshed after an hour, with one
+shared in-flight load per entry, a 40-second deadline, at most one upstream
+attempt a minute per entry after a failure, and the last good grid served as
+stale while the upstream is down.
+
+NOAA GFS data is U.S. public domain; the credit is a courtesy and does not imply
+endorsement. ECMWF data is licensed under CC BY 4.0 and the ECMWF Terms of Use;
+the in-app credit states that the service is based on ECMWF data and products,
+names resampling and animation as modifications and keeps ECMWF's liability
+disclaimer.
 
 ### Natural Earth physical regions (`natural_earth/`)
 

@@ -32,6 +32,15 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   5 minutes, InciWeb catalog 1 hour, incident pages 30 minutes, stale on
   error) and limits each client to 60 requests a minute (ported from
   upstream, Bilawal Sidhu, Gustavo Beneduzi, James Cooke).
+- Same-origin `/api/wind` forecast proxy for the Wind layer: NOAA GFS and
+  ECMWF IFS 10 m wind, optionally with 2 m temperature or mean sea-level
+  pressure from the same run, decoded server-side by ecCodes (WebAssembly,
+  loaded on the first wind request only) and served as a manifest plus a
+  1° Float32 grid. It byte-range fetches only the needed GRIB2 messages with
+  the Vantage User-Agent, caps every body, caches one entry per model and
+  field for an hour with the previous grid kept for rollovers, retries a
+  failed upstream at most once a minute and serves the last good grid as
+  stale (ported from upstream, Bilawal Sidhu, Gustavo Beneduzi).
 
 ### Changed
 

@@ -800,5 +800,17 @@
   "src/ui/railTimeline.js",
   "src/ui/railTimeline.test.mjs",
   "src/ui/panelPositionControls.test.mjs",
-  "src/ui/railScrollers.test.mjs"
+  "src/ui/railScrollers.test.mjs",
+  "server/providers/wind.js",
+  "server/providers/wind/catalog.js",
+  "server/providers/wind/decode.js",
+  "server/providers/wind/gfs.js",
+  "server/providers/wind/grid.js",
+  "server/providers/wind/ifs.js",
+  "src/sources/windBody.js",
+  "src/data/windDecode.test.mjs",
+  "src/data/windGfs.test.mjs",
+  "src/data/windGrid.test.mjs",
+  "src/data/windIfs.test.mjs",
+  "src/data/windProxy.test.mjs"
 ]

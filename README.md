@@ -516,7 +516,10 @@ callsign); `stream.aisstream.io` (bounding box from your settings);
 `celestrak.org`; `ll.thespacedevs.com`; `firms.modaps.eosdis.nasa.gov`;
 `services3.arcgis.com` (NIFC WFIGS fire perimeters, every 5 minutes) and
 `inciweb.wildfire.gov` (its incident catalog, at most hourly) for Fire
-Perimeters; `earthquake.usgs.gov` (fetched by the browser); `api.tomtom.com` (tile
+Perimeters; `noaa-gfs-bdp-pds.s3.amazonaws.com` (NOAA GFS) and, only with the
+ECMWF model chosen, `data.ecmwf.int` (ECMWF Open Data) for Wind, at most once
+an hour per model and field (global forecast files, nothing about your view);
+`earthquake.usgs.gov` (fetched by the browser); `api.tomtom.com` (tile
 coordinates in view); Overpass mirrors `overpass-api.de`,
 `lz4.overpass-api.de`, `overpass.kumi.systems`, `overpass.private.coffee`
 (bounding-box queries of the view); registered GTFS-realtime and GBFS feeds

@@ -41,6 +41,12 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   field for an hour with the previous grid kept for rollovers, retries a
   failed upstream at most once a minute and serves the last good grid as
   stale (ported from upstream, Bilawal Sidhu, Gustavo Beneduzi).
+- A WEATHER panel in the right rail, between CCTV and Global Context, that
+  holds one card per enabled weather layer (summary, legend, settings,
+  actions and readings). It stays hidden while no weather layer is on, opens
+  on its first appearance unless a stored or shared collapse choice says
+  otherwise, and keeps its scroll position through refreshes (ported from
+  upstream, Bilawal Sidhu).
 
 ### Changed
 

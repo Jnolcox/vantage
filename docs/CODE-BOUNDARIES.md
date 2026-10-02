@@ -332,6 +332,23 @@ write DOM; focused controls survive feed refreshes. `readout: true` layer rows
 render only the toggle and source/meta line; their subscriptions still refresh
 the cards, which own configuration and readings.
 
+Weather descriptors retain top-level `chips`, `list` and `legend` for non-DOM
+consumers and expose `summary.settings`, `summary.actions` and an optional
+`summary.result`. The WEATHER adapter is `src/ui/weatherPanel.js`; its
+`WEATHER_LAYER_IDS` export is the one list of weather layer ids, in card order:
+cyclones, wind, then a bordered Observed history group holding the timeline and
+the active radar, satellite and lightning cards. The group heading and scope
+name its active products. The timeline stays visible whenever any observed
+product is enabled; fewer than two ticks disables transport. Pass
+`heading: false` to the timeline when the containing group owns the heading.
+Exactly one active card is open. Header clicks and newly enabled ids choose it
+(the last new entry wins a batch); refreshes and clock ticks retain it. First
+appearance uses cyclones with storms, otherwise the first card. Disabling the
+open layer falls back to the first remaining card. A WeakMap per document keeps
+explicit choices through body remounts without adding share state; the
+observed-history selection stays transient. Card opening, storm selection and
+layer enabling remain independent.
+
 Optional card/badge/slider class names provide feature styling. Shared card
 styles live in `src/ui/styles/weather.css`; the panel's readout container
 defines `--weather-card-border`. Setting/result labels use `.panel-title`;

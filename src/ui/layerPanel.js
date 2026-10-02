@@ -4,6 +4,7 @@ import { layerFeedState } from '../data/feedState.js';
 export { layerFeedState } from '../data/feedState.js';
 import { GUIDANCE_STATUSES } from '../loadingFeedback.js';
 import { keySetupRequirement } from '../keySetupCore.mjs';
+import { createWeatherPanel, WEATHER_LAYER_IDS } from './weatherPanel.js';
 const FEED_STATE_LABELS = Object.freeze({
   nominal: 'ON',
   loading: 'LOADING',
@@ -118,6 +119,12 @@ export class LayerPanel {
     if (this._destroyed) return;
     this._releaseBindings();
     this._toggleContainer = container;
+    this._weatherPanel?.destroy();
+    this._weatherPanel = createWeatherPanel({
+      container:
+        container?.ownerDocument?.getElementById?.('weather-panel-body'),
+      setLayerParams: this.setLayerParams,
+    });
     this._renderToggles();
   }
   _bind(element, type, listener) {
@@ -134,6 +141,8 @@ export class LayerPanel {
     if (this._destroyed) return;
     this._destroyed = true;
     this._releaseBindings();
+    this._weatherPanel?.destroy();
+    this._weatherPanel = null;
     this._toggleContainer = null;
   }
   _renderToggles() {
@@ -278,6 +287,7 @@ export class LayerPanel {
 
       this._toggleContainer.appendChild(row);
     }
+    this._refreshWeatherPanel();
   }
 
   /**
@@ -445,6 +455,22 @@ export class LayerPanel {
         row.querySelector('.data-row-list'),
       );
     }
+    this._refreshWeatherPanel();
+  }
+
+  /** Hand the enabled weather layers' readouts to the WEATHER rail card. */
+  _refreshWeatherPanel() {
+    this._weatherPanel?.update(
+      this.getAll()
+        .filter(
+          (layer) => layer.enabled && WEATHER_LAYER_IDS.includes(layer.id),
+        )
+        .map((layer) => ({
+          id: layer.id,
+          icon: layer.icon,
+          ...this._rowControlsFor(layer.id),
+        })),
+    );
   }
 
   _buildMetaText(layer) {

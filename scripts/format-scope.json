@@ -819,5 +819,7 @@
   "src/layers/weather/imageryOrder.test.mjs",
   "src/layers/weather/shellSurface.js",
   "src/layers/weather/shellSurface.test.mjs",
-  "src/layers/weather/shellFixture.mjs"
+  "src/layers/weather/shellFixture.mjs",
+  "src/ui/weatherPanel.js",
+  "src/ui/weatherPanel.test.mjs"
 ]

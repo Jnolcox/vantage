@@ -10,6 +10,14 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
 
 ## [Unreleased]
 
+### Added
+
+- MODIS NRT (Terra + Aqua, ~1 km) detections join the three VIIRS NRT sources
+  in the Active Fires layer. They share the existing `FIRMS_MAP_KEY`, the
+  30-minute proxy cache and the trailing-24-hour clamp; MODIS confidence is
+  kept as its raw 0-100 value (ported from upstream, Bilawal Sidhu, Gustavo
+  Beneduzi, James Cooke).
+
 ### Changed
 
 - Share-link layer tokens are durable allocations instead of ad hoc picks.

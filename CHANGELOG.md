@@ -66,6 +66,10 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   collapse schedules at most one follow-up pass, hidden panels are ignored,
   and only the tactical HUD auto-collapses panels (ported from upstream,
   Bilawal Sidhu).
+- Scrolling the CCTV or Context panel no longer snaps back to the top when
+  the right rail re-lays itself out (for example when a layer row refreshes
+  every second): every panel body the measuring pass lifts now has its
+  scroll offset restored (ported from upstream, Bilawal Sidhu).
 - The NASA FIRMS proxy now sends the Vantage `firms-proxy` User-Agent with
   its CSV source and MAP_KEY status requests, as the other server-side
   proxies do; they previously went out with the runtime's default agent.

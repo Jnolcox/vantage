@@ -249,12 +249,8 @@ test('Radio is nested inside Context with separate disclosure and power controls
   assert.match(css, /\.radio-tuner\.is-dragging \.radio-tuner-needle,[\s\S]*?\.radio-tuner\.is-dragging \.radio-tuner-tick\s*\{\s*transition: none;/);
   assert.match(css, /\.radio-tuner\s*\{[\s\S]*?max-width: 100%;[\s\S]*?overflow: hidden;/);
   assert.match(css, /#radio-tuner-slider\s*\{[\s\S]*?max-width: 100%;[\s\S]*?touch-action: none;/);
-  assert.match(css, /#title-bar\.radio-broadcasting \.title-logo::before/);
-  assert.match(css, /#title-bar\.radio-broadcasting \.title-logo::after/);
-  assert.match(css, /--radio-broadcast-opacity: 0\.17/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.radio-tuner-needle,[\s\S]*?\.radio-tuner-tick\s*\{\s*transition: none;/);
   assert.doesNotMatch(ui, /_radioTunerCameraRemove = this\.viewer\?\.camera\?\.changed/);
-  assert.match(radioPresentation, /classList\.toggle\('radio-broadcasting', state\.audioState === 'playing'\)/);
   assert.match(radioBindings, /cycleStation\(direction, \{[\s\S]*?rotate,[\s\S]*?stationIds:/);
   const cycleStart = radioBindings.indexOf('const cycleRadio = (direction, { rotate = true } = {}) =>');
   const cycleMethod = radioBindings.slice(cycleStart, radioBindings.indexOf('const toggleRadio', cycleStart));
@@ -264,7 +260,6 @@ test('Radio is nested inside Context with separate disclosure and power controls
   assert.match(radioBindings, /previewTuningStation\(station\?\.id \|\| null, \{ rotate \}\)/);
   assert.match(radioBindings, /tunerPreview\(\{\s*coordinate: this\._radioTunerCoordinate,\s*rotate: commit,?\s*\}\)/);
   assert.match(radioBindings, /this\.radio\.cancelTuning\(\)/);
-  assert.match(radioControlsSource, /classList\.remove\('radio-broadcasting'\)/);
   assert.match(radioBindings, /this\.radio\.getTunerStations\(750\)/);
   assert.match(radioBindings, /radioTunerPointerPosition\(/);
   assert.doesNotMatch(css, /#right-context-rail\s*>\s*#radio-panel/);

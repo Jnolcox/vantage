@@ -1567,7 +1567,6 @@
       "src/loadingFeedback.js",
       "src/locationStatus.js",
       "src/locations.js",
-      "src/logoGaze.js",
       "src/mapStackChips.js",
       "src/mapStackController.js",
       "src/mapStartup.js",

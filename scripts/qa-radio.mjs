@@ -3275,19 +3275,7 @@ async function main() {
       {},
       tunerCommit.id,
     );
-    const broadcastIndicator = await page.evaluate(() => ({
-      active: document.getElementById('title-bar').classList.contains('radio-broadcasting'),
-      innerOpacity: getComputedStyle(document.querySelector('#title-bar .title-logo'), '::before').opacity,
-      outerOpacity: getComputedStyle(document.querySelector('#title-bar .title-logo'), '::after').opacity,
-    }));
     check('actual broadcaster playback fades out the tuner static', true, tunerCommit.id);
-    check(
-      'confirmed playback shows two restrained broadcast waves above the main logo',
-      broadcastIndicator.active
-        && Number(broadcastIndicator.innerOpacity) > 0 && Number(broadcastIndicator.innerOpacity) <= 0.28
-        && Number(broadcastIndicator.outerOpacity) > 0 && Number(broadcastIndicator.outerOpacity) <= 0.17,
-      JSON.stringify(broadcastIndicator),
-    );
     const microDragStart = await page.evaluate(() => {
       const style = window.__godsEyeView.styleManager;
       const slider = document.getElementById('radio-tuner-slider');
@@ -3643,20 +3631,18 @@ async function main() {
           audioState: failed.audioState,
           tuningStatic: failed.tuningStatic,
           awaiting: failed.tuningAwaitingStationId,
-          broadcasting: document.getElementById('title-bar').classList.contains('radio-broadcasting'),
         },
         stopped: {
           tuningStatic: stopped.tuningStatic,
           awaiting: stopped.tuningAwaitingStationId,
-          broadcasting: document.getElementById('title-bar').classList.contains('radio-broadcasting'),
         },
       };
     });
     check(
       'failed tuner stations retain the audible static hint until Stop',
       failedTuner.failed.audioState === 'error' && failedTuner.failed.tuningStatic && failedTuner.failed.awaiting
-        && !failedTuner.failed.broadcasting && !failedTuner.stopped.tuningStatic
-        && !failedTuner.stopped.awaiting && !failedTuner.stopped.broadcasting,
+        && !failedTuner.stopped.tuningStatic
+        && !failedTuner.stopped.awaiting,
       JSON.stringify(failedTuner),
     );
     await page.select('#radio-filter', 'news');
@@ -4671,8 +4657,6 @@ async function main() {
       const context = element.closest('#global-context-panel');
       const contextRect = context.getBoundingClientRect();
       const scroller = context.querySelector('.global-context-panel-inner');
-      const logo = document.querySelector('#title-bar .title-logo');
-      const logoRect = logo.getBoundingClientRect();
       const tunerRect = element.querySelector('.radio-tuner').getBoundingClientRect();
       const innerRect = element.querySelector('.radio-panel-inner').getBoundingClientRect();
       return {
@@ -4684,15 +4668,11 @@ async function main() {
         radioWidth: rect.width,
         radioVisible: rect.bottom > contextRect.top && rect.top < contextRect.bottom,
         scrollable: scroller.scrollHeight >= scroller.clientHeight,
-        broadcastVisible: Number(getComputedStyle(logo, '::before').opacity) > 0
-          && Number(getComputedStyle(logo, '::after').opacity) > 0,
-        broadcastInsideViewport: logoRect.left >= 0 && logoRect.right <= innerWidth && logoRect.top - 15 >= 0,
         tunerInside: tunerRect.left >= innerRect.left && tunerRect.right <= innerRect.right
           && tunerRect.left >= 0 && tunerRect.right <= innerWidth,
       };
     });
     check('mobile Context host is full-width and keeps the tuner contained', mobile.left >= 0 && mobile.right <= 390 && mobile.width >= 350 && mobile.radioWidth < mobile.width && mobile.radioVisible && mobile.scrollable && mobile.tunerInside, JSON.stringify(mobile));
-    check('mobile playing state keeps both broadcast waves visible and on-screen', mobile.broadcastVisible && mobile.broadcastInsideViewport, JSON.stringify(mobile));
     await page.click('#radio-stop-btn');
     const actionableConsoleErrors = [...consoleErrors];
     const externalFontFailures = [];

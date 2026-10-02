@@ -19,9 +19,6 @@ export function renderRadioState(state) {
   const selected = state.selected || null;
   const hasStations = state.filteredCount > 0;
   const activePlayback = ['playing', 'buffering'].includes(state.audioState);
-  document
-    .getElementById('title-bar')
-    ?.classList.toggle('radio-broadcasting', state.audioState === 'playing');
   this._radioPanel.classList.toggle('radio-enabled', enabled);
   this._radioPanel.classList.toggle('lifecycle-uncertain', uncertain);
   this._contextRadioDock?.classList.toggle('active', enabled);

@@ -287,36 +287,6 @@
   text-align: center;
 }
 
-.loader-logo {
-  display: block;
-  width: 128px;
-  height: auto;
-  margin: 0 auto 24px;
-  filter: drop-shadow(0 0 24px rgba(0, 246, 255, 0.42));
-  animation: logo-pulse 2s ease-in-out infinite;
-}
-
-@keyframes logo-pulse {
-  0%,
-  100% {
-    opacity: 0.72;
-    transform: scale(0.98);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.02);
-  }
-}
-
-.loader-content h2 {
-  font-family: var(--font-mono);
-  font-size: 18px;
-  font-weight: 600;
-  letter-spacing: 6px;
-  color: var(--text-primary);
-  margin-bottom: 12px;
-}
-
 .loader-status {
   font-family: var(--font-mono);
   font-size: 11px;

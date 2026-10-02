@@ -85,6 +85,14 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
 - Malformed enabled-layer lists in a share link (empty, repeated or duplicate
   members, or a repeated `l` field) now reject the whole layer payload instead
   of restoring a partial list (ported from upstream, manjunath22466).
+- Region scopes in voice analyst queries ("in the Gulf of Mexico", "over the
+  Alps") work in the dev server again: the bundled Natural Earth and
+  neighborhood packs are fetched as same-origin JSON in the browser
+  (`src/data/bundledJson.js`) instead of a JSON-attributed `import()` the
+  browser rejected. When a region is not in the bundled packs, the geocode and
+  admin-boundary fallback answers `region-timeout` after 3 s instead of holding
+  the reply; the lookup keeps running and fills the cache (ported from
+  upstream, Bilawal Sidhu).
 
 ## [1.0.0] - 2026-10-02
 

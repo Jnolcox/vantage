@@ -292,7 +292,7 @@ function matchArgs(expected, actual) {
 
 async function runRoutingLayer() {
   console.log(`\nLAYER 1 — routing assertions (budget ${TURN_BUDGET} model turns)`);
-  const logDir = path.join(ROOT, '.gev-logs', 'qa-voice-routing');
+  const logDir = path.join(ROOT, '.vantage-logs', 'qa-voice-routing');
   fs.mkdirSync(logDir, { recursive: true });
   const evidence = fs.createWriteStream(path.join(logDir, `run-${Date.now()}.jsonl`));
 

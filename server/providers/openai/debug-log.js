@@ -48,7 +48,7 @@ function isRealtimeDebugLogEnabled(env = process.env) {
 }
 
 function createDebugLogHandler({ sourceRoot = defaultSourceRoot } = {}) {
-  const logDir = path.join(sourceRoot, '.gev-logs');
+  const logDir = path.join(sourceRoot, '.vantage-logs');
   const logFile = path.join(logDir, 'realtime-conversations.jsonl');
   const allow = makeRateLimiter({
     windowMs: 60_000,

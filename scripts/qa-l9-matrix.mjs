@@ -497,7 +497,7 @@ function readOverlaySummary(layerId, jsonPath) {
   };
 }
 
-const HARNESS_LOG_DIR = resolve(REPO_ROOT, '.gev-logs', 'qa-l9-matrix');
+const HARNESS_LOG_DIR = resolve(REPO_ROOT, '.vantage-logs', 'qa-l9-matrix');
 /** Where D12 asks qa-overlay-baseline to write its machine-readable run. */
 const OVERLAY_JSON = resolve(HARNESS_LOG_DIR, 'D12-overlay-baseline.json');
 
@@ -680,7 +680,7 @@ check({
     // scanner its own first hit — and this script ships publicly.
     const terms = [['horm', 'uz'], ['cease', 'fire'], ['gps-', 'jamming']].map(([a, b]) => a + b);
     const grep = await sh('git', ['grep', '-lIiE', terms.join('|'), '--',
-      ':!docs/inter' + 'nal/**', ':!.cla' + 'ude/**', ':!.gev-logs/**', ':!CLA' + 'UDE.md', ':!AGENTS.md'], { timeoutMs: 120000 });
+      ':!docs/inter' + 'nal/**', ':!.cla' + 'ude/**', ':!.vantage-logs/**', ':!CLA' + 'UDE.md', ':!AGENTS.md'], { timeoutMs: 120000 });
     // 0 = matches, 1 = no matches, >1 = the scan itself failed.
     if (grep.code > 1) return crash(`git grep failed (exit ${grep.code}): ${tail(grep.err)}`);
     const hits = grep.out.split('\n').filter(Boolean);

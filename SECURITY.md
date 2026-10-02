@@ -68,7 +68,7 @@ The data proxies under `server/providers/` are written so the browser cannot tur
 - **Response-size caps and timeouts** on proxied responses.
 - **Sanitized errors** — internal error details are not echoed back to clients.
 - **Coalesced OAuth refresh** and cached successful responses only (OpenSky).
-- **Opt-in, redacted debug logging.** The voice debug log (`.gev-logs/`, gitignored) is written only when the server runs with `VANTAGE_REALTIME_DEBUG_LOG=1`, and strips API keys, bearer tokens, client secrets, and image data URLs before writing. When enabled it records full voice transcripts.
+- **Opt-in, redacted debug logging.** The voice debug log (`.vantage-logs/`, gitignored) is written only when the server runs with `VANTAGE_REALTIME_DEBUG_LOG=1`, and strips API keys, bearer tokens, client secrets, and image data URLs before writing. When enabled it records full voice transcripts.
 
 ## Network exposure — the operator threat model
 

@@ -217,7 +217,7 @@ test('debug logging resolves each supplied application directory independently',
     );
     const file = path.join(
       sourceRoot,
-      '.gev-logs/realtime-conversations.jsonl',
+      '.vantage-logs/realtime-conversations.jsonl',
     );
     assert.equal(JSON.parse(readFileSync(file, 'utf8')).marker, marker);
   }
@@ -238,7 +238,7 @@ test('the debug log is off by default: the sink answers 204 and writes nothing',
       { method: 'POST', body: JSON.stringify({ transcript: 'private' }) },
     );
     assert.equal(response.status, 204);
-    assert.equal(existsSync(path.join(sourceRoot, '.gev-logs')), false);
+    assert.equal(existsSync(path.join(sourceRoot, '.vantage-logs')), false);
   }
 });
 
@@ -375,7 +375,10 @@ test('the debug-log sink stays bounded, rate limited, and quiet about failures',
   const handler = install(openAiRealtimeProxy({ sourceRoot })).get(
     '/api/realtime/debug-log',
   );
-  const file = path.join(sourceRoot, '.gev-logs/realtime-conversations.jsonl');
+  const file = path.join(
+    sourceRoot,
+    '.vantage-logs/realtime-conversations.jsonl',
+  );
   const write = (record) =>
     request(handler, { method: 'POST', body: JSON.stringify(record) });
 
@@ -436,7 +439,10 @@ test('the debug log rotates instead of growing without bound', async (t) => {
   const handler = install(openAiRealtimeProxy({ sourceRoot })).get(
     '/api/realtime/debug-log',
   );
-  const file = path.join(sourceRoot, '.gev-logs/realtime-conversations.jsonl');
+  const file = path.join(
+    sourceRoot,
+    '.vantage-logs/realtime-conversations.jsonl',
+  );
 
   // 8 MB bounds one request body; nothing bounded the file until now, so a
   // single page could grow it for as long as the dev server ran. Each record

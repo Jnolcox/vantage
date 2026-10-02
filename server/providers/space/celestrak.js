@@ -26,7 +26,7 @@ const CELESTRAK_USER_AGENT = clientUserAgent('celestrak-proxy');
  */
 export function celestrakProxy() {
   const TLE_TTL_MS = 6 * 3600_000;
-  const CACHE_DIR = path.join(process.cwd(), '.gev-cache');
+  const CACHE_DIR = path.join(process.cwd(), '.vantage-cache');
   const mem = new Map(); // group -> { at: epochMs, body: string }
   const inflight = new Map(); // group -> Promise<{at, body}|null>
 

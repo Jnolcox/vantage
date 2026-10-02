@@ -24,7 +24,7 @@ export function rocketLaunchesProxy() {
   const maxDiskCacheBytes = 24 * 1024 * 1024;
   const cachePath = path.join(
     process.cwd(),
-    '.gev-cache',
+    '.vantage-cache',
     'launch-library-2-v2.3.json',
   );
   let cache = null;

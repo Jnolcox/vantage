@@ -215,7 +215,7 @@ export class RealtimeDiagnostics {
         this.debugSink && this.debugLogEnabled
           ? {
               endpoint: DEBUG_LOG_URL,
-              file: '.gev-logs/realtime-conversations.jsonl',
+              file: '.vantage-logs/realtime-conversations.jsonl',
               sessionId: this.sessionId,
             }
           : null,

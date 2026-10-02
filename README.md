@@ -465,7 +465,7 @@ a separately reviewed authentication proxy if remote access is required.
   some layers (map tiles, Radio streams, embedded media) are loaded directly
   by your browser from the provider. [DATA_SOURCES.md](DATA_SOURCES.md) lists
   every source.
-- **Voice debug log is opt-in.** Nothing is written to `.gev-logs/` unless you
+- **Voice debug log is opt-in.** Nothing is written to `.vantage-logs/` unless you
   start the server with `VANTAGE_REALTIME_DEBUG_LOG=1` (in `.env`, or in
   `pinokio/ENVIRONMENT` under Pinokio). When enabled, the log stays local,
   contains full voice transcripts, and redacts keys, tokens, and image data.

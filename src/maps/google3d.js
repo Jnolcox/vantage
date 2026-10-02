@@ -49,6 +49,32 @@ export async function loadPhotorealisticTileset(
   return { tileset: null, route: 'osm', errors };
 }
 
+/** Locally served copy of the Google logo Cesium credits 3D Tiles with. */
+export const GOOGLE_CREDIT_IMAGE_URL = '/credits/google-credit.png';
+
+/**
+ * Close Cesium's implicit network paths before any map loads.
+ *
+ * Cesium ships a demo ion token as Ion.defaultAccessToken, so any SDK call
+ * made without an explicit token (world terrain, ion geocoding, Google tiles
+ * without a key) would silently reach api.cesium.com. The default becomes the
+ * configured token, or '' so such calls fail closed. Cesium also credits
+ * Google 3D Tiles with an <img> from assets.ion.cesium.com, even on the
+ * Google-direct route with no ion account; the credit keeps Google's logo but
+ * loads it from this server.
+ */
+export function configureCesiumNetworkDefaults(
+  Cesium,
+  { cesiumToken = '', googleCreditImageUrl = GOOGLE_CREDIT_IMAGE_URL } = {},
+) {
+  Cesium.Ion.defaultAccessToken = clean(cesiumToken);
+  Cesium.GoogleMaps.getDefaultCredit = () =>
+    new Cesium.Credit(
+      `<img src="${googleCreditImageUrl}" style="vertical-align: -5px" alt="Google">`,
+      true,
+    );
+}
+
 /** Pass credentials to the source instead of changing SDK-wide defaults. */
 export function createGoogleDirectTileset(Cesium, key) {
   key = clean(key);

@@ -7,7 +7,10 @@ import {
 import { registerDataCredits } from '../data/dataCredits.js';
 import { configureCreditKeyboardAccess } from '../creditKeyboard.js';
 import { MapStackController } from '../mapStackController.js';
-import { loadPhotorealisticTileset } from '../mapStartup.js';
+import {
+  configureCesiumNetworkDefaults,
+  loadPhotorealisticTileset,
+} from '../mapStartup.js';
 import {
   uninstallRenderGovernor,
   governorRequestRender,
@@ -40,6 +43,7 @@ export async function createApplicationScene({
     });
   }
   loaderStatus.textContent = 'Configuring viewer...';
+  configureCesiumNetworkDefaults(Cesium, { cesiumToken });
   // Provider attribution stays visible, including clean-view and recording.
   const creditContainer = document.createElement('div');
   creditContainer.id = 'cesium-credits';

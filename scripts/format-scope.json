@@ -754,5 +754,6 @@
   "src/legacyDirectories.test.mjs",
   "src/tooling/networkExposure.test.mjs",
   "src/tooling/apiRequestGuard.test.mjs",
-  "src/tooling/devServerDeny.test.mjs"
+  "src/tooling/devServerDeny.test.mjs",
+  "src/maps/cesiumNetworkDefaults.test.mjs"
 ]

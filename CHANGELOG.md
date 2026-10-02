@@ -34,6 +34,12 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   least-recently-used eviction, so a long session no longer retains every
   coordinate it ever resolved. Consumer reads promote their entry and a batch
   still reports every point it resolved (ported from upstream, Pedro Lobato).
+- CCTV cameras whose bearing is a guess now say so. Packs mark bearings derived
+  from a hash of the camera id as `headingConfidence: 'low'`, but nothing read
+  the flag, so roughly 70% of a default catalog rendered like surveyed facings.
+  The HUD now reads `HDG n° (ESTIMATED)` and the coverage wireframe draws
+  dashed; manual calibrations and curated poses are never marked estimated
+  (ported from upstream, bassem chagra).
 
 ## [1.0.0] - 2026-10-02
 

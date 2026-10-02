@@ -483,6 +483,8 @@
   "src/layers/cctv/presentation.js",
   "src/layers/cctv/ground.js",
   "src/layers/cctv/health.js",
+  "src/layers/cctv/headingConfidence.js",
+  "src/layers/cctv/headingConfidence.test.mjs",
   "src/data/cctv.js",
   "src/data/cctvCatalogCap.test.mjs",
   "src/data/cctvDisplayCode.test.mjs",

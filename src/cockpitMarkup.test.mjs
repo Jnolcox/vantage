@@ -880,3 +880,18 @@ test('cockpit state cannot report entryAllowed while already active', () => {
   assert.match(state, /'contacts-inactive'/);
   assert.match(state, /'no-tracked-aircraft'/);
 });
+
+test('the title bar is only the frame-rate readout host, with no upstream branding', () => {
+  const sceneChrome = fs.readFileSync(path.join(ROOT, 'src', 'ui', 'templates', 'scene-chrome.html'), 'utf8');
+  const loading = fs.readFileSync(path.join(ROOT, 'src', 'ui', 'templates', 'hud-loading.html'), 'utf8');
+  assert.match(sceneChrome, /<div id="title-bar"><\/div>/, 'frameRateMonitor.js mounts the readout into #title-bar');
+  for (const markup of [sceneChrome, loading]) {
+    assert.doesNotMatch(markup, /brand-logo|title-logo|data-logo-gaze|title-accent|class="subtitle"/);
+  }
+  assert.doesNotMatch(loading, /<h2>/);
+  assert.doesNotMatch(css, /\.title-logo|\.brand-logo|\.title-accent|radio-broadcasting|logo-pulse/);
+  const radioControls = fs.readFileSync(path.join(ROOT, 'src', 'ui', 'radioControls.js'), 'utf8');
+  for (const source of [radioPresentation, radioControls]) {
+    assert.doesNotMatch(source, /title-bar|radio-broadcasting/);
+  }
+});

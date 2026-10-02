@@ -278,6 +278,7 @@
   "src/ui/styles/command-dock.css",
   "src/ui/styles/command-dock-sliding.css",
   "src/ui/styles/provider-settings.css",
+  "src/ui/styles/weather.css",
   "src/ui/styles/radio.css",
   "src/ui/styles/responsive.css",
   "src/ui/styles/voice-cost.css",
@@ -792,5 +793,10 @@
   "src/ui/chipGroup.js",
   "src/ui/chipGroup.test.mjs",
   "src/ui/rowList.js",
-  "src/ui/railTestFixture.mjs"
+  "src/ui/railTestFixture.mjs",
+  "src/ui/railCards.js",
+  "src/ui/railCardBlocks.js",
+  "src/ui/railCards.test.mjs",
+  "src/ui/railTimeline.js",
+  "src/ui/railTimeline.test.mjs"
 ]

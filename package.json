@@ -33,6 +33,7 @@
   ],
   "scripts": {
     "doctor": "node scripts/setup-doctor.mjs",
+    "version": "node scripts/sync-version.mjs && git add src/sources/version.js",
     "format": "node scripts/format.mjs --write",
     "format:check": "node scripts/format.mjs --check",
     "fonts:fetch": "node scripts/fetch-fonts.mjs",

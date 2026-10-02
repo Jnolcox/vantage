@@ -747,6 +747,8 @@
   "scripts/qa-director-sharing.mjs",
   "src/data/aisStreamSentinels.test.mjs",
   "src/sources/projectIdentity.test.mjs",
+  "src/sources/version.test.mjs",
+  "scripts/sync-version.mjs",
   "scripts/fetch-fonts.mjs",
   "src/tooling/fetchFonts.test.mjs",
   "src/storageMigration.test.mjs",

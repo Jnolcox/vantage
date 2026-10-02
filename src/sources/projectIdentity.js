@@ -10,10 +10,12 @@
  * frames to browsers (NSW_IMAGE_USER_AGENT in server/providers/cctv/).
  */
 
+import { PACKAGE_VERSION } from './version.js';
+
 export const PROJECT_NAME = 'vantage';
 
-/** Application version announced to upstreams; kept equal to package.json. */
-export const PROJECT_VERSION = '0.1.1';
+/** Application version announced to upstreams: the package.json version. */
+export const PROJECT_VERSION = PACKAGE_VERSION;
 
 /** Public home of this fork: the contact point every upstream is given. */
 export const PROJECT_URL = 'https://github.com/Jnolcox/vantage';
@@ -21,7 +23,7 @@ export const PROJECT_URL = 'https://github.com/Jnolcox/vantage';
 /** Version of a single proxy client's request shape, independent of the app. */
 const CLIENT_VERSION = '1.0';
 
-/** Application-level User-Agent, e.g. `vantage/0.1.1 (+<PROJECT_URL>)`. */
+/** Application-level User-Agent, e.g. `vantage/1.2.3 (+<PROJECT_URL>)`. */
 export const PROJECT_USER_AGENT = `${PROJECT_NAME}/${PROJECT_VERSION} (+${PROJECT_URL})`;
 
 /**

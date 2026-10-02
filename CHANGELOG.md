@@ -20,6 +20,11 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   rescheduled while the response is still waiting to drain, so a viewer on a
   slow link is not mistaken for a dead camera; live feeds are unaffected
   (ported from upstream, Ethan Stoner).
+- Aircraft track backfill (`/api/opensky-track`, `/api/adsblol/trace`) answers
+  502 when the upstream body exceeds the 5 MB cap, instead of a 200 whose error
+  body the client read as an empty track. The failure is cached like other
+  upstream errors, so retries inside the 60-second window do not spend OpenSky
+  credits (ported from upstream, Raushankumar0720).
 
 ## [1.0.0] - 2026-10-02
 

@@ -2,6 +2,7 @@ import { lookup as lookupDns } from 'node:dns/promises';
 import { randomUUID } from 'node:crypto';
 
 import { readResponseTextCapped } from '../common/http.js';
+import { readVantageEnv } from '../common/env.js';
 import {
   normalizeRadioBrowserStation,
   publicRadioStation,
@@ -43,11 +44,23 @@ export async function mapRadioConcurrent(values, concurrency, mapper) {
   return results;
 }
 
+/**
+ * Whether to tell Radio Browser which station was played. The public click
+ * counter only ranks stations for other users; playback never depends on it,
+ * so it stays off unless VANTAGE_RADIO_REPORT_CLICKS=1.
+ */
+export function radioClickReportingEnabled(env = process.env) {
+  return /^(1|true)$/i.test(
+    String(readVantageEnv('RADIO_REPORT_CLICKS', env) ?? '').trim(),
+  );
+}
+
 /** Create the testable Connect middleware backing `/api/radio`. */
 export function createRadioProxyMiddleware({
   fetchImpl = null,
   lookupImpl = lookupDns,
   now = Date.now,
+  reportClicks = () => radioClickReportingEnabled(),
 } = {}) {
   let mirrorCache = { origins: [...RADIO_FALLBACK_MIRRORS], cachedAt: 0 };
   let mirrorPromise = null;
@@ -385,7 +398,7 @@ export function createRadioProxyMiddleware({
       }
       res.writeHead(204, { 'Cache-Control': 'no-store' });
       res.end();
-      void fetchPath(`/json/url/${id}`).catch(() => {});
+      if (reportClicks()) void fetchPath(`/json/url/${id}`).catch(() => {});
       return;
     }
 

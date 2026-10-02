@@ -7,6 +7,7 @@ import {
   publicRadioStation,
   publicRadioHttpsUrl,
 } from '../../vite.config.js';
+import { radioClickReportingEnabled } from '../../server/providers/radio/catalog.js';
 import { rankRadioStationsForRequest } from './radio.js';
 
 const UUID = '12345678-1234-4234-8234-123456789abc';
@@ -120,7 +121,7 @@ test('proxy coalesces refreshes, omits favicons, and counts known stations only'
     if (String(url).includes(`/json/url/${UUID}`)) return responseJson({ ok: 'true' });
     return responseJson({}, 404);
   };
-  const middleware = createProxy({ fetchImpl });
+  const middleware = createProxy({ fetchImpl, reportClicks: () => true });
   const [first, second] = await Promise.all([
     invoke(middleware, '/stations'),
     invoke(middleware, '/stations'),
@@ -139,6 +140,28 @@ test('proxy coalesces refreshes, omits favicons, and counts known stations only'
   assert.equal(known.status, 204);
   await new Promise((resolve) => setTimeout(resolve, 0));
   assert.equal(fetchCount, 11);
+});
+
+test('a played station is not reported to Radio Browser unless opted in', async () => {
+  const requested = [];
+  const fetchImpl = async (url) => {
+    requested.push(String(url));
+    if (String(url).includes('/json/servers')) return responseJson([{ name: 'de1.api.radio-browser.info' }]);
+    if (String(url).includes('/json/stations/search')) return responseJson([station()]);
+    return responseJson({ ok: 'true' });
+  };
+  const middleware = createProxy({ fetchImpl });
+  assert.equal((await invoke(middleware, '/stations')).status, 200);
+  assert.equal((await invoke(middleware, `/click/${UUID}`, 'POST')).status, 204);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.equal(requested.some((url) => url.includes('/json/url/')), false);
+});
+
+test('click reporting is opt-in through VANTAGE_RADIO_REPORT_CLICKS', () => {
+  assert.equal(radioClickReportingEnabled({}), false);
+  assert.equal(radioClickReportingEnabled({ VANTAGE_RADIO_REPORT_CLICKS: '0' }), false);
+  assert.equal(radioClickReportingEnabled({ VANTAGE_RADIO_REPORT_CLICKS: '1' }), true);
+  assert.equal(radioClickReportingEnabled({ VANTAGE_RADIO_REPORT_CLICKS: 'true' }), true);
 });
 
 test('method and route validation happen before any upstream refresh', async () => {

@@ -441,7 +441,7 @@ Everything above is the deliberately cheap baseline — enough to get a real tas
 
 ### 🔒 Sharing an instance
 
-By default nobody else can reach your server — it binds to localhost. To share on your LAN, opt in explicitly (`npm run dev -- --host 0.0.0.0 --port 4173`, or `HOST=0.0.0.0 ./scripts/dev-fresh.sh` on macOS/Linux) — but know that ⚠️ **a LAN-visible server brokers your configured API keys to anyone who can reach it.** Set the per-IP throttles (`VANTAGE_RATELIMIT_OPENAI_PER_MIN`, `VANTAGE_RATELIMIT_GOOGLE_PER_MIN` — see `.env.example`) and, before anything else, **configure provider quotas, usage limits, and billing alerts**: app-level throttles are not billing caps, and a budget alert alone does not stop spending. Full threat model in [SECURITY.md](SECURITY.md).
+By default nobody else can reach your server — it binds to `127.0.0.1`. To share on your LAN, opt in explicitly (`VANTAGE_HOST=0.0.0.0 npm run dev`, or `VANTAGE_HOST=0.0.0.0 ./scripts/dev-fresh.sh` on macOS/Linux; `HOST` still works as the old name) — but know that ⚠️ **a LAN-visible server brokers your configured API keys to anyone who can reach it.** In that mode the per-IP throttles (`VANTAGE_RATELIMIT_OPENAI_PER_MIN`, `VANTAGE_RATELIMIT_GOOGLE_PER_MIN` — see `.env.example`) switch on at 30 and 60 requests a minute unless you set them, and only local names, IP addresses, this machine's hostname and `VANTAGE_ALLOWED_HOSTS` are accepted as the `Host`. Before anything else, **configure provider quotas, usage limits, and billing alerts**: app-level throttles are not billing caps, and a budget alert alone does not stop spending. Full threat model in [SECURITY.md](SECURITY.md).
 
 Provider Settings is disabled when the server is shared, so remote users cannot
 access the key-entry panel.
@@ -462,9 +462,17 @@ a separately reviewed authentication proxy if remote access is required.
   the data sources behind the layers you use and to the providers whose keys
   you configure (Google, Cesium ion, OpenAI, and the rest of
   [Keys & Costs](#-api-keys)). Most feeds are fetched by the local server;
-  some layers (map tiles, Radio streams, embedded media) are loaded directly
-  by your browser from the provider. [DATA_SOURCES.md](DATA_SOURCES.md) lists
-  every source.
+  some (map tiles, search, Radio streams, embedded media) are loaded directly
+  by your browser. [Network & privacy](#network--privacy) below lists every
+  destination, and [DATA_SOURCES.md](DATA_SOURCES.md) every source's terms.
+- **The page can only talk to listed hosts.** A Content-Security-Policy
+  (`build/content-security-policy.js`) names every third-party origin the
+  browser may reach; anything else is blocked. The referrer policy is
+  `strict-origin-when-cross-origin`, so other sites see only
+  `http://localhost:<port>/`, never the path or your share-link state.
+- **Other websites cannot drive your server.** Every `/api` route refuses a
+  foreign `Host` (DNS rebinding), a foreign `Origin`, and requests the browser
+  marks cross-site, so a page you visit cannot spend your keys.
 - **Voice debug log is opt-in.** Nothing is written to `.vantage-logs/` unless you
   start the server with `VANTAGE_REALTIME_DEBUG_LOG=1` (in `.env`, or in
   `pinokio/ENVIRONMENT` under Pinokio). When enabled, the log stays local,
@@ -474,6 +482,65 @@ a separately reviewed authentication proxy if remote access is required.
   providers can see who is calling them. The Live Traffic NSW camera host is
   the one exception: it only serves frames to browsers, so it is sent a
   browser User-Agent.
+
+### Network & privacy
+
+Every place data can leave your machine, when it happens, and what is sent.
+"Browser" means your browser connects to the provider directly (it sees your
+IP address and the origin `http://localhost:<port>/`); "server" means the
+local Vantage server makes the request (the provider sees your machine's IP
+address and the Vantage User-Agent, not your browser).
+
+**Automatic, without a click**
+
+| Destination | From | When | What is sent |
+| --- | --- | --- | --- |
+| `services.arcgisonline.com` (Esri), `tile.openstreetmap.org` | Browser | Keyless basemap, always | Tile coordinates of the area in view |
+| `terrain.reearth.land` | Browser, server | Keyless terrain; `/api/terrain/heights` for ground sampling | Tile coordinates; sampled points |
+| `tile.googleapis.com` | Browser | Google 3D Tiles, with a Google key | Tiles in view, browser key, origin |
+| `api.cesium.com`, `assets.ion.cesium.com`, `assets.cesium.com`, Bing/Azure imagery hosts | Browser | Only with a Cesium ion token | Assets and tiles in view, ion token |
+| `maps.googleapis.com` (Geocoding) | Browser | HUD **Context: Live**, every 15 s and after each move, with a Google key | View-target latitude/longitude |
+| `places.googleapis.com` | Server | Same HUD trigger, with a Google key | Latitude/longitude and radius |
+| `api.openai.com` (Responses) | Server | Same HUD trigger, with an OpenAI key | Place, street and nearby-place labels, enabled layer names |
+| `nominatim.openstreetmap.org`, `api.open-meteo.com`, `news.google.com`, `api.gdeltproject.org` | Server | Cockpit mode: regional brief and weather, refreshed as the contact moves | Latitude/longitude; locality name for news |
+| Layer feeds you have switched on | Server | Polling while the layer is on | See below |
+
+Set DISPLAY ▸ HUD ▸ **Context** to **Local** to stop the three HUD rows; the
+summary line then uses on-device data only.
+
+**Feeds the server polls for a layer you enabled** (no user data unless
+noted): OpenSky (`opensky-network.org`, `auth.opensky-network.org`) and
+`api.adsb.lol` (rounded latitude/longitude of the view for the fallback,
+selected aircraft hex for tracks); `api.adsbdb.com` (selected hex or
+callsign); `stream.aisstream.io` (bounding box from your settings);
+`celestrak.org`; `ll.thespacedevs.com`; `firms.modaps.eosdis.nasa.gov`;
+`earthquake.usgs.gov` (fetched by the browser); `api.tomtom.com` (tile
+coordinates in view); Overpass mirrors `overpass-api.de`,
+`lz4.overpass-api.de`, `overpass.kumi.systems`, `overpass.private.coffee`
+(bounding-box queries of the view); registered GTFS-realtime and GBFS feeds
+(`src/data/transitFeeds.js`, the GBFS catalog); the CCTV catalogs and
+snapshot hosts registered in `server/providers/cctv/` (TfL, Caltrans, Austin,
+Ontario 511, Fintraffic, DriveBC, TxDOT, Tallinn, Tarktee, Warendorf, NSW,
+Calgary); the Radio Browser directory (`*.api.radio-browser.info`).
+
+**Only when you act**
+
+| Destination | From | Trigger | What is sent |
+| --- | --- | --- | --- |
+| `maps.googleapis.com` (Geocoding), then `photon.komoot.io`, then `nominatim.openstreetmap.org` (server) | Browser, server | Search box or a voice search | Query text and a bias from the current view |
+| `places.googleapis.com` | Server | Place and nearby searches, with a Google key | Query, latitude/longitude, radius |
+| `routing.openstreetmap.de` | Server | Directions | Route coordinates |
+| `maps.googleapis.com` (Street View Static) | Server | CCTV fallback frame for a registered camera with no live image | That camera's registered location |
+| `api.openai.com` | Server, then browser | Starting voice | Server mints a short-lived secret; the browser then streams microphone audio, map context and tool results, and — with **VIEW** on — screenshots of local-scale views |
+| The station's stream host | Browser | Pressing play on Radio | Your IP address and origin; `radio-browser` hears about the play only with `VANTAGE_RADIO_REPORT_CLICKS=1` |
+| `www.youtube-nocookie.com`, `www.youtube.com`; `www.facebook.com`, `connect.facebook.net`; `platform.twitter.com` | Browser | Pressing **LOAD** or **ALWAYS ALLOW** on an embedded witness clip | Your IP address, origin and that provider's cookies |
+| `i.ytimg.com` | Browser | Opening the Bhote Koshi event | Your IP address and origin, no cookies (the event's YouTube thumbnail posters) |
+
+Nothing else leaves the machine: no analytics, crash reporting, geolocation
+or IP lookups. API keys stay on the server except `GOOGLE_MAPS_API_KEY` and
+`CESIUM_ION_TOKEN`, which the browser needs and which a production `vite
+build` writes into `dist/` (the build warns; restrict both keys by referrer).
+A plain `npm install` skips Puppeteer's Chrome download (`.puppeteerrc.cjs`).
 
 ---
 

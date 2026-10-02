@@ -74,9 +74,12 @@ The data proxies under `server/providers/` are written so the browser cannot tur
 
 The dev server is a **key broker**: every server-side key above is spendable by anyone who can send HTTP requests to it. That shapes the defaults:
 
-- **Local-only by default.** `./scripts/dev-fresh.sh` (and the Vite config itself) bind to `localhost`, so only your machine can reach the server — and only local names are accepted (`allowedHosts` stays restricted, which also blunts DNS-rebinding tricks).
-- **LAN exposure is an explicit opt-in**: `HOST=0.0.0.0 ./scripts/dev-fresh.sh`. The launcher prints a prominent warning plus your LAN URL. Understand what opting in means: **every device on that network can drive the proxies and spend your OpenAI / Google / OpenSky / AISStream / TomTom / FIRMS quota** for as long as the server runs. Do this only on networks you trust.
-- **App-level throttles (opt-in):** `VANTAGE_RATELIMIT_OPENAI_PER_MIN` and `VANTAGE_RATELIMIT_GOOGLE_PER_MIN` cap the cost-bearing endpoints per client IP per minute (over-limit requests receive a sanitized `429`). They are **per-IP, process-local, in-memory guards** — they reset on restart and are **not billing caps**.
+- **Local-only by default.** `./scripts/dev-fresh.sh`, `npm run dev` and Pinokio bind to `127.0.0.1`, so only your machine can reach the server.
+- **Only expected `Host` names are answered — on `/api` too.** `allowedHosts` is always an explicit list (localhost, `*.local`, IP addresses, plus this machine's hostname in LAN mode and anything in `VANTAGE_ALLOWED_HOSTS`). Vite applies it to the page; because provider middleware runs before Vite's own checks, a separate guard (`server/standalone/api-request-guard.js`) applies it to every `/api` route, which closes DNS rebinding.
+- **Other websites cannot drive the proxies.** The same guard refuses any `Origin` other than the server's own and any request the browser labels `Sec-Fetch-Site: cross-site` or `same-site` (which covers `<img>` and no-cors loads that carry no `Origin`). CORS is off, `/api/realtime/token` answers only `POST`, and the CCTV Street View fallback frames only registered cameras. Local tools without those headers (curl, the QA scripts) still work.
+- **Local data is never served.** `.vantage-logs/` (voice transcripts when the debug log is on) and `.vantage-cache/` are in the dev server's `fs.deny`, alongside `.env*`, certificates, `.git` and `pinokio/ENVIRONMENT`.
+- **LAN exposure is an explicit opt-in**: `VANTAGE_HOST=0.0.0.0 ./scripts/dev-fresh.sh` (`HOST` is still read as the old name). The launcher prints a prominent warning plus your LAN URL. Understand what opting in means: **every device on that network can drive the proxies and spend your OpenAI / Google / OpenSky / AISStream / TomTom / FIRMS quota** for as long as the server runs. Do this only on networks you trust.
+- **App-level throttles:** `VANTAGE_RATELIMIT_OPENAI_PER_MIN` and `VANTAGE_RATELIMIT_GOOGLE_PER_MIN` cap the cost-bearing endpoints per client IP per minute (over-limit requests receive a sanitized `429`). They are off on a loopback bind and default to 30 and 60 in LAN mode unless you set them (`0` means unlimited). They are **per-IP, process-local, in-memory guards** — they reset on restart and are **not billing caps**.
 - **Provider-side budgets are the real backstop.** For hard spend protection, configure limits where the money is: OpenAI platform usage limits, Google Cloud budget alerts + per-API quotas, and equivalent controls for any other keyed provider.
 - **Pinokio LAN and Cloudflare sharing are refused.** The current supported
   Pinokio release re-reads sharing state when an app registers its Open URL and
@@ -87,6 +90,43 @@ The dev server is a **key broker**: every server-side key above is spendable by 
   sharing value is therefore discarded rather than honored, and Vantage starts on
   loopback only. Use a separately reviewed authentication proxy for remote
   access and keep provider-side quotas as the spend backstop.
+
+## Network & privacy — what the browser may contact
+
+The README's [Network & privacy](README.md#network--privacy) section lists
+every outbound destination, when it is contacted and what is sent. The
+controls that keep it that way:
+
+- **Content-Security-Policy.** `build/content-security-policy.js` lists each
+  third-party origin the page may load from or connect to, with the
+  directives it needs and why; everything else is `'self'` and goes through
+  `/api`. The dev and preview servers send it as a header (with
+  `frame-ancestors 'none'` and `X-Frame-Options: DENY`), and `vite build`
+  writes it into `dist/index.html` as a meta tag. `script-src` allows
+  `'unsafe-eval'` only because the Knockout copy inside Cesium's widgets
+  compiles its bindings with `new Function`, and `blob:` only because the
+  production Cesium build starts its workers from blob URLs; script origins
+  stay pinned.
+  `src/tooling/contentSecurityPolicy.test.mjs` fails when browser code names
+  a host the policy does not classify. If something is blocked while you
+  investigate, `VANTAGE_CSP=report-only` reports instead of blocking.
+- **Referrer-Policy `strict-origin-when-cross-origin`** (header and meta).
+  Google referrer-restricted keys and YouTube embeds need the origin, so it
+  is never tightened to `no-referrer`; paths and share-link state are never
+  sent.
+- **Embedded media is click-to-load.** YouTube (`youtube-nocookie`), Facebook
+  and X load nothing — no preconnect, warm-up frame or SDK — until the viewer
+  presses LOAD or ALWAYS ALLOW for that provider. Opening the Bhote Koshi
+  event fetches its YouTube thumbnail posters from `i.ytimg.com` without
+  cookies.
+- **Automatic AI context is visible and switchable.** DISPLAY ▸ HUD ▸
+  Context (Live/Local) controls the HUD's periodic Google and OpenAI lookups;
+  the mic's VIEW toggle controls voice screenshots.
+- **Cesium fails closed.** `Ion.defaultAccessToken` is the configured token
+  or empty, so no implicit call reaches Cesium ion with the SDK's demo token,
+  and the Google 3D Tiles credit logo is served locally.
+- **Opt-in third-party reporting only.** Radio plays reach Radio Browser's
+  click counter only with `VANTAGE_RADIO_REPORT_CLICKS=1`.
 
 ## Scope & expectations
 

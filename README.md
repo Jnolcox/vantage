@@ -2,7 +2,7 @@
 
 # 🌐 Vantage
 
-[![CI](https://github.com/Jnolcox/gods-eye-view/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Jnolcox/gods-eye-view/actions/workflows/ci.yml)
+[![CI](https://github.com/Jnolcox/vantage/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Jnolcox/vantage/actions/workflows/ci.yml)
 
 ### A spy-satellite simulator in your browser — then you realize the sources are public and the data is real.
 
@@ -75,7 +75,7 @@ app's **POWER UP** panel; [Keys & Costs](#-api-keys) explains the options.
 
 1. Install or update [Pinokio](https://desktop.pinokio.co/) to **8.2 or later**.
 2. In Pinokio, choose **Download from URL** and paste
-   `https://github.com/Jnolcox/gods-eye-view`.
+   `https://github.com/Jnolcox/vantage`.
 3. Click **Install**, then **Start**.
 
 The repository ships its own Pinokio launcher, which installs the locked
@@ -88,8 +88,8 @@ Use **Node.js 24.x (24.14.0 or later) or 26.x**. The setup doctor warns about
 Node 25, which is end-of-life.
 
 ```bash
-git clone https://github.com/Jnolcox/gods-eye-view.git
-cd gods-eye-view
+git clone https://github.com/Jnolcox/vantage.git
+cd vantage
 npm ci
 npm run doctor
 npm run dev

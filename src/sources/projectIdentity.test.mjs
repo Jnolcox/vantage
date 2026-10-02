@@ -22,7 +22,7 @@ import { RADIO_USER_AGENT } from '../../server/providers/radio/constants.js';
 import { CCTV_USER_AGENT } from '../../server/providers/cctv/constants.js';
 import { transitUpstreamHeaders } from '../data/transitProxy.js';
 
-const FORK_URL = 'https://github.com/Jnolcox/gods-eye-view';
+const FORK_URL = 'https://github.com/Jnolcox/vantage';
 const ROOT = fileURLToPath(new URL('../../', import.meta.url));
 
 test('the project points every upstream at the fork', () => {

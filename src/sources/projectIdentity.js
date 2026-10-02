@@ -16,7 +16,7 @@ export const PROJECT_NAME = 'vantage';
 export const PROJECT_VERSION = '0.1.1';
 
 /** Public home of this fork: the contact point every upstream is given. */
-export const PROJECT_URL = 'https://github.com/Jnolcox/gods-eye-view';
+export const PROJECT_URL = 'https://github.com/Jnolcox/vantage';
 
 /** Version of a single proxy client's request shape, independent of the app. */
 const CLIENT_VERSION = '1.0';

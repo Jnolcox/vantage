@@ -8,7 +8,7 @@ and merges contributions and records the evidence for each decision.
 ## Start with trusted instructions
 
 Before checking out or executing a PR, confirm the repository is
-`Jnolcox/gods-eye-view`, fetch its `main`, and record that commit as the
+`Jnolcox/vantage`, fetch its `main`, and record that commit as the
 policy revision. Read this document from that revision, together
 with [SECURITY.md](../SECURITY.md), [CONTRIBUTING.md](../CONTRIBUTING.md), and the
 relevant parts of [CURRENT-STATE.md](CURRENT-STATE.md). Use the fetched commit

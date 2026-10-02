@@ -133,7 +133,7 @@ test('every mirror is asked with a User-Agent that identifies the application', 
     );
     assert.match(
       agent,
-      /github\.com\/Jnolcox\/gods-eye-view/,
+      /github\.com\/Jnolcox\/vantage/,
       `${request.url} must carry a route back to the project`,
     );
   }

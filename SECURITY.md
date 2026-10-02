@@ -6,7 +6,7 @@ Vantage is a local-first client for **public** data. It is built for exploration
 
 Please report security issues **privately** — do not open a public issue for anything exploitable.
 
-- Use GitHub's [private vulnerability reporting](https://github.com/Jnolcox/gods-eye-view/security/advisories/new) (Security tab → "Report a vulnerability"), or
+- Use GitHub's [private vulnerability reporting](https://github.com/Jnolcox/vantage/security/advisories/new) (Security tab → "Report a vulnerability"), or
 - Reach the maintainer, John Nolcox ([@Jnolcox](https://github.com/Jnolcox)), via the contact on the GitHub profile.
 
 Include repro steps and impact. We'll acknowledge, investigate, and credit you (if you'd like) once a fix ships.

@@ -7,8 +7,8 @@ Thanks for being here. Vantage is an open foundation for live spatial intelligen
 Use Node.js 24.14.x or 26.x (also enforced by `package.json`).
 
 ```bash
-git clone https://github.com/Jnolcox/gods-eye-view.git
-cd gods-eye-view
+git clone https://github.com/Jnolcox/vantage.git
+cd vantage
 nvm install 24.14.0
 nvm use 24.14.0
 npm install

@@ -61,6 +61,9 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   credits, including ECMWF's licence notice, are in Data attribution (ported
   from upstream, Bilawal Sidhu, Gustavo Beneduzi, Daniel Slay, Rehaan
   Delmotra).
+- Voice can show, hide and open the Wind layer (`set_layer_visibility`,
+  `show_data_layers_menu`), including "winds", "wind layer" and "wind
+  forecast".
 
 ### Changed
 

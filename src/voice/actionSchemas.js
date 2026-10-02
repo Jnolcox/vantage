@@ -139,6 +139,7 @@ const schemas = [
             'local-firms',
             'fire-perimeters',
             'alpr-cameras',
+            'wind',
           ],
         },
         enabled: {
@@ -172,6 +173,7 @@ const schemas = [
             'local-firms',
             'fire-perimeters',
             'alpr-cameras',
+            'wind',
           ],
         },
       },

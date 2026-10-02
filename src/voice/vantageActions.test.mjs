@@ -3182,3 +3182,32 @@ test('ISS voice lookup uses the registered satellite instance', async () => {
   assert.deepEqual(calls, [{ latDeg: 30, lonDeg: -97, minElevDeg: 15 }]);
   assert.match(result.error, /No ISS pass above 15/);
 });
+
+test('voice resolves wind phrasings to the Wind layer', async () => {
+  globalThis.window = globalThis.window || { clearTimeout, setTimeout, requestIdleCallback: null };
+  const viewer = {
+    clock: { onTick: { addEventListener: () => () => {} } },
+    scene: { canvas: { addEventListener() {}, removeEventListener() {} } },
+    camera: { moveEnd: { addEventListener() {} } },
+  };
+  const requested = [];
+  let enabled = false;
+  const dataManager = {
+    layers: new Map([['wind', { module: {} }]]),
+    isEnabled: () => enabled,
+    getLayerLifecycleState: () => ({ enabled, lifecycleState: enabled ? 'enabled' : 'disabled', uncertain: false }),
+    getAll: () => [{ id: 'wind', name: 'Wind' }],
+    async setEnabled(id, value) {
+      requested.push(id);
+      enabled = value;
+      return true;
+    },
+  };
+  const runner = createVantageActionRunner({ viewer, styleManager: {}, dataManager });
+  for (const layerId of ['wind', 'winds', 'Wind layer', 'wind forecast']) {
+    const result = await runner('set_layer_visibility', { layerId, enabled: true });
+    assert.equal(result.ok, true, layerId);
+    assert.equal(result.layerId, 'wind', layerId);
+  }
+  assert.deepEqual(requested, ['wind', 'wind', 'wind', 'wind']);
+});

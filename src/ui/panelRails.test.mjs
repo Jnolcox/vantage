@@ -577,3 +577,19 @@ test('narrow-screen rails pin every hosted panel glow inside its panel box', () 
     );
   }
 });
+
+test('clean view and recording hide every panel the right rail hosts', () => {
+  const css = readStylesheet(new URL('../../style.css', import.meta.url))
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/\s+/g, ' ');
+  for (const mode of ['ui-clean-view', 'recording-mode']) {
+    const selector = `body.${mode} #right-context-rail > [data-panel-id]`;
+    const rule = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].find(
+      ([, selectors]) =>
+        selectors.split(',').some((part) => part.trim() === selector),
+    );
+    assert.ok(rule, `${selector} is missing`);
+    assert.match(rule[2], /visibility:\s*hidden\s*!important/);
+    assert.match(rule[2], /pointer-events:\s*none\s*!important/);
+  }
+});

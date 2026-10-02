@@ -1337,3 +1337,12 @@
   .data-count {
   display: none;
 }
+
+body.ui-clean-view #right-context-rail,
+body.recording-mode #right-context-rail,
+body.ui-clean-view #right-context-rail > [data-panel-id],
+body.recording-mode #right-context-rail > [data-panel-id] {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}

@@ -52,6 +52,9 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   `npm run layer-token:check -- --base-ref origin/main` guards published
   assignments and allocation order in pull-request CI. Existing v2 links keep
   their exact meaning (ported from upstream, manjunath22466).
+- Clean view and recording mode hide the right rail and every panel it
+  hosts, rather than a fixed list of panel ids, so panels added to the rail
+  later are covered too (ported from upstream, Bilawal Sidhu).
 
 ### Fixed
 

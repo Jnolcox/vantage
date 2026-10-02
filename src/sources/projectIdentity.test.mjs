@@ -37,16 +37,13 @@ test('the announced version is the package version', () => {
 });
 
 test('the application User-Agent names the application, its version and the fork', () => {
-  assert.equal(
-    PROJECT_USER_AGENT,
-    `gods-eye-view/${PROJECT_VERSION} (+${FORK_URL})`,
-  );
+  assert.equal(PROJECT_USER_AGENT, `vantage/${PROJECT_VERSION} (+${FORK_URL})`);
 });
 
 test('a client User-Agent names the proxy client and the fork', () => {
   assert.equal(
     clientUserAgent('cctv-proxy'),
-    `gods-eye-view-cctv-proxy/1.0 (+${FORK_URL})`,
+    `vantage-cctv-proxy/1.0 (+${FORK_URL})`,
   );
 });
 

@@ -1,5 +1,22 @@
 # Changelog
 
+- Rename the product from God's Eye View to Vantage: page title, Pinokio
+  launcher, voice instructions, logs, docs and the `vantage` package name
+  (outbound User-Agents now read `vantage/<version> (+<repo URL>)`). The
+  repository URL is unchanged for now. Existing installs carry over:
+  - browser storage saved under `godsEyeView.*` / `gev:*` / `gev-*` keys is
+    moved to `vantage.*` / `vantage:*` / `vantage-*` once at startup
+    (`src/storageMigration.js`), keeping scenes, panel layout, layer state,
+    voice cost limits and first-run choices;
+  - `GEV_*` settings are now `VANTAGE_*`; the old names are still read, with
+    a one-time deprecation warning, when the new name is unset, including the
+    lines of an existing `pinokio/ENVIRONMENT`;
+  - `.gev-cache/` and `.gev-logs/` are renamed to `.vantage-cache/` and
+    `.vantage-logs/` when the dev server starts;
+  - scene bundles exported as `gev-scene-bundle` (`.gevbundle.json`) still
+    import. Debug globals are now `window.__vantage*`, DOM events
+    `vantage:*` and response headers `X-Vantage-*`.
+
 - Remove the title bar wordmark, tagline and logo (with its pointer-gaze
   animation and radio broadcast waves) from the scene chrome and loading
   screen; `#title-bar` now only hosts the optional FPS readout.

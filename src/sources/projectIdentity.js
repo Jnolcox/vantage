@@ -10,7 +10,7 @@
  * frames to browsers (NSW_IMAGE_USER_AGENT in server/providers/cctv/).
  */
 
-export const PROJECT_NAME = 'gods-eye-view';
+export const PROJECT_NAME = 'vantage';
 
 /** Application version announced to upstreams; kept equal to package.json. */
 export const PROJECT_VERSION = '0.1.1';
@@ -21,7 +21,7 @@ export const PROJECT_URL = 'https://github.com/Jnolcox/gods-eye-view';
 /** Version of a single proxy client's request shape, independent of the app. */
 const CLIENT_VERSION = '1.0';
 
-/** Application-level User-Agent, e.g. `gods-eye-view/0.1.1 (+<PROJECT_URL>)`. */
+/** Application-level User-Agent, e.g. `vantage/0.1.1 (+<PROJECT_URL>)`. */
 export const PROJECT_USER_AGENT = `${PROJECT_NAME}/${PROJECT_VERSION} (+${PROJECT_URL})`;
 
 /**
@@ -29,7 +29,7 @@ export const PROJECT_USER_AGENT = `${PROJECT_NAME}/${PROJECT_VERSION} (+${PROJEC
  * which part of the application is calling them.
  *
  * @param {string} client Short kebab-case client label, e.g. `cctv-proxy`.
- * @returns {string} e.g. `gods-eye-view-cctv-proxy/1.0 (+<PROJECT_URL>)`.
+ * @returns {string} e.g. `vantage-cctv-proxy/1.0 (+<PROJECT_URL>)`.
  */
 export function clientUserAgent(client) {
   return `${PROJECT_NAME}-${client}/${CLIENT_VERSION} (+${PROJECT_URL})`;

@@ -101,7 +101,7 @@ export class RealtimeConnection {
       const costState = this.cost.bindServedModel(minted.model);
       if (!costState.ratesRecognized) {
         console.warn(
-          `[GEV voice] unrecognised Realtime model "${costState.modelId}" — ` +
+          `[Vantage voice] unrecognised Realtime model "${costState.modelId}" — ` +
             'billing this session at the most expensive known rates. Update the ' +
             'rate table in src/voice/voiceCost.js.',
         );

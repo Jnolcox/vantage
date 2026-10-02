@@ -189,7 +189,7 @@ export class RealtimeDiagnostics {
     this.errors.unshift(record);
     this.errors.length = Math.min(this.errors.length, ERROR_LOG_LIMIT);
     storeErrors(this.errors);
-    console.error('[GEV Realtime]', record);
+    console.error('[Vantage Realtime]', record);
     this.debugLog('error', record);
     this.setStatus('error', formatErrorForDisplay(record));
     return record;

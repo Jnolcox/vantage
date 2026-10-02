@@ -138,7 +138,7 @@ test('a search reaches the upstream identified, and the answer is cached', async
       const headers = calls[0].options.headers;
       assert.match(
         String(headers['User-Agent']),
-        /gods-eye-view\/\d/,
+        /vantage\/\d/,
         'the policy asks for a User-Agent identifying the application',
       );
       assert.equal(

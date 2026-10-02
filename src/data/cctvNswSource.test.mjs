@@ -10,6 +10,7 @@ import {
   fetchCctvImageFromUpstream,
 } from '../../server/providers/cctv/media.js';
 import {
+  CCTV_USER_AGENT,
   NSW_CAMERAS_URL,
   NSW_IMAGE_USER_AGENT,
 } from '../../server/providers/cctv/constants.js';
@@ -100,33 +101,46 @@ test('the browser User-Agent applies to the NSW image host only', async () => {
     cctvUpstreamUserAgent(
       'https://webcams.transport.nsw.gov.au.evil.test/x.jpeg',
     ),
-    'gods-eye-view-cctv-proxy/1.0',
+    CCTV_USER_AGENT,
   );
   assert.equal(
     cctvUpstreamUserAgent(
       'https://example.test/webcams.transport.nsw.gov.au/x.jpeg',
     ),
-    'gods-eye-view-cctv-proxy/1.0',
+    CCTV_USER_AGENT,
   );
-  assert.equal(
-    cctvUpstreamUserAgent('not a url'),
-    'gods-eye-view-cctv-proxy/1.0',
-  );
+  assert.equal(cctvUpstreamUserAgent('not a url'), CCTV_USER_AGENT);
 
   const seen = [];
-  await fetchCctvImageFromUpstream(
+  for (const url of [
+    'https://webcams.transport.nsw.gov.au/livetraffic-webcams/cameras/x.jpeg',
     'https://cctv.austinmobility.io/image/1.jpg',
-    {
+  ]) {
+    await fetchCctvImageFromUpstream(url, {
       timeoutMs: 100,
-      fetchImpl: async (url, init) => {
+      fetchImpl: async (requested, init) => {
         seen.push(init.headers['User-Agent']);
         return new Response(Buffer.from([0xff, 0xd8, 0xff]), {
           headers: { 'Content-Type': 'image/jpeg' },
         });
       },
+    });
+  }
+  assert.deepEqual(seen, [NSW_IMAGE_USER_AGENT, CCTV_USER_AGENT]);
+});
+
+test('an image host that answers with an HTML placeholder is a miss, not a frame', async () => {
+  const frame = await fetchCctvImageFromUpstream(
+    'https://webcams.transport.nsw.gov.au/livetraffic-webcams/cameras/x.jpeg',
+    {
+      timeoutMs: 100,
+      fetchImpl: async () =>
+        new Response('<html>browser only</html>', {
+          headers: { 'Content-Type': 'text/html' },
+        }),
     },
   );
-  assert.deepEqual(seen, ['gods-eye-view-cctv-proxy/1.0']);
+  assert.equal(frame, null);
 });
 
 test('the frame path follows redirects within the host only', async () => {

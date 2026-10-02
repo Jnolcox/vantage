@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { readResponseTextCapped, coalesceProxyRequest } from './sources/httpBody.js';
+import { clientUserAgent } from './sources/projectIdentity.js';
 
 const source = ['local.js', 'common/http.js', 'aircraft/enrichment.js', 'terrain.js', 'space/celestrak.js', 'space/launch-library.js', '../../src/data/spaceProviderRequests.js']
   .map(file => readFileSync(new URL(`../server/providers/${file}`, import.meta.url), 'utf8'))
@@ -32,6 +33,7 @@ function fixture(name, overrides = {}, preview = false) {
     console: { warn: (...args) => logs.push(args.join(' ')), error: (...args) => logs.push(args.join(' ')) },
     setInterval: () => ({ unref() {} }),
     LL2_CACHE_TTL_MS: 15 * 60_000,
+    CELESTRAK_USER_AGENT: clientUserAgent('celestrak-proxy'),
     parseTerrainPoints: () => [[1, 2]],
     resolveTerrainHeightRequest: async () => { throw new Error(detail); },
     ...overrides,

@@ -18,6 +18,7 @@ import { fetchRegionalJson } from '../../server/providers/regional/http.js';
 import { localProviderPlugins } from '../../server/providers/local.js';
 import { createPlaceSearch, createGoogleGeocoder } from '../search/index.js';
 import { createPhotonGeocoder } from '../keylessGeocoder.js';
+import { PROJECT_URL } from '../sources/projectIdentity.js';
 
 const HIT = [
   {
@@ -140,7 +141,11 @@ test('a search reaches the upstream identified, and the answer is cached', async
         /gods-eye-view\/\d/,
         'the policy asks for a User-Agent identifying the application',
       );
-      assert.ok(headers.Referer, 'a Referer is sent alongside it');
+      assert.equal(
+        headers.Referer,
+        PROJECT_URL,
+        'a Referer naming the project is sent alongside it',
+      );
       assert.equal(
         calls[0].options.redirect,
         'error',

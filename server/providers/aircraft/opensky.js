@@ -4,6 +4,13 @@ import {
   readResponseJsonCapped,
 } from '../common/http.js';
 import { requiredFiniteQueryNumber } from '../common/query.js';
+import { clientUserAgent } from '../../../src/sources/projectIdentity.js';
+
+/** Identifies the regional adsb.lol fallback to the adsb.lol API. */
+const ADSBLOL_REGIONAL_USER_AGENT = clientUserAgent(
+  'adsblol-regional-fallback',
+);
+
 // ---------------------------------------------------------------------------
 // OpenSky OAuth2 token + response cache state
 // ---------------------------------------------------------------------------
@@ -260,7 +267,7 @@ async function fetchAdsbLolPointFallback(req) {
           {
             headers: {
               Accept: 'application/json',
-              'User-Agent': 'gods-eye-view-adsblol-regional-fallback/1.0',
+              'User-Agent': ADSBLOL_REGIONAL_USER_AGENT,
             },
             signal: controller.signal,
           },

@@ -1,5 +1,11 @@
 # Changelog
 
+- Build every explicitly set server-side User-Agent (and the Nominatim
+  Referer) from one shared identity in `src/sources/projectIdentity.js`,
+  pointing at the fork. The Live Traffic NSW image host still receives a
+  browser User-Agent, because it serves frames only to browsers; every other
+  upstream sees the project identity.
+
 - Enable responsive trackpad pinch zoom on the globe. Browser pixel-mode
   `Ctrl+wheel` pinch gestures now reach Cesium with bounded amplification,
   while ordinary wheel, line-mode and touch-pinch inputs retain their existing

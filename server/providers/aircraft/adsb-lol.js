@@ -1,3 +1,8 @@
+import { clientUserAgent } from '../../../src/sources/projectIdentity.js';
+
+/** Identifies the military-aircraft proxy to the adsb.lol API. */
+const ADSBLOL_USER_AGENT = clientUserAgent('adsblol-proxy');
+
 /**
  * Vite plugin: adsb.lol military aircraft proxy with 12 s response cache.
  *
@@ -95,7 +100,7 @@ export function adsbLolProxy() {
           return;
         }
         const upstream = await fetch('https://api.adsb.lol/v2/mil', {
-          headers: { 'User-Agent': 'gods-eye-view-adsblol-proxy/1.0' },
+          headers: { 'User-Agent': ADSBLOL_USER_AGENT },
         });
         if (upstream.ok) {
           const body = await upstream.text();

@@ -1,5 +1,9 @@
 import { fetchRegionalText, fetchRegionalJson } from './http.js';
+import { clientUserAgent } from '../../../src/sources/projectIdentity.js';
 import { normalizeRegionalArticles } from '../../../src/data/regionalModel.js';
+
+/** Identifies the proxy to Google News RSS and the GDELT DOC API. */
+const NEWS_USER_AGENT = clientUserAgent('news-proxy');
 
 function decodeRssText(value) {
   return String(value || '')
@@ -71,7 +75,7 @@ async function fetchRegionalNews(place) {
     const xml = await fetchRegionalText(
       `https://news.google.com/rss/search?${rssParams}`,
       {
-        headers: { 'User-Agent': 'GodsEyeView/0.1' },
+        headers: { 'User-Agent': NEWS_USER_AGENT },
         timeoutMs: 12_000,
       },
     );
@@ -93,7 +97,7 @@ async function fetchRegionalNews(place) {
     const payload = await fetchRegionalJson(
       `https://api.gdeltproject.org/api/v2/doc/doc?${params}`,
       {
-        headers: { 'User-Agent': 'GodsEyeView/0.1' },
+        headers: { 'User-Agent': NEWS_USER_AGENT },
         timeoutMs: 12_000,
       },
     );

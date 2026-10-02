@@ -1,4 +1,5 @@
 import path from 'node:path';
+import { PROJECT_USER_AGENT } from '../../../src/sources/projectIdentity.js';
 
 // ---------------------------------------------------------------------------
 // Overpass API proxy constants and cache state
@@ -13,8 +14,7 @@ import path from 'node:path';
  * mirrors are left. Keep this honest and stable — if it is ever refused, the
  * answer is less query volume, not a new name.
  */
-const OVERPASS_USER_AGENT =
-  'gods-eye-view/0.1 (+https://github.com/bilawalsidhu/gods-eye-view)';
+const OVERPASS_USER_AGENT = PROJECT_USER_AGENT;
 
 /** Ordered list of Overpass API mirrors; tried sequentially on failure/rate-limit. */
 const OVERPASS_UPSTREAMS = [

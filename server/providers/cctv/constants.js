@@ -1,3 +1,8 @@
+import { clientUserAgent } from '../../../src/sources/projectIdentity.js';
+
+/** Identifies the CCTV proxy to every camera catalog and image host. */
+export const CCTV_USER_AGENT = clientUserAgent('cctv-proxy');
+
 export const DEFAULT_CCTV_SOURCE_FILE = 'config/cctv_sources.austin.json';
 /** Austin Open Data portal endpoint for traffic camera records. */
 export const DEFAULT_AUSTIN_ROWS_URL =
@@ -210,7 +215,9 @@ export const SYDNEY_CENTER = { lat: -33.8688, lon: 151.2093 };
 /**
  * The NSW webcam host answers non-browser clients with HTTP 200 and a short
  * HTML body instead of the frame (verified 2026-09-13), so the proxy
- * identifies as a browser for that one host. See media.js.
+ * identifies as a browser for that one host and keeps CCTV_USER_AGENT
+ * everywhere else. Without it every Live Traffic NSW frame falls back to the
+ * Street View still or the placeholder card. See media.js.
  */
 export const NSW_IMAGE_USER_AGENT =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';

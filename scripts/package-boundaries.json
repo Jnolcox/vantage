@@ -45,7 +45,8 @@
       "src/data/adsbLolFallback.js",
       "src/data/aisStreamAdapter.js",
       "src/data/aisWatchdog.js",
-      "src/sources/httpBody.js"
+      "src/sources/httpBody.js",
+      "src/sources/projectIdentity.js"
     ],
     "external": ["ws"]
   },
@@ -69,7 +70,8 @@
       "src/data/placeProviderPayloads.js",
       "src/data/routeSteps.js",
       "src/sources/httpBody.js",
-      "src/sources/rateLimit.js"
+      "src/sources/rateLimit.js",
+      "src/sources/projectIdentity.js"
     ],
     "external": []
   },
@@ -87,7 +89,8 @@
       "server/providers/space/launch-library.js",
       "server/providers/common/http.js",
       "src/data/spaceProviderRequests.js",
-      "src/sources/httpBody.js"
+      "src/sources/httpBody.js",
+      "src/sources/projectIdentity.js"
     ],
     "external": []
   },
@@ -139,7 +142,8 @@
       "server/providers/gbfs.js",
       "server/providers/common/http.js",
       "src/data/gbfsSource.js",
-      "src/sources/httpBody.js"
+      "src/sources/httpBody.js",
+      "src/sources/projectIdentity.js"
     ],
     "external": []
   },
@@ -168,7 +172,8 @@
       "scripts/google-server-key.mjs",
       "src/data/cctvFootprint.js",
       "src/sources/cctvTypes.js",
-      "src/sources/httpBody.js"
+      "src/sources/httpBody.js",
+      "src/sources/projectIdentity.js"
     ],
     "external": []
   },
@@ -184,7 +189,8 @@
       "src/data/radioCountry.js",
       "server/providers/common/http.js",
       "src/sources/radioBrowser.js",
-      "src/sources/httpBody.js"
+      "src/sources/httpBody.js",
+      "src/sources/projectIdentity.js"
     ],
     "external": []
   },
@@ -207,7 +213,8 @@
       "src/data/routeSteps.js",
       "src/sources/httpBody.js",
       "src/sources/overpass.js",
-      "src/sources/rateLimit.js"
+      "src/sources/rateLimit.js",
+      "src/sources/projectIdentity.js"
     ],
     "external": []
   },
@@ -226,7 +233,8 @@
       "server/providers/overpass/geometry.js",
       "server/providers/overpass/transport.js",
       "src/sources/httpBody.js",
-      "src/sources/rateLimit.js"
+      "src/sources/rateLimit.js",
+      "src/sources/projectIdentity.js"
     ],
     "external": []
   },
@@ -248,7 +256,8 @@
       "src/data/regionalModel.js",
       "src/nominatimGeocode.js",
       "src/sources/httpBody.js",
-      "src/sources/rateLimit.js"
+      "src/sources/rateLimit.js",
+      "src/sources/projectIdentity.js"
     ],
     "external": []
   },
@@ -1808,7 +1817,8 @@
       "src/director/sharing/lifetime.js",
       "src/director/authoring.js",
       "src/scenes/sharing.js",
-      "src/ui/sceneSharing.js"
+      "src/ui/sceneSharing.js",
+      "src/sources/projectIdentity.js"
     ],
     "external": [
       "@mapbox/vector-tile",
@@ -2202,7 +2212,8 @@
       "src/sources/overpassFeaturesRecords.js",
       "src/sources/overpassFeatures.js",
       "src/sources/featureSource.js",
-      "src/sources/overpassRoads.js"
+      "src/sources/overpassRoads.js",
+      "src/sources/projectIdentity.js"
     ],
     "external": [
       "cesium",
@@ -2551,7 +2562,8 @@
       "src/sources/transitHistory.js",
       "src/sources/transitService.js",
       "src/sources/transitHistoryStore.js",
-      "src/sources/rateLimit.js"
+      "src/sources/rateLimit.js",
+      "src/sources/projectIdentity.js"
     ],
     "external": ["pbf"]
   },
@@ -2561,7 +2573,8 @@
       "src/data/gtfsRealtime.js",
       "src/data/transitFeeds.js",
       "src/data/transitProxy.js",
-      "src/sources/transitHistory.js"
+      "src/sources/transitHistory.js",
+      "src/sources/projectIdentity.js"
     ],
     "external": ["pbf"]
   },
@@ -2621,7 +2634,8 @@
       "src/sources/featureGeometry.js",
       "src/sources/overpassFeaturesRecords.js",
       "src/sources/overpassFeatures.js",
-      "src/sources/featureSource.js"
+      "src/sources/featureSource.js",
+      "src/sources/projectIdentity.js"
     ],
     "external": ["cesium", "egm96-universal", "pbf"]
   },
@@ -2658,7 +2672,8 @@
       "scripts/qa-transit-controls.mjs",
       "scripts/qa-transit-browser.mjs",
       "src/layers/transit/source.js",
-      "src/sources/transitHistory.js"
+      "src/sources/transitHistory.js",
+      "src/sources/projectIdentity.js"
     ],
     "external": ["cesium", "pbf"]
   },
@@ -2680,7 +2695,8 @@
       "src/sources/transitHistory.js",
       "src/sources/transitService.js",
       "src/sources/transitHistoryStore.js",
-      "src/sources/rateLimit.js"
+      "src/sources/rateLimit.js",
+      "src/sources/projectIdentity.js"
     ],
     "external": ["pbf"]
   },

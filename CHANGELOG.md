@@ -49,6 +49,16 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   read `Overpass mirrors unreachable` and `Overpass temporarily unavailable`.
   Failures the layer cannot classify keep the general line (ported from
   upstream, daikaginza).
+- Vantage renders on iPad and iPhone instead of stopping with "An error
+  occurred while rendering." Cesium's per-vertex model atmosphere binds shader
+  `out` parameters directly to varyings, which Apple's Metal/ANGLE backend
+  cannot link, so the program failed and the render loop was torn down. The
+  stage is now kept out of the pipeline on affected devices by clearing
+  `scene.fog.renderable`, which leaves `fog.enabled` (and the fog density that
+  drives 3D Tiles refinement) untouched. Detection is a WebGL2 link probe of
+  the same pattern, whose throwaway context is released immediately, with
+  iOS/iPadOS detection as a backstop. Affected devices lose distance fog on 3D
+  tiles and globe basemaps (ported from upstream, Sean Armstrong).
 
 ## [1.0.0] - 2026-10-02
 

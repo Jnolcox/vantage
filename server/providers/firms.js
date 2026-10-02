@@ -2,6 +2,11 @@ import path from 'node:path';
 import { promises as fsp } from 'node:fs';
 
 import { filterTrailing24h, parseFirmsCsv } from '../../src/data/firmsCsv.js';
+import { clientUserAgent } from '../../src/sources/projectIdentity.js';
+
+const FIRMS_REQUEST_HEADERS = Object.freeze({
+  'User-Agent': clientUserAgent('firms-proxy'),
+});
 
 /**
  * NASA FIRMS live active-fire proxy with a memory + disk cache.
@@ -83,7 +88,10 @@ export function firmsProxy() {
    */
   async function fetchSource(key, source) {
     const url = `https://firms.modaps.eosdis.nasa.gov/api/area/csv/${encodeURIComponent(key)}/${source}/world/2`;
-    const res = await fetch(url, { signal: AbortSignal.timeout(60_000) });
+    const res = await fetch(url, {
+      headers: FIRMS_REQUEST_HEADERS,
+      signal: AbortSignal.timeout(60_000),
+    });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const records = parseFirmsCsv(await res.text());
     if (records === null) throw new Error('non-CSV upstream response');
@@ -146,7 +154,10 @@ export function firmsProxy() {
       statusInflight = (async () => {
         try {
           const url = `https://firms.modaps.eosdis.nasa.gov/mapserver/mapkey_status/?MAP_KEY=${encodeURIComponent(key)}`;
-          const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+          const res = await fetch(url, {
+            headers: FIRMS_REQUEST_HEADERS,
+            signal: AbortSignal.timeout(10_000),
+          });
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const body = await res.json();
           const used = Number(body?.current_transactions);

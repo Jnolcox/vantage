@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import test from 'node:test';
 import { filterTrailing24h, parseFirmsCsv } from './firmsCsv.js';
+import { clientUserAgent } from '../sources/projectIdentity.js';
 
 const config = fs.readFileSync(new URL('../../server/providers/firms.js', import.meta.url), 'utf8');
 const start = config.indexOf('  async function refreshUpstream(key) {');
@@ -77,4 +78,31 @@ test('FIRMS distinguishes all-source failure from successful empty sources', asy
   const result = await createRefresh(async () => [])('fixture');
   assert.deepEqual(result.fires, []);
   assert.deepEqual(result.sources, SOURCES.map(source => ({ source, count: 0, ok: true })));
+});
+
+test('FIRMS sends the Vantage firms-proxy User-Agent with each source request', async () => {
+  const fetchStart = config.indexOf('  async function fetchSource(key, source) {');
+  assert.notEqual(fetchStart, -1, 'FIRMS source fetch exists');
+  const fetchEnd = config.indexOf('\n  }', fetchStart);
+  const requests = [];
+  const fetchSource = new Function('fetch', 'parseFirmsCsv', 'FIRMS_REQUEST_HEADERS',
+    `return (${config.slice(fetchStart, fetchEnd + 4)});`)(
+    async (url, init) => {
+      requests.push({ url, init });
+      return new Response('latitude,longitude,acq_date,acq_time,confidence,frp\n');
+    },
+    parseFirmsCsv,
+    { 'User-Agent': clientUserAgent('firms-proxy') },
+  );
+  await fetchSource('fixture', 'MODIS_NRT');
+  assert.equal(requests.length, 1);
+  assert.match(requests[0].url, /\/MODIS_NRT\/world\/2$/);
+  assert.equal(requests[0].init.headers['User-Agent'], clientUserAgent('firms-proxy'));
+});
+
+test('every FIRMS upstream request carries the shared request headers', () => {
+  const fetchCalls = config.match(/await fetch\(url, \{[^}]*\}/g) ?? [];
+  assert.equal(fetchCalls.length, 2, 'CSV source and mapkey status requests');
+  for (const call of fetchCalls) assert.match(call, /headers: FIRMS_REQUEST_HEADERS/);
+  assert.match(config, /'User-Agent': clientUserAgent\('firms-proxy'\)/);
 });

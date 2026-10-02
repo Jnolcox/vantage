@@ -47,6 +47,9 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
 
 ### Fixed
 
+- The NASA FIRMS proxy now sends the Vantage `firms-proxy` User-Agent with
+  its CSV source and MAP_KEY status requests, as the other server-side
+  proxies do; they previously went out with the runtime's default agent.
 - CCTV media streams whose upstream falls silent after answering are released.
   The 15-second media deadline covered only the wait for response headers, so a
   camera that replied and then stopped sending held both the proxy connection

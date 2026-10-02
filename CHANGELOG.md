@@ -1,5 +1,12 @@
 # Changelog
 
+- Serve the Inter, JetBrains Mono and Material Symbols fonts from
+  `public/fonts/` instead of Google Fonts, so loading the page no longer
+  contacts `fonts.googleapis.com` or `fonts.gstatic.com`. `npm run fonts:fetch`
+  regenerates the subset and its license texts from
+  `src/ui/materialSymbolsGlyphs.json`, downloading everything before it
+  replaces the committed files.
+
 - Make the Realtime voice debug log opt-in. The server writes
   `.gev-logs/realtime-conversations.jsonl` only when
   `GEV_REALTIME_DEBUG_LOG=1` (set in `.env`, or in `pinokio/ENVIRONMENT` under

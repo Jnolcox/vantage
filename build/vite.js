@@ -5,6 +5,30 @@ import {
 } from './content-security-policy.js';
 import cesium from 'vite-plugin-cesium';
 
+/**
+ * Warn when a production build embeds browser keys: dist/*.js then carries
+ * them in clear text for anyone the files are served to. Names only, never
+ * values.
+ */
+export function exposedKeyBuildWarning({ googleApiKey, cesiumToken } = {}) {
+  const exposed = Object.entries({
+    GOOGLE_MAPS_API_KEY: googleApiKey,
+    CESIUM_ION_TOKEN: cesiumToken,
+  })
+    .filter(([, value]) => String(value ?? '').trim() !== '')
+    .map(([name]) => name);
+  return {
+    name: 'vantage-exposed-key-warning',
+    apply: 'build',
+    buildStart() {
+      if (!exposed.length) return;
+      this.warn(
+        `dist/ will contain ${exposed.join(' and ')}. Restrict each key to your site (HTTP referrer or URL restrictions) before hosting the build anywhere others can load it.`,
+      );
+    },
+  };
+}
+
 /** Build browser assets with explicit inputs; never load environment or providers. */
 export function createBrowserViteConfig({
   plugins = [],
@@ -21,6 +45,7 @@ export function createBrowserViteConfig({
       cesium(),
       applicationHtmlPlugin(),
       contentSecurityPolicyHtmlPlugin({ reportOnly: cspReportOnly }),
+      exposedKeyBuildWarning({ googleApiKey, cesiumToken }),
       ...plugins,
     ],
     ...(publicDir === undefined ? {} : { publicDir }),

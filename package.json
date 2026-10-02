@@ -37,6 +37,8 @@
     "format": "node scripts/format.mjs --write",
     "format:check": "node scripts/format.mjs --check",
     "fonts:fetch": "node scripts/fetch-fonts.mjs",
+    "layer-token:next": "node scripts/next-layer-state-token.mjs",
+    "layer-token:check": "node scripts/check-layer-state-tokens.mjs",
     "dev": "vite",
     "dev:secure": "./scripts/dev-secure.sh",
     "opensky:import": "./scripts/opensky-import-client.sh",

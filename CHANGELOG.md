@@ -10,6 +10,18 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
 
 ## [Unreleased]
 
+### Changed
+
+- Share-link layer tokens are durable allocations instead of ad hoc picks.
+  Existing one-character mappings, including the ones upstream published for
+  layers not yet ported, are pinned permanently in
+  `src/data/layerStateTokenReservations.json`; new layers take the next free
+  single-character digit, then two-character base-36 tokens.
+  `npm run layer-token:next -- <layer-id>` reports the next token and
+  `npm run layer-token:check -- --base-ref origin/main` guards published
+  assignments and allocation order in pull-request CI. Existing v2 links keep
+  their exact meaning (ported from upstream, manjunath22466).
+
 ### Fixed
 
 - CCTV media streams whose upstream falls silent after answering are released.
@@ -70,6 +82,9 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   `refreshLayerStats()` now lives on the layer lifecycle, not only on the
   compatibility facade. `scripts/qa-radio.mjs` uses it instead of a private
   panel method (ported from upstream, Bilawal Sidhu).
+- Malformed enabled-layer lists in a share link (empty, repeated or duplicate
+  members, or a repeated `l` field) now reject the whole layer payload instead
+  of restoring a partial list (ported from upstream, manjunath22466).
 
 ## [1.0.0] - 2026-10-02
 

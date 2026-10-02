@@ -27,7 +27,19 @@ export function createBrowserViteConfig({
       // read served modules, which carry the browser keys defined below.
       cors: false,
       fs: {
-        deny: ['.env', '.env.*', '*.{crt,pem}', '**/.git/**', '**/ENVIRONMENT'],
+        // Local caches and the opt-in voice transcript log are private data;
+        // the pre-rename .gev-* names are listed until legacy moves finish.
+        deny: [
+          '.env',
+          '.env.*',
+          '*.{crt,pem}',
+          '**/.git/**',
+          '**/ENVIRONMENT',
+          '**/.vantage-logs/**',
+          '**/.vantage-cache/**',
+          '**/.gev-logs/**',
+          '**/.gev-cache/**',
+        ],
       },
       // These headers protect the document containing Provider Settings.
       headers: {

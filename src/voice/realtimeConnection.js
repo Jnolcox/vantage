@@ -93,6 +93,7 @@ export class RealtimeConnection {
       });
       const token = minted.token;
       if (this.abandonStart(epoch, { localStream, localPc })) return;
+      this.setDebugLogEnabled(minted.debugLogEnabled);
       // Bind the session meter to the model actually served. An env override
       // (OPENAI_REALTIME_MODEL[_MINI]) can point a tier at a different model,
       // and pricing by the tier we asked for would then under-meter and let the
@@ -243,6 +244,10 @@ export class RealtimeConnection {
         releaseStartResources({ localStream, localPc });
         return;
       }
+      // A failed token mint still reports the server's debug-log setting, so
+      // the records explaining this failure reach an enabled log.
+      if (typeof error?.debugLogEnabled === 'boolean')
+        this.setDebugLogEnabled(error.debugLogEnabled);
       const diagnostics = this.connectionDiagnostics();
       this.stop({ preserveStatus: true });
       this.reportError('Realtime connection', error, diagnostics);

@@ -1,5 +1,13 @@
 # Changelog
 
+- Make the Realtime voice debug log opt-in. The server writes
+  `.gev-logs/realtime-conversations.jsonl` only when
+  `GEV_REALTIME_DEBUG_LOG=1` (set in `.env`, or in `pinokio/ENVIRONMENT` under
+  Pinokio); otherwise `/api/realtime/debug-log` answers 204 and the token
+  response's `X-GEV-Debug-Log: 0` header tells the client not to post at all.
+  The header also arrives on failed token requests, so an enabled log records
+  why a voice session could not start.
+
 - Build every explicitly set server-side User-Agent (and the Nominatim
   Referer) from one shared identity in `src/sources/projectIdentity.js`,
   pointing at the fork. The Live Traffic NSW image host still receives a

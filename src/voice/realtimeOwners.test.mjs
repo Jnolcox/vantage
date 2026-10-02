@@ -263,3 +263,45 @@ test('late action or viewport completion cannot resume a stopped or replacement 
     }
   }
 });
+
+test('a session start applies the minted debug-log setting before anything is beaconed', async (t) => {
+  browser(t);
+  for (const debugLogEnabled of [true, false]) {
+    const sent = [];
+    const controller = new GevRealtimeController({
+      runner: async () => ({ ok: true }),
+      backend: {
+        async requestToken() { return { token: 'synthetic', model: resolveVoiceModel('mini').id, debugLogEnabled }; },
+        async negotiate() { return 'answer'; },
+      },
+      debugSink: (record) => sent.push(record.event),
+      ui: { root: { dataset: {}, classList: { remove() {} }, querySelectorAll: () => [] }, status: {}, detail: {} },
+    });
+    await controller.start();
+    controller.stop();
+    if (debugLogEnabled) {
+      assert.ok(sent.includes('session.starting'), 'records held before the mint are flushed');
+      assert.ok(sent.includes('session.token.ready'));
+    } else {
+      assert.deepEqual(sent, [], 'a disabled server log receives nothing');
+    }
+  }
+});
+
+test('a failed token mint still delivers the failure to an enabled debug log', async (t) => {
+  browser(t);
+  const sent = [];
+  const controller = new GevRealtimeController({
+    runner: async () => ({ ok: true }),
+    backend: {
+      async requestToken() { throw Object.assign(new Error('token refused'), { debugLogEnabled: true }); },
+      async negotiate() { return 'answer'; },
+    },
+    debugSink: (record) => sent.push(record.event),
+    ui: { root: { dataset: {}, classList: { remove() {} }, querySelectorAll: () => [] }, status: {}, detail: {} },
+  });
+  await controller.start();
+  assert.ok(sent.includes('session.starting'), 'records held before the mint are flushed');
+  assert.ok(sent.includes('error'), 'the failure itself is recorded');
+  controller.stop();
+});

@@ -43,6 +43,8 @@ test('the fresh template keeps provider credentials out of native Configure', ()
   assert.equal(configured.PINOKIO_SHARE_VAR, '__gev_sharing_disabled__');
   assert.equal(configured.GEV_RATELIMIT_OPENAI_PER_MIN, '30');
   assert.equal(configured.GEV_RATELIMIT_GOOGLE_PER_MIN, '120');
+  assert.equal('GEV_REALTIME_DEBUG_LOG' in configured, false, 'the voice debug log stays off');
+  assert.match(source, /^# GEV_REALTIME_DEBUG_LOG=$/m);
   assert.match(source, /Do not enter credentials in Pinokio 8\.0\.40's native Configure panel/);
   assert.match(source, /trusted local text editor/);
   assert.match(source, /Stop and Start the app/);

@@ -13,6 +13,10 @@ import {
 } from './constants.js';
 import { realtimeInstructions } from './instructions.js';
 import { GEV_REALTIME_TOOLS } from './tools.js';
+import {
+  isRealtimeDebugLogEnabled,
+  REALTIME_DEBUG_LOG_HEADER,
+} from './debug-log.js';
 
 function createRealtimeTokenHandler({
   annotationGuidance,
@@ -23,6 +27,12 @@ function createRealtimeTokenHandler({
 } = {}) {
   return async (req, res) => {
     res.setHeader('Cache-Control', 'no-store');
+    // Set before any early return so the browser learns the debug-log setting
+    // whichever way this mint turns out.
+    res.setHeader(
+      REALTIME_DEBUG_LOG_HEADER,
+      isRealtimeDebugLogEnabled() ? '1' : '0',
+    );
     if (req.method !== 'GET' && req.method !== 'POST') {
       res.statusCode = 405;
       res.setHeader('Content-Type', 'application/json');

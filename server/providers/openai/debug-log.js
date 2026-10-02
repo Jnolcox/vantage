@@ -23,6 +23,29 @@ const REALTIME_DEBUG_LOG_MAX_FILE_BYTES = 32 * 1024 * 1024;
  */
 const REALTIME_DEBUG_LOG_MAX_PER_MIN = 120;
 
+/**
+ * Response header on the Realtime token mint that tells the browser whether
+ * this sink records anything. The client already makes that request at the
+ * start of every voice session, so it learns the setting without a round-trip
+ * of its own and stops beaconing records the server would drop.
+ */
+const REALTIME_DEBUG_LOG_HEADER = 'X-GEV-Debug-Log';
+
+const ENABLED_FLAG_VALUES = new Set(['1', 'true']);
+
+/**
+ * The sink writes full conversation transcripts to disk, so it is opt-in:
+ * GEV_REALTIME_DEBUG_LOG=1 (or `true`). Read per request rather than captured
+ * when the handler is built, so it always reflects the current environment.
+ */
+function isRealtimeDebugLogEnabled(env = process.env) {
+  return ENABLED_FLAG_VALUES.has(
+    String(env.GEV_REALTIME_DEBUG_LOG ?? '')
+      .trim()
+      .toLowerCase(),
+  );
+}
+
 function createDebugLogHandler({ sourceRoot = defaultSourceRoot } = {}) {
   const logDir = path.join(sourceRoot, '.gev-logs');
   const logFile = path.join(logDir, 'realtime-conversations.jsonl');
@@ -68,6 +91,14 @@ function createDebugLogHandler({ sourceRoot = defaultSourceRoot } = {}) {
       return;
     }
 
+    // Disabled is a quiet success rather than a 404, so a page that has not yet
+    // learned the setting never surfaces an error for a diagnostic it sent.
+    if (!isRealtimeDebugLogEnabled()) {
+      res.statusCode = 204;
+      res.end();
+      return;
+    }
+
     if (!allow(clientKey(req))) {
       res.writeHead(429, {
         'Content-Type': 'application/json',
@@ -103,4 +134,8 @@ function createDebugLogHandler({ sourceRoot = defaultSourceRoot } = {}) {
   };
 }
 
-export { createDebugLogHandler };
+export {
+  createDebugLogHandler,
+  isRealtimeDebugLogEnabled,
+  REALTIME_DEBUG_LOG_HEADER,
+};

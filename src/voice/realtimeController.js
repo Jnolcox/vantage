@@ -185,6 +185,7 @@ export class GevRealtimeController extends RealtimeFacade {
         syncCostUi: (...args) => this.syncCostUi(...args),
         setStatus: (...args) => this.setStatus(...args),
         debugLog: (...args) => this.debugLog(...args),
+        setDebugLogEnabled: (...args) => this.setDebugLogEnabled(...args),
         connectionDiagnostics: (...args) => this.connectionDiagnostics(...args),
         setMicrophoneEnabled: (...args) => this.setMicrophoneEnabled(...args),
         startVoiceVisualizer: (...args) => this.startVoiceVisualizer(...args),

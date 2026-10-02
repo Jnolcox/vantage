@@ -563,4 +563,8 @@ export class RealtimeFacade {
   debugLog(...args) {
     return this._diagnostics.debugLog(...args);
   }
+
+  setDebugLogEnabled(...args) {
+    return this._diagnostics.setDebugLogEnabled(...args);
+  }
 }

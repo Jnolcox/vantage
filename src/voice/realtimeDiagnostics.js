@@ -4,6 +4,14 @@ export const ERROR_STORAGE_KEY = 'gev-realtime-errors';
 
 export const DEBUG_LOG_URL = '/api/realtime/debug-log';
 
+/**
+ * Records held while the server's opt-in debug-log setting is still unknown.
+ * The setting arrives with the first token mint, after `controller.created`
+ * and `session.starting` have already been logged; holding a few records lets
+ * an enabled log keep them without a dedicated config request.
+ */
+export const PENDING_DEBUG_LOG_LIMIT = 50;
+
 export function createDebugSessionId() {
   const randomPart = Math.random().toString(36).slice(2, 10);
   return `gev-${Date.now().toString(36)}-${randomPart}`;
@@ -156,6 +164,10 @@ export class RealtimeDiagnostics {
       operations,
     );
     this.debugSink = debugSink;
+    // null until the server says whether it records anything (see
+    // setDebugLogEnabled); the server log is opt-in, so nothing is sent before.
+    this.debugLogEnabled = null;
+    this.pendingDebugRecords = [];
     this.errors = loadStoredErrors();
     this.sessionId = createDebugSessionId();
   }
@@ -199,26 +211,50 @@ export class RealtimeDiagnostics {
       status: this.status,
       connection: this.connectionDiagnostics(),
       recentErrors: this.errors.slice(),
-      debugLog: this.debugSink
-        ? {
-            endpoint: DEBUG_LOG_URL,
-            file: '.gev-logs/realtime-conversations.jsonl',
-            sessionId: this.sessionId,
-          }
-        : null,
+      debugLog:
+        this.debugSink && this.debugLogEnabled
+          ? {
+              endpoint: DEBUG_LOG_URL,
+              file: '.gev-logs/realtime-conversations.jsonl',
+              sessionId: this.sessionId,
+            }
+          : null,
       cost: this.costTracker.state(),
     };
   }
 
+  /** Apply the server's debug-log setting, flushing or dropping held records. */
+  setDebugLogEnabled(enabled) {
+    this.debugLogEnabled = Boolean(enabled);
+    const pending = this.pendingDebugRecords;
+    this.pendingDebugRecords = [];
+    if (this.debugLogEnabled)
+      pending.forEach((record) => this.sendDebug(record));
+  }
+
   debugLog(event, payload = {}) {
+    if (!this.debugSink || this.debugLogEnabled === false) return;
     try {
-      this.debugSink?.({
+      const record = {
         timestamp: new Date().toISOString(),
         sessionId: this.sessionId,
         event,
         status: this.status,
         payload: sanitizeDebugValue(payload),
-      });
+      };
+      if (this.debugLogEnabled) {
+        this.sendDebug(record);
+      } else if (this.pendingDebugRecords.length < PENDING_DEBUG_LOG_LIMIT) {
+        this.pendingDebugRecords.push(record);
+      }
+    } catch {
+      /* Diagnostics cannot interrupt voice. */
+    }
+  }
+
+  sendDebug(record) {
+    try {
+      this.debugSink?.(record);
     } catch {
       /* Diagnostics cannot interrupt voice. */
     }

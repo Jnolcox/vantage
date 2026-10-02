@@ -23,6 +23,7 @@ module.exports = {
           PINOKIO_SHARE_VAR: '{{env.PINOKIO_SHARE_VAR || "__gev_sharing_disabled__"}}',
           GEV_RATELIMIT_OPENAI_PER_MIN: '{{env.GEV_RATELIMIT_OPENAI_PER_MIN || ""}}',
           GEV_RATELIMIT_GOOGLE_PER_MIN: '{{env.GEV_RATELIMIT_GOOGLE_PER_MIN || ""}}',
+          GEV_REALTIME_DEBUG_LOG: '{{env.GEV_REALTIME_DEBUG_LOG || ""}}',
         },
         message: 'node scripts/pinokio-start.mjs',
         on: [{

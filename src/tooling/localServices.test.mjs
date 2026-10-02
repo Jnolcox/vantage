@@ -196,6 +196,7 @@ test('Realtime handler preserves tools and default instructions, isolates suppli
 });
 
 test('debug logging resolves each supplied application directory independently', async (t) => {
+  env(t, 'GEV_REALTIME_DEBUG_LOG', '1');
   const first = root(t),
     second = root(t);
   for (const [sourceRoot, marker] of [
@@ -220,6 +221,35 @@ test('debug logging resolves each supplied application directory independently',
     );
     assert.equal(JSON.parse(readFileSync(file, 'utf8')).marker, marker);
   }
+});
+
+test('the debug log is off by default: the sink answers 204 and writes nothing', async (t) => {
+  // `env` restores once per call in registration order, so it is called once
+  // and the loop below varies the value directly.
+  env(t, 'GEV_REALTIME_DEBUG_LOG', undefined);
+  for (const value of ['', '0', 'false', 'yes', undefined]) {
+    if (value === undefined) delete process.env.GEV_REALTIME_DEBUG_LOG;
+    else process.env.GEV_REALTIME_DEBUG_LOG = value;
+    const sourceRoot = root(t);
+    const response = await request(
+      install(openAiRealtimeProxy({ sourceRoot })).get(
+        '/api/realtime/debug-log',
+      ),
+      { method: 'POST', body: JSON.stringify({ transcript: 'private' }) },
+    );
+    assert.equal(response.status, 204);
+    assert.equal(existsSync(path.join(sourceRoot, '.gev-logs')), false);
+  }
+});
+
+test('the token mint tells the browser whether the debug log is enabled', async (t) => {
+  env(t, 'OPENAI_API_KEY', undefined);
+  const mint = () =>
+    request(install(openAiRealtimeProxy()).get('/api/realtime/token'));
+  env(t, 'GEV_REALTIME_DEBUG_LOG', undefined);
+  assert.equal((await mint()).headers['x-gev-debug-log'], '0');
+  process.env.GEV_REALTIME_DEBUG_LOG = '1';
+  assert.equal((await mint()).headers['x-gev-debug-log'], '1');
 });
 
 test('key setup writes only the supplied application root, retains request guards and stays absent from preview', async (t) => {
@@ -340,6 +370,7 @@ test('OpenAI routes answer generically when the upstream or the request fails', 
 });
 
 test('the debug-log sink stays bounded, rate limited, and quiet about failures', async (t) => {
+  env(t, 'GEV_REALTIME_DEBUG_LOG', '1');
   const sourceRoot = root(t);
   const handler = install(openAiRealtimeProxy({ sourceRoot })).get(
     '/api/realtime/debug-log',
@@ -381,6 +412,7 @@ test('the debug-log sink stays bounded, rate limited, and quiet about failures',
 });
 
 test('an oversized debug-log request receives the fixed error response', async (t) => {
+  env(t, 'GEV_REALTIME_DEBUG_LOG', '1');
   const handler = install(openAiRealtimeProxy({ sourceRoot: root(t) })).get(
     '/api/realtime/debug-log',
   );
@@ -399,6 +431,7 @@ test('an oversized debug-log request receives the fixed error response', async (
 });
 
 test('the debug log rotates instead of growing without bound', async (t) => {
+  env(t, 'GEV_REALTIME_DEBUG_LOG', 'true');
   const sourceRoot = root(t);
   const handler = install(openAiRealtimeProxy({ sourceRoot })).get(
     '/api/realtime/debug-log',

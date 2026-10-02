@@ -748,5 +748,6 @@
   "src/data/aisStreamSentinels.test.mjs",
   "src/sources/projectIdentity.test.mjs",
   "scripts/fetch-fonts.mjs",
-  "src/tooling/fetchFonts.test.mjs"
+  "src/tooling/fetchFonts.test.mjs",
+  "src/storageMigration.test.mjs"
 ]

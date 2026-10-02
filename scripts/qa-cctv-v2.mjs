@@ -916,7 +916,7 @@ async function main() {
       return ui.cameras.find((c) => c.id === camId)?.calBadge;
     }, activeId);
     const baseStoreEmpty = await page.evaluate((camId) => {
-      const raw = localStorage.getItem('godsEyeView.cctv.calibration.v2');
+      const raw = localStorage.getItem('vantage.cctv.calibration.v2');
       const map = raw ? JSON.parse(raw) : {};
       return !(camId in map);
     }, activeId);
@@ -943,7 +943,7 @@ async function main() {
     // only — the store must stay untouched and the camera must read as
     // dirty/EDITED until the explicit save action below.
     const afterPatch = await page.evaluate((camId) => {
-      const raw = localStorage.getItem('godsEyeView.cctv.calibration.v2');
+      const raw = localStorage.getItem('vantage.cctv.calibration.v2');
       const map = raw ? JSON.parse(raw) : {};
       const mod = window.__godsEyeView.dataManager.layers.get('cctv').module;
       const cam = mod.getUIState().cameras.find((c) => c.id === camId);
@@ -978,7 +978,7 @@ async function main() {
     await sleep(200);
 
     const storeEntry = await page.evaluate((camId) => {
-      const raw = localStorage.getItem('godsEyeView.cctv.calibration.v2');
+      const raw = localStorage.getItem('vantage.cctv.calibration.v2');
       const map = raw ? JSON.parse(raw) : {};
       return map[camId] || null;
     }, activeId);
@@ -1028,7 +1028,7 @@ async function main() {
     await sleep(300);
 
     const storeAfterReset = await page.evaluate((camId) => {
-      const raw = localStorage.getItem('godsEyeView.cctv.calibration.v2');
+      const raw = localStorage.getItem('vantage.cctv.calibration.v2');
       const map = raw ? JSON.parse(raw) : {};
       return camId in map;
     }, activeId);
@@ -1786,7 +1786,7 @@ async function main() {
       const mod = window.__godsEyeView.dataManager.layers.get('cctv').module;
       const viewer = window.__godsEyeView.viewer;
       const cam = mod.getUIState().activeCamera;
-      const raw = localStorage.getItem('godsEyeView.cctv.calibration.v2');
+      const raw = localStorage.getItem('vantage.cctv.calibration.v2');
       const map = raw ? JSON.parse(raw) : {};
       let pickable = null;
       let ownsPick = null;

@@ -230,9 +230,9 @@ try {
     'Save persists the selected camera calibration',
     await page.evaluate(() =>
       Boolean(
-        JSON.parse(
-          localStorage.getItem('godsEyeView.cctv.calibration.v2') || '{}',
-        )['qa-camera-a'],
+        JSON.parse(localStorage.getItem('vantage.cctv.calibration.v2') || '{}')[
+          'qa-camera-a'
+        ],
       ),
     ),
   );

@@ -1,3 +1,5 @@
+// Must stay the first import: renames legacy storage before any module reads it.
+import './standalone/legacyStorage.js';
 import { createStandaloneApplication } from './standalone/application.js';
 import { describeError } from './standalone/errors.js';
 

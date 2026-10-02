@@ -129,10 +129,10 @@ const appState = (page) => page.evaluate(() => {
     firmsError: firms?.stats?.error ?? null,
     firmsCount: firms?.stats?.count ?? null,
     detectionOverridden: sm?._detectionUserOverridden ?? null,
-    durable: localStorage.getItem('gev:first-run-mission:v1'),
-    session: sessionStorage.getItem('gev:first-run-mission-session:v1'),
-    layerStateBlob: localStorage.getItem('gev:layer-state:v2'),
-    allocation: localStorage.getItem('gev:detection-allocation:v1'),
+    durable: localStorage.getItem('vantage:first-run-mission:v1'),
+    session: sessionStorage.getItem('vantage:first-run-mission-session:v1'),
+    layerStateBlob: localStorage.getItem('vantage:layer-state:v2'),
+    allocation: localStorage.getItem('vantage:detection-allocation:v1'),
   };
 });
 
@@ -226,7 +226,7 @@ async function runArbitrationSection(page, { shots, consoleErrors }) {
         // Real visibility: `display:none` yields zero client rects.
         onScreen: !!node && node.getClientRects().length > 0,
         topmost: !!(hit && node && node.contains(hit)),
-        session: sessionStorage.getItem('gev:first-run-mission-session:v1'),
+        session: sessionStorage.getItem('vantage:first-run-mission-session:v1'),
       };
     }, LAUNCHER);
 

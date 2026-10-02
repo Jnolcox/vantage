@@ -1421,7 +1421,7 @@ try {
         }));
       // Inspect this known layer-state key only. Keep its value inside the page;
       // evidence receives equality booleans, never stored contents.
-      const durableBefore = localStorage.getItem('gev:layer-state:v2');
+      const durableBefore = localStorage.getItem('vantage:layer-state:v2');
       const state = { ids: [], before: production(), production, durableBefore, collapsed: document.getElementById('data-panel').classList.contains('collapsed') };
       window.__qaDataFocus = state;
       if (typeof window.__gevQaRegisterLayer !== 'function' || typeof window.__gevQaUnregisterLayer !== 'function') {
@@ -1481,7 +1481,7 @@ try {
       return {
         ready: Boolean(offId), offId, fixtureIds: state.ids.slice(0, 2), transitionId,
         productionUnchanged: JSON.stringify(state.before) === JSON.stringify(production()),
-        durableUnchanged: durableBefore === localStorage.getItem('gev:layer-state:v2'),
+        durableUnchanged: durableBefore === localStorage.getItem('vantage:layer-state:v2'),
       };
     });
     check('Data Layers: explicit dev fixtures provide status coverage without changing production layers',
@@ -1520,7 +1520,7 @@ try {
               const probe = window.__qaDataFocus;
               const focusBefore = document.activeElement;
               const productionBefore = JSON.stringify(probe.production());
-              const durableBefore = localStorage.getItem('gev:layer-state:v2');
+              const durableBefore = localStorage.getItem('vantage:layer-state:v2');
               const { application } = await import('/src/main.js');
               application.getComponents().data.presentation.refresh();
               return {
@@ -1529,7 +1529,7 @@ try {
                   && focusBefore.closest('[data-layer-id]')?.dataset.layerId === layerId,
                 productionUnchanged: productionBefore === JSON.stringify(probe.production())
                   && productionBefore === JSON.stringify(probe.before),
-                durableUnchanged: durableBefore === localStorage.getItem('gev:layer-state:v2')
+                durableUnchanged: durableBefore === localStorage.getItem('vantage:layer-state:v2')
                   && durableBefore === probe.durableBefore,
               };
             }, id);
@@ -1545,7 +1545,7 @@ try {
       }
       check('Data Layers: focus traversal leaves production visibility unchanged', await page.evaluate(() => (
         JSON.stringify(window.__qaDataFocus.before) === JSON.stringify(window.__qaDataFocus.production())
-          && window.__qaDataFocus.durableBefore === localStorage.getItem('gev:layer-state:v2')
+          && window.__qaDataFocus.durableBefore === localStorage.getItem('vantage:layer-state:v2')
       )));
 
       await page.setViewport({ width: 1000, height: 900, deviceScaleFactor: 1 });
@@ -1634,12 +1634,12 @@ try {
       // A native user-origin toggle legitimately asks the production state
       // coordinator to persist. Restore the exact pre-fixture value so this
       // hermetic QA journey leaves the user's durable layer snapshot untouched.
-      if (state.durableBefore === null) localStorage.removeItem('gev:layer-state:v2');
-      else localStorage.setItem('gev:layer-state:v2', state.durableBefore);
+      if (state.durableBefore === null) localStorage.removeItem('vantage:layer-state:v2');
+      else localStorage.setItem('vantage:layer-state:v2', state.durableBefore);
       const result = {
         complete: removed.every(Boolean) && state.ids.every((id) => !manager.layers.has(id)),
         productionUnchanged: JSON.stringify(state.before) === JSON.stringify(state.production()),
-        durableUnchanged: state.durableBefore === localStorage.getItem('gev:layer-state:v2'),
+        durableUnchanged: state.durableBefore === localStorage.getItem('vantage:layer-state:v2'),
       };
       delete window.__qaDataFocus;
       return result;

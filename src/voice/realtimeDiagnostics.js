@@ -1,6 +1,6 @@
 export const ERROR_LOG_LIMIT = 30;
 
-export const ERROR_STORAGE_KEY = 'gev-realtime-errors';
+export const ERROR_STORAGE_KEY = 'vantage-realtime-errors';
 
 export const DEBUG_LOG_URL = '/api/realtime/debug-log';
 

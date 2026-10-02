@@ -61,8 +61,8 @@ import {
 } from '../director/document.js';
 
 /** @constant {string} localStorage key for the serialized project */
-const STORAGE_KEY = 'godsEyeView.sceneProject.v2';
-const STORAGE_CHECKPOINT_KEY = 'godsEyeView.sceneProject.checkpoint.v1';
+const STORAGE_KEY = 'vantage.sceneProject.v2';
+const STORAGE_CHECKPOINT_KEY = 'vantage.sceneProject.checkpoint.v1';
 /**
  * Orchestrates deterministic cinematic scene playback.
  *

@@ -189,7 +189,7 @@ try {
   bad.camera.lat = 91;
   await value('Shot camera, timing, packs and actions', JSON.stringify(bad));
   const saved = await page.evaluate(() =>
-    localStorage.getItem('godsEyeView.sceneProject.v2'),
+    localStorage.getItem('vantage.sceneProject.v2'),
   );
   await page.click('[data-director-apply-details]');
   await page.waitForFunction(() =>
@@ -200,7 +200,7 @@ try {
   check(
     'invalid draft preserves saved bytes and existing authored content',
     await page.evaluate(
-      (saved) => localStorage.getItem('godsEyeView.sceneProject.v2') === saved,
+      (saved) => localStorage.getItem('vantage.sceneProject.v2') === saved,
       saved,
     ),
   );

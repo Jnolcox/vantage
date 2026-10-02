@@ -32,7 +32,7 @@ import {
   shareCacheNeedsHeal,
   shareableDetectionState,
 } from '../contactsDetectionPolicy.js';
-const DETECTION_ALLOCATION_STORAGE_KEY = 'gev:detection-allocation:v1';
+const DETECTION_ALLOCATION_STORAGE_KEY = 'vantage:detection-allocation:v1';
 
 /** Own visual preferences, detection overrides and display-control state. */
 export class VisualSettings {

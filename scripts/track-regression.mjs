@@ -682,7 +682,7 @@ async function main() {
 
     // Prove the URL itself owns the result. Remove the same-origin saved
     // preference, then open the captured link as a clean recipient would.
-    await evalPage(() => localStorage.removeItem('gev:layer-state:v2'));
+    await evalPage(() => localStorage.removeItem('vantage:layer-state:v2'));
     await page.goto(trackedShareUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
     await page.waitForFunction(
       () => window.__godsEyeView?.dataManager?.layers?.size >= 12,

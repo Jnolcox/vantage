@@ -56,9 +56,7 @@ try {
     'New creates and selects a persisted empty scene',
     await page.evaluate(() => {
       const director = window.__godsEyeView.sceneDirector;
-      const saved = JSON.parse(
-        localStorage.getItem('godsEyeView.sceneProject.v2'),
-      );
+      const saved = JSON.parse(localStorage.getItem('vantage.sceneProject.v2'));
       return (
         director._getSelectedScene().shots.length === 0 &&
         !!document.querySelector('.scene-shot-empty') &&
@@ -98,10 +96,9 @@ try {
     await page.evaluate(
       () =>
         !document.querySelector('.scene-shot-label b') &&
-        JSON.parse(
-          localStorage.getItem('godsEyeView.sceneProject.v2'),
-        ).scenes.some((scene) =>
-          scene.shots.some((shot) => shot.title === '<b>QA shot</b>'),
+        JSON.parse(localStorage.getItem('vantage.sceneProject.v2')).scenes.some(
+          (scene) =>
+            scene.shots.some((shot) => shot.title === '<b>QA shot</b>'),
         ),
     ),
   );
@@ -288,7 +285,7 @@ try {
     ),
   );
   const savedBefore = await page.evaluate(() =>
-    localStorage.getItem('godsEyeView.sceneProject.v2'),
+    localStorage.getItem('vantage.sceneProject.v2'),
   );
   const futureFile = path.join(shots, 'future.json');
   fs.writeFileSync(futureFile, JSON.stringify({ version: 99, scenes: [] }));
@@ -302,7 +299,7 @@ try {
     'Unsupported versions leave authored state and saved bytes unchanged',
     await page.evaluate(
       (saved) =>
-        localStorage.getItem('godsEyeView.sceneProject.v2') === saved &&
+        localStorage.getItem('vantage.sceneProject.v2') === saved &&
         window.__godsEyeView.sceneDirector._getSelectedScene().title ===
           'QA Scene',
       savedBefore,
@@ -321,7 +318,7 @@ try {
   check(
     'Invalid camera field identifies its path without replacing the project',
     await page.evaluate(
-      (saved) => localStorage.getItem('godsEyeView.sceneProject.v2') === saved,
+      (saved) => localStorage.getItem('vantage.sceneProject.v2') === saved,
       savedBefore,
     ),
   );

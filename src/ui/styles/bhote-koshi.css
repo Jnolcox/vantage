@@ -224,6 +224,50 @@
   margin: 0 auto !important;
 }
 
+.bhote-embedded-consent {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+  height: 100%;
+  padding: 12px 14px;
+  box-sizing: border-box;
+  color: rgba(214, 240, 246, 0.86);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.bhote-embedded-consent p {
+  margin: 0;
+}
+
+.bhote-embedded-consent-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.bhote-embedded-consent button {
+  padding: 5px 9px;
+  border: 1px solid rgba(107, 232, 255, 0.46);
+  background: rgba(107, 232, 255, 0.08);
+  color: #c9f6ff;
+  font: inherit;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+
+.bhote-embedded-consent button:hover,
+.bhote-embedded-consent button:focus-visible {
+  background: rgba(107, 232, 255, 0.2);
+}
+
+.bhote-embedded-consent button[data-consent='always'] {
+  border-color: rgba(107, 232, 255, 0.24);
+  background: transparent;
+}
+
 .bhote-embedded-callout.is-unavailable .bhote-embedded-callout-player {
   min-height: 92px;
   background: repeating-linear-gradient(

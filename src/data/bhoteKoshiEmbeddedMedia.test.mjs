@@ -9,6 +9,10 @@ import {
   publicEmbeddedMediaUrl,
   resolveEmbeddedMediaSource,
 } from './bhoteKoshiEmbeddedMedia.js';
+import { createEmbeddedMediaConsent } from './embeddedMediaConsent.js';
+
+// Tests of provider behaviour run as a viewer who has allowed every provider.
+const ALLOW_ALL = { isAllowed: () => true, allow() {} };
 
 test('Pinokio fallback never creates provider DOM or loads SDKs', async () => {
   const unexpected = () => { throw new Error('Provider resource allocated in Pinokio'); };
@@ -196,7 +200,7 @@ test('pausing YouTube removes its frame and rejects a late load from the stopped
     createElement: (tag) => new Element(tag),
     createElementNS: (_, tag) => new Element(tag),
   };
-  const media = createBhoteKoshiEmbeddedMedia({ viewer: {}, documentRef, globalRef: {} });
+  const media = createBhoteKoshiEmbeddedMedia({ viewer: {}, documentRef, globalRef: {}, consent: ALLOW_ALL });
   const options = { observation: { title: 'Clip', media: { sourceUrl: 'https://youtu.be/DbqRexFxv3k' } }, anchor: {}, autoplay: true };
   assert.equal(media.show(options), true);
   const frame = nodes.find((node) => node.tag === 'iframe');
@@ -321,7 +325,7 @@ function preloadFixture(options = {}) {
     createElement: tag => new Element(tag),
     createElementNS: (_, tag) => new Element(tag),
   };
-  const media = createBhoteKoshiEmbeddedMedia({ viewer: {}, documentRef, globalRef: {}, ...options });
+  const media = createBhoteKoshiEmbeddedMedia({ viewer: {}, documentRef, globalRef: {}, consent: ALLOW_ALL, ...options });
   return { media, root: documentRef.body.children[0] };
 }
 
@@ -393,4 +397,89 @@ test('pausing cancels a mounted Facebook preload and rejects its late ready call
   ready({ type: 'video', instance: { play() { playerCalls.push('play'); }, pause() { playerCalls.push('pause'); } } });
   assert.deepEqual(playerCalls, []);
   media.destroy();
+});
+
+function findAll(node, predicate, found = []) {
+  if (predicate(node)) found.push(node);
+  for (const child of node.children || []) findAll(child, predicate, found);
+  return found;
+}
+
+function memoryStorage() {
+  const values = new Map();
+  return {
+    values,
+    getItem: key => (values.has(key) ? values.get(key) : null),
+    setItem: (key, value) => values.set(key, String(value)),
+  };
+}
+
+test('without consent a provider gets no preconnect, warm-up frame or SDK', () => {
+  const unexpected = () => { throw new Error('provider resource loaded without consent'); };
+  const { media, root } = preloadFixture({
+    consent: createEmbeddedMediaConsent(memoryStorage()),
+    facebookLoader: unexpected, xLoader: unexpected, youtubeLoader: unexpected,
+  });
+  for (const sourceUrl of [
+    'https://youtu.be/DbqRexFxv3k',
+    'https://www.facebook.com/reel/1571491657757829',
+  ]) {
+    assert.equal(media.warm({ sourceUrl }), false, sourceUrl);
+    assert.equal(root.children.length, 0, sourceUrl);
+  }
+  media.destroy();
+});
+
+test('an unconsented card shows a click-to-load gate instead of the provider', () => {
+  const unexpected = () => { throw new Error('provider resource loaded without consent'); };
+  const { media, root } = preloadFixture({
+    consent: createEmbeddedMediaConsent(memoryStorage()),
+    xLoader: unexpected,
+  });
+  for (const sourceUrl of [
+    'https://youtu.be/DbqRexFxv3k',
+    'https://x.com/example/status/123456789',
+  ]) {
+    assert.equal(media.show({ observation: { media: { sourceUrl } }, anchor: {} }), true);
+    assert.deepEqual(findAll(root, node => node.tag === 'iframe'), [], sourceUrl);
+    const buttons = findAll(root, node => node.tag === 'button');
+    assert.deepEqual(buttons.map(button => button.dataset.consent), ['once', 'always'], sourceUrl);
+    assert.equal(findAll(root, node => node.tag === 'a').length, 1, 'the original link stays available');
+  }
+  media.destroy();
+});
+
+test('loading once mounts the provider for this page without remembering it', () => {
+  const storage = memoryStorage();
+  const { media, root } = preloadFixture({ consent: createEmbeddedMediaConsent(storage) });
+  const observation = { media: { sourceUrl: 'https://youtu.be/DbqRexFxv3k' } };
+  media.show({ observation, anchor: {} });
+  findAll(root, node => node.dataset?.consent === 'once')[0].dispatchEvent(new Event('click'));
+  const frame = findAll(root, node => node.tag === 'iframe')[0];
+  assert.match(frame.src, /^https:\/\/www\.youtube-nocookie\.com\/embed\/DbqRexFxv3k/);
+  assert.equal(frame.referrerPolicy, 'strict-origin-when-cross-origin');
+  assert.equal(findAll(root, node => node.tag === 'button').length, 0);
+  assert.equal(storage.values.size, 0);
+  assert.equal(media.warm({ observation }), true, 'the same page may now preload');
+  media.destroy();
+});
+
+test('always allowing a provider is remembered for later visits', () => {
+  const storage = memoryStorage();
+  const first = preloadFixture({ consent: createEmbeddedMediaConsent(storage) });
+  first.media.show({ observation: { media: { sourceUrl: 'https://youtu.be/DbqRexFxv3k' } }, anchor: {} });
+  findAll(first.root, node => node.dataset?.consent === 'always')[0].dispatchEvent(new Event('click'));
+  first.media.destroy();
+  assert.equal(storage.values.get('vantage.embeddedMedia.allow.youtube'), '1');
+  const later = createEmbeddedMediaConsent(storage);
+  assert.equal(later.isAllowed('youtube'), true);
+  assert.equal(later.isAllowed('facebook'), false, 'consent is per provider');
+});
+
+test('consent survives storage that throws', () => {
+  const broken = { getItem() { throw new Error('blocked'); }, setItem() { throw new Error('blocked'); } };
+  const consent = createEmbeddedMediaConsent(broken);
+  assert.equal(consent.isAllowed('x'), false);
+  consent.allow('x', { remember: true });
+  assert.equal(consent.isAllowed('x'), true);
 });

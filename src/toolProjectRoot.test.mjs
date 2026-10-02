@@ -105,7 +105,7 @@ require('node:fs').writeFileSync(process.env.TEST_CAPTURE, JSON.stringify({ cwd:
         'dev',
         '--',
         '--host',
-        'localhost',
+        '127.0.0.1',
         '--port',
         '4173',
         '--force',

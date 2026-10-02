@@ -7,19 +7,22 @@ export function createBrowserViteConfig({
   publicDir,
   googleApiKey,
   cesiumToken,
-  host = 'localhost',
+  host = '127.0.0.1',
   port = 4173,
+  allowedHosts = [],
 } = {}) {
   return {
     plugins: [cesium(), applicationHtmlPlugin(), ...plugins],
     ...(publicDir === undefined ? {} : { publicDir }),
     server: {
-      host: host || 'localhost',
+      host: host || '127.0.0.1',
       port: parseInt(port, 10) || 4173,
-      allowedHosts:
-        host === '0.0.0.0' || host === '::'
-          ? true
-          : ['localhost', '127.0.0.1', '.local'],
+      // Always an explicit list, even when bound to every interface: Vite
+      // accepts IP literals on its own, and `true` would switch off the Host
+      // check that stops DNS rebinding.
+      allowedHosts: [
+        ...new Set(['localhost', '127.0.0.1', '.local', ...allowedHosts]),
+      ],
       fs: {
         deny: ['.env', '.env.*', '*.{crt,pem}', '**/.git/**', '**/ENVIRONMENT'],
       },

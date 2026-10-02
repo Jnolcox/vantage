@@ -13,8 +13,9 @@ cd "$ROOT_DIR"
 PORT="${PORT:-4173}"
 # Local-only by default: the dev server brokers configured API keys, so it
 # should not be reachable from the network unless explicitly requested.
-# Set HOST=0.0.0.0 to opt in to LAN exposure (a warning is printed).
-HOST="${HOST:-localhost}"
+# Set VANTAGE_HOST=0.0.0.0 to opt in to LAN exposure (a warning is printed).
+# HOST is still read as the pre-rename name.
+HOST="${VANTAGE_HOST:-${HOST:-127.0.0.1}}"
 # CCTV source packs (all keyless): Austin (~815 live upstream), Caltrans
 # districts 4,7,11,3 = SF/LA/San Diego/Sacramento (~1,860 live upstream),
 # TfL London JamCams (~870 live upstream), Ontario 511 (~944 live upstream,
@@ -279,7 +280,7 @@ rm -rf node_modules/.vite
 echo "Starting fresh Vantage dev server..."
 case "${HOST}" in
   localhost|127.0.0.1|::1)
-    echo "Local-only mode: reachable at http://localhost:${PORT}/ (set HOST=0.0.0.0 for LAN)"
+    echo "Local-only mode: reachable at http://localhost:${PORT}/ (set VANTAGE_HOST=0.0.0.0 for LAN)"
     ;;
   *)
     LAN_IP=""
@@ -295,13 +296,14 @@ case "${HOST}" in
     fi
     echo ""
     echo "!! =============================================================="
-    echo "!! WARNING: HOST=${HOST} — network-exposed mode."
+    echo "!! WARNING: VANTAGE_HOST=${HOST} — network-exposed mode."
     echo "!! This dev server brokers your configured API keys (OpenAI,"
     echo "!! OpenSky, AISStream, TomTom, FIRMS, LL2, Google) to ANYONE who can"
     echo "!! reach it on the network. Use only on networks you trust."
-    echo "!! Consider the opt-in per-IP throttles VANTAGE_RATELIMIT_OPENAI_PER_MIN"
-    echo "!! and VANTAGE_RATELIMIT_GOOGLE_PER_MIN (see .env.example) — and note"
-    echo "!! they are NOT billing caps; set provider-side budget alerts too."
+    echo "!! Per-IP throttles VANTAGE_RATELIMIT_OPENAI_PER_MIN (default 30)"
+    echo "!! and VANTAGE_RATELIMIT_GOOGLE_PER_MIN (default 60) apply in this mode"
+    echo "!! unless you set them (see .env.example). They are NOT billing caps;"
+    echo "!! set provider-side budget alerts too."
     if [[ -n "${LAN_IP}" ]]; then
       echo "!! LAN URL: http://${LAN_IP}:${PORT}/"
     else
@@ -425,6 +427,7 @@ put_env_if_set CESIUM_ION_TOKEN "${CESIUM_ION_TOKEN}"
 put_env_if_set TOMTOM_API_KEY "${TOMTOM_API_KEY}"
 put_env_if_set FIRMS_MAP_KEY "${FIRMS_MAP_KEY}"
 put_env_if_set LL2_API_TOKEN "${LL2_API_TOKEN}"
+put_env VANTAGE_HOST "${HOST}"
 put_env VANTAGE_LAUNCHER "dev-fresh"
 put_env VANTAGE_KEY_SETUP_EXTERNAL_KEYS "${KEY_SETUP_EXTERNAL_KEYS_CSV}"
 # The explicit markers above replace their pre-rename names; never let a stale

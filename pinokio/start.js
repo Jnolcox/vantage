@@ -6,7 +6,7 @@ module.exports = {
       params: {
         path: '..',
         env: {
-          HOST: '127.0.0.1',
+          VANTAGE_HOST: '127.0.0.1',
           PORT: '{{port}}',
           GOOGLE_MAPS_SERVER_API_KEY: '{{env.GOOGLE_MAPS_SERVER_API_KEY || ""}}',
           GOOGLE_MAPS_API_KEY: '{{env.GOOGLE_MAPS_API_KEY || ""}}',

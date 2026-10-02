@@ -703,10 +703,10 @@ check({
   id: 'A8', group: 'A', desc: 'Default launch binds localhost; LAN is an explicit opt-in that warns (release bar #3)',
   run: async () => {
     const sh_ = readFileSync(resolve(REPO_ROOT, 'scripts/dev-fresh.sh'), 'utf8');
-    const localDefault = /HOST="\$\{HOST:-localhost\}"/.test(sh_);
-    const warns = /WARNING: HOST=/.test(sh_) && /brokers your configured API keys/i.test(sh_);
+    const localDefault = /HOST="\$\{VANTAGE_HOST:-\$\{HOST:-127\.0\.0\.1\}\}"/.test(sh_);
+    const warns = /WARNING: VANTAGE_HOST=/.test(sh_) && /brokers your configured API keys/i.test(sh_);
     const localBanner = /Local-only mode/.test(sh_);
-    if (localDefault && warns && localBanner) return pass('HOST defaults to localhost; LAN path prints the key-exposure warning');
+    if (localDefault && warns && localBanner) return pass('VANTAGE_HOST defaults to 127.0.0.1; LAN path prints the key-exposure warning');
     return fail(`localhost-default=${localDefault} lan-warning=${warns} local-banner=${localBanner}`);
   },
 });
@@ -716,7 +716,7 @@ check({
   run: async () => {
     const t = readFileSync(resolve(REPO_ROOT, '.env.example'), 'utf8');
     const bits = {
-      lan: /HOST=0\.0\.0\.0/.test(t),
+      lan: /VANTAGE_HOST=0\.0\.0\.0/.test(t),
       google: /VANTAGE_RATELIMIT_GOOGLE_PER_MIN/.test(t),
       openai: /VANTAGE_RATELIMIT_OPENAI_PER_MIN/.test(t),
       notBilling: /not.*billing cap|billing cap/i.test(t),

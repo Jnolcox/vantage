@@ -11,8 +11,9 @@ ROOT_DIR="$(cd "${VANTAGE_PROJECT_ROOT:-$SOURCE_ROOT}" && pwd)"
 cd "$ROOT_DIR"
 
 PORT="${PORT:-4173}"
-# Local-only by default; set HOST=0.0.0.0 explicitly to expose on the LAN.
-HOST="${HOST:-localhost}"
+# Local-only by default; set VANTAGE_HOST=0.0.0.0 explicitly to expose on the
+# LAN. HOST is still read as the pre-rename name.
+HOST="${VANTAGE_HOST:-${HOST:-127.0.0.1}}"
 
 GOOGLE_MAPS_API_KEY_ENV="${GOOGLE_MAPS_API_KEY:-}"
 GOOGLE_MAPS_API_KEY_KEYCHAIN=""
@@ -205,4 +206,5 @@ OPENSKY_CLIENT_ID="${OPENSKY_CLIENT_ID}" \
 OPENSKY_CLIENT_SECRET="${OPENSKY_CLIENT_SECRET}" \
 OPENSKY_USERNAME="${OPENSKY_USERNAME}" \
 OPENSKY_PASSWORD="${OPENSKY_PASSWORD}" \
+VANTAGE_HOST="${HOST}" \
 npm run dev -- --host "${HOST}" --port "${PORT}"

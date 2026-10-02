@@ -751,5 +751,6 @@
   "src/tooling/fetchFonts.test.mjs",
   "src/storageMigration.test.mjs",
   "src/vantageEnv.test.mjs",
-  "src/legacyDirectories.test.mjs"
+  "src/legacyDirectories.test.mjs",
+  "src/tooling/networkExposure.test.mjs"
 ]

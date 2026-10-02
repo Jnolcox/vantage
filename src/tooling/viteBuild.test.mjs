@@ -13,7 +13,7 @@ test('explicit build inputs preserve browser-only defines, plugin order and loop
     cesiumToken: 'ion-fixture',
   });
   assert.equal(config.plugins[2], plugin);
-  assert.equal(config.server.host, 'localhost');
+  assert.equal(config.server.host, '127.0.0.1');
   assert.equal(config.server.port, 4173);
   assert.deepEqual(config.server.allowedHosts, [
     'localhost',
@@ -31,10 +31,13 @@ test('explicit build inputs preserve browser-only defines, plugin order and loop
     'import.meta.env.GOOGLE_MAPS_API_KEY': '"browser-fixture"',
     'import.meta.env.CESIUM_ION_TOKEN': '"ion-fixture"',
   });
-  assert.equal(
-    createBrowserViteConfig({ host: '0.0.0.0', port: '4800' }).server
-      .allowedHosts,
-    true,
+  assert.deepEqual(
+    createBrowserViteConfig({
+      host: '0.0.0.0',
+      port: '4800',
+      allowedHosts: ['studio', 'localhost'],
+    }).server.allowedHosts,
+    ['localhost', '127.0.0.1', '.local', 'studio'],
   );
   assert.equal(
     createBrowserViteConfig({ host: '::', port: '4800' }).server.port,

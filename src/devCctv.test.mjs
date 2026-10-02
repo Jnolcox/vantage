@@ -54,7 +54,8 @@ fs.writeFileSync(process.env.CCTV_TEST_CAPTURE, JSON.stringify({ args: process.a
 
 bashTest('CCTV preset starts keyless on localhost through the normal launcher', async () => {
   const result = await launch();
-  assert.deepEqual(result.args, ['run', 'dev', '--', '--host', 'localhost', '--port', '4173', '--force']);
+  assert.deepEqual(result.args, ['run', 'dev', '--', '--host', '127.0.0.1', '--port', '4173', '--force']);
+  assert.equal(result.env.VANTAGE_HOST, '127.0.0.1');
   assert.equal(result.cwd, result.root);
   assert.equal(result.env.CCTV_SOURCES_FILE, 'config/cctv_sources.austin.json');
   assert.equal(result.env.CCTV_PREFER_AUSTIN, '1');
@@ -76,7 +77,13 @@ bashTest('CCTV preset preserves explicit LAN and source overrides with a warning
   assert.equal(result.env.CCTV_MAX_SOURCES, '9');
   assert.equal(result.env.CCTV_CALTRANS_DISTRICTS, '');
   assert.equal(result.env.CCTV_TFL_ENABLED, '0');
-  assert.match(result.output, /!! WARNING: HOST=0\.0\.0\.0/);
+  assert.match(result.output, /!! WARNING: VANTAGE_HOST=0\.0\.0\.0/);
+});
+
+bashTest('CCTV preset prefers VANTAGE_HOST over the legacy HOST name', async () => {
+  const result = await launch({ VANTAGE_HOST: '0.0.0.0', HOST: 'localhost' });
+  assert.deepEqual(result.args.slice(-5), ['--host', '0.0.0.0', '--port', '4173', '--force']);
+  assert.equal(result.env.VANTAGE_HOST, '0.0.0.0');
 });
 
 bashTest('CCTV preset shares dotenv precedence and names-only credential provenance', async () => {

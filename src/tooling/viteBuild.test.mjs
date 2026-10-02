@@ -12,7 +12,7 @@ test('explicit build inputs preserve browser-only defines, plugin order and loop
     googleApiKey: 'browser-fixture',
     cesiumToken: 'ion-fixture',
   });
-  assert.equal(config.plugins[2], plugin);
+  assert.equal(config.plugins[3], plugin);
   assert.equal(config.server.host, '127.0.0.1');
   assert.equal(config.server.port, 4173);
   assert.deepEqual(config.server.allowedHosts, [
@@ -25,9 +25,9 @@ test('explicit build inputs preserve browser-only defines, plugin order and loop
   assert.equal(config.server.cors, false);
   assert.equal(config.preview.cors, false);
   assert.equal(config.server.headers['X-Frame-Options'], 'DENY');
-  assert.equal(
+  assert.match(
     config.server.headers['Content-Security-Policy'],
-    "frame-ancestors 'none'",
+    /frame-ancestors 'none'/,
   );
   assert.deepEqual(config.define, {
     'import.meta.env.GOOGLE_MAPS_API_KEY': '"browser-fixture"',
@@ -56,7 +56,7 @@ test('build helper does not discover environment values or construct local provi
       config.define['import.meta.env.GOOGLE_MAPS_API_KEY'],
       undefined,
     );
-    assert.equal(config.plugins.length, 2);
+    assert.equal(config.plugins.length, 3);
   } finally {
     if (before === undefined) delete process.env.GOOGLE_MAPS_API_KEY;
     else process.env.GOOGLE_MAPS_API_KEY = before;
@@ -67,10 +67,10 @@ test('root config retains existing named exports and standalone provider order',
   for (const [name, value] of Object.entries(providers))
     assert.equal(compatibility[name], value, name);
   const config = standaloneConfig({ mode: 'test' });
-  assert.equal(config.plugins[2].name, 'vantage-api-request-guard');
-  assert.equal(config.plugins[2].enforce, 'pre');
+  assert.equal(config.plugins[3].name, 'vantage-api-request-guard');
+  assert.equal(config.plugins[3].enforce, 'pre');
   assert.deepEqual(
-    config.plugins.slice(3, -1).map((plugin) => plugin.name),
+    config.plugins.slice(4, -1).map((plugin) => plugin.name),
     providers.localProviderPlugins().map((plugin) => plugin.name),
   );
   assert.equal(config.plugins.at(-2).name, 'vantage-key-setup');

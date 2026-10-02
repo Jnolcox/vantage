@@ -1,4 +1,8 @@
 import { applicationHtmlPlugin } from './application-html.js';
+import {
+  contentSecurityPolicyHtmlPlugin,
+  securityHeaders,
+} from './content-security-policy.js';
 import cesium from 'vite-plugin-cesium';
 
 /** Build browser assets with explicit inputs; never load environment or providers. */
@@ -10,9 +14,15 @@ export function createBrowserViteConfig({
   host = '127.0.0.1',
   port = 4173,
   allowedHosts = [],
+  cspReportOnly = false,
 } = {}) {
   return {
-    plugins: [cesium(), applicationHtmlPlugin(), ...plugins],
+    plugins: [
+      cesium(),
+      applicationHtmlPlugin(),
+      contentSecurityPolicyHtmlPlugin({ reportOnly: cspReportOnly }),
+      ...plugins,
+    ],
     ...(publicDir === undefined ? {} : { publicDir }),
     server: {
       host: host || '127.0.0.1',
@@ -41,13 +51,14 @@ export function createBrowserViteConfig({
           '**/.gev-cache/**',
         ],
       },
-      // These headers protect the document containing Provider Settings.
-      headers: {
-        'X-Frame-Options': 'DENY',
-        'Content-Security-Policy': "frame-ancestors 'none'",
-      },
+      // The policy limits where the page can send data, and keeps the
+      // document containing Provider Settings out of other sites' frames.
+      headers: securityHeaders({ reportOnly: cspReportOnly }),
     },
-    preview: { cors: false },
+    preview: {
+      cors: false,
+      headers: securityHeaders({ reportOnly: cspReportOnly }),
+    },
     define: {
       'import.meta.env.GOOGLE_MAPS_API_KEY': JSON.stringify(googleApiKey),
       'import.meta.env.CESIUM_ION_TOKEN': JSON.stringify(cesiumToken),

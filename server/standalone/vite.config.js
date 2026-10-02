@@ -2,6 +2,7 @@ import { fileURLToPath } from 'node:url';
 import { defineConfig, loadEnv } from 'vite';
 import { createBrowserViteConfig } from '../../build/vite.js';
 import { localProviderPlugins } from '../providers/local.js';
+import { readVantageEnv } from '../providers/common/env.js';
 import { apiNotFoundPlugin } from './api-not-found.js';
 import { apiRequestGuardPlugin } from './api-request-guard.js';
 import { moveLegacyDirectories } from './legacy-directories.js';
@@ -37,5 +38,10 @@ export default defineConfig(({ mode }) => {
     host,
     port: process.env.PORT,
     allowedHosts: extraAllowedHosts(process.env, host),
+    // Escape hatch while diagnosing a blocked request: report, don't block.
+    cspReportOnly:
+      String(readVantageEnv('CSP') ?? '')
+        .trim()
+        .toLowerCase() === 'report-only',
   });
 });

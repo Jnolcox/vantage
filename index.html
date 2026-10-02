@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Send only the origin cross-site. Google referrer-restricted keys and
+       YouTube embeds need it, so never tighten this to no-referrer. -->
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
   <title>Vantage</title>
   <link rel="icon" type="image/svg+xml" href="/logo.svg" />
   <link rel="stylesheet" href="/style.css" />

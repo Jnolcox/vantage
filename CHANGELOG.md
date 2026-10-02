@@ -55,6 +55,14 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
 
 ### Fixed
 
+- The right panel rail (Display, CCTV, Context) settles within two layout
+  passes instead of flipping in and out of focus mode as panel heights
+  change. Each pass measures natural heights under a synchronous
+  `data-rail-measuring` override rather than stripping and rewriting
+  allocations, focus mode uses a wider hysteresis band, an automatic
+  collapse schedules at most one follow-up pass, hidden panels are ignored,
+  and only the tactical HUD auto-collapses panels (ported from upstream,
+  Bilawal Sidhu).
 - The NASA FIRMS proxy now sends the Vantage `firms-proxy` User-Agent with
   its CSV source and MAP_KEY status requests, as the other server-side
   proxies do; they previously went out with the runtime's default agent.

@@ -519,6 +519,10 @@ callsign); `stream.aisstream.io` (bounding box from your settings);
 Perimeters; `noaa-gfs-bdp-pds.s3.amazonaws.com` (NOAA GFS) and, only with the
 ECMWF model chosen, `data.ecmwf.int` (ECMWF Open Data) for Wind, at most once
 an hour per model and field (global forecast files, nothing about your view);
+`nowcoast.noaa.gov` (NOAA nowCOAST) for Rain radar, Satellite clouds and
+Lightning density: capabilities every 2 minutes (lightning 10) and the image
+tiles or detail window for the area in view, so NOAA sees the approximate
+bounding box you are looking at, from the server's IP address;
 `earthquake.usgs.gov` (fetched by the browser); `api.tomtom.com` (tile
 coordinates in view); Overpass mirrors `overpass-api.de`,
 `lz4.overpass-api.de`, `overpass.kumi.systems`, `overpass.private.coffee`

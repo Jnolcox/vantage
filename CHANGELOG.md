@@ -41,6 +41,16 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   field for an hour with the previous grid kept for rollovers, retries a
   failed upstream at most once a minute and serves the last good grid as
   stale (ported from upstream, Bilawal Sidhu, Gustavo Beneduzi).
+- Same-origin `/api/weather` proxy for observed weather from NOAA nowCOAST:
+  MRMS radar reflectivity, GOES regional and NESDIS global infrared, and
+  15-minute lightning density. It reads WMS capabilities (2 minutes, 10 for
+  lightning, last good copy served stale for an hour) and serves exact
+  advertised frames as geographic tiles, whole-extent images or 0.25°-rounded
+  detail windows, with the Vantage User-Agent, no redirects, checked and
+  capped PNG bodies, a 12-second deadline, 8 concurrent upstream requests and
+  one shared 16 MiB image cache. Tiles and windows follow the view, so NOAA
+  sees the approximate area in view from the server's address (ported from
+  upstream, Bilawal Sidhu).
 - A WEATHER panel in the right rail, between CCTV and Global Context, that
   holds one card per enabled weather layer (summary, legend, settings,
   actions and readings). It stays hidden while no weather layer is on, opens

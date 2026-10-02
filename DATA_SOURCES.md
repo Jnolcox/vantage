@@ -30,6 +30,7 @@ How to read this:
 | **InciWeb** (inciweb.wildfire.gov)                                    | Per-incident "InciWeb ↗" card links to official incident pages (narratives, evacuation/closure notices) | U.S. government public incident information. Links are matched best-effort by incident name and state, with incident page origin and update times checked on selection. Same-origin `/api/fire-perimeters/inciweb` routes cache the catalog for 1 hour and incident-page times for 30 minutes; linked pages remain InciWeb content | "Incident information: InciWeb (inciweb.wildfire.gov)" |
 | **NOAA GFS** (Global Forecast System, NOAA Open Data on AWS)          | Wind layer: global 10 m wind, optional 2 m temperature and mean sea-level pressure | U.S. public domain (NOAA); fetched keyless by the server through `/api/wind` from the `noaa-gfs-bdp-pds` S3 bucket | "NOAA Global Forecast System (GFS)" (courtesy; not an endorsement) |
 | **ECMWF IFS** (ECMWF Open Data)                                         | Wind layer, ECMWF model: global 10 m wind, optional 2 m temperature and mean sea-level pressure | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) plus the [ECMWF Terms of Use](https://apps.ecmwf.int/datasets/licences/general/); fetched keyless by the server through `/api/wind` from `data.ecmwf.int` | "Based on data and products of the European Centre for Medium-Range Weather Forecasts (ECMWF)", with the CC BY 4.0 link, the modification notice and the ECMWF liability disclaimer |
+| **NOAA nowCOAST** (observed-weather WMS)                               | Rain radar (MRMS base reflectivity, CONUS), Satellite clouds (GOES-19/18 Band 14 regional and the NESDIS global longwave infrared mosaic) and Lightning density (15-minute density derived from Vaisala NLDN/GLD360) | U.S. public domain (NOAA); the lightning layer is NOAA's public Level-5 derived product, [distributable as such](https://ocean.weather.gov/lightning/lightning_pdd.php), not raw Vaisala detections. Fetched keyless by the server through `/api/weather` | "NOAA nowCOAST · NWS/OAR MRMS radar; NESDIS GOES and global satellite partners" and "NOAA/NWS nowCOAST · derived from Vaisala NLDN/GLD360", with the [NOAA disclaimer](https://oceanservice.noaa.gov/disclaimer.html) |
 | **OpenStreetMap (Overpass API)**                                      | Road geometry for traffic                                                                                                           | ODbL 1.0                                                                                                                                                                                                                                                                                                                                              | "© OpenStreetMap contributors"                                                                                                              |
 | **TomTom Traffic API** (flow vector tiles)                            | Live congestion coloring for the traffic layer (optional, BYOK)                                                                     | [TomTom for Developers terms](https://developer.tomtom.com) (proprietary, your own key; free tier currently 200K tile requests/month — see [current pricing](https://docs.tomtom.com/pricing/))                                                                                                                                                       | "Traffic flow data © TomTom" — registered when live mode activates                                                                          |
 | **OpenStreetMap (Overpass API)**                                      | Viewport-bounded mapped installation context for Global Context                                                                     | ODbL 1.0                                                                                                                                                                                                                                                                                                                                              | "© OpenStreetMap contributors" (incomplete mapped context)                                                                                  |
@@ -193,6 +194,57 @@ endorsement. ECMWF data is licensed under CC BY 4.0 and the ECMWF Terms of Use;
 the in-app credit states that the service is based on ECMWF data and products,
 names resampling and animation as modifications and keeps ECMWF's liability
 disclaimer.
+
+### NOAA nowCOAST observed weather
+
+The optional **Rain radar**, **Satellite clouds** and **Lightning density**
+layers show observed weather from three fixed NOAA nowCOAST WMS services under
+`https://nowcoast.noaa.gov/geoserver/observations/`:
+
+- `weather_radar` / `conus_base_reflectivity_mosaic` (style
+  `weather_radar_base_reflectivity`): MRMS base reflectivity for the contiguous
+  United States, approximately 1 km, usually 4-minute updates. dBZ measures
+  radar reflectivity, not rainfall rate, probability or future rain, and a
+  coverage gap does not mean no precipitation.
+- `satellite` / `goes_longwave_imagery` (style `goes-lir`): GOES-19/18 Band 14
+  longwave infrared, approximately 2 km and 5-minute updates, regional North
+  America. `satellite` / `global_longwave_imagery_mosaic` (style `reflectance`):
+  the NESDIS global longwave mosaic, approximately 3 km, hourly, nominally
+  60°S–60°N with typically 2–3 hours of latency. "Clouds only" dims pixels below
+  a brightness ramp (0.40 to 0.70 in linear light); it is a display filter, not a
+  cloud mask or measured cloud volume.
+- `lightning_detection` / `ldn_lightning_strike_density` (style
+  `lightning_density`): 15-minute accumulated density on an approximately 8 km
+  grid, in strikes/km²/min ×10³, covering 110°E across the Pacific and the
+  Americas to 0° and 25°S–80°N. It is not individual GLM flashes, a live strike
+  count, an all-clear or global coverage.
+
+The same-origin `/api/weather` proxy is the only client. `/api/weather/manifest`
+reads the service's WMS 1.3.0 capabilities (at most 512 KiB, no DTDs or
+entities) and returns the product bounds and up to 13 exact observation times
+from the last 24 hours; `/api/weather/tile` and `/api/weather/image` issue one
+WMS 1.1.1 `GetMap` (EPSG:4326, PNG) for a level-0–6 geographic tile, the whole
+product extent, or a 2:1 detail window rounded to 0.25° inside it. The browser
+never supplies an upstream URL, only a product, an advertised time and tile
+coordinates, a size or a window. Every request sends the `vantage-weather-proxy`
+User-Agent and refuses redirects; PNG signatures and dimensions are checked,
+whole images and windows are capped at 16 MiB and tiles at 1 MiB (or their raw
+RGBA size for 512 and 1024 px tiles),
+and a 12-second deadline applies. Up to 8 upstream requests run at once, with
+in-flight requests shared and abandoned ones cancelled. Capabilities are cached
+for 2 minutes (lightning 10 minutes) with the last good copy served as stale for
+up to an hour; images share one 16 MiB, 128-entry cache, and a failed image is
+not retried for 30 seconds.
+
+Tile coordinates and detail windows follow the map view, so **NOAA sees the
+approximate area being viewed** (from the server's IP address, never the
+browser's) while one of these layers is on. Nothing is requested while the
+layers are off.
+
+The interface shows the exact advertised observation time; "latest" means the
+newest available observation, not zero-delay real time. No nowcast is
+synthesized. NOAA data is U.S. public domain; the credit is a courtesy and does
+not imply endorsement.
 
 ### Natural Earth physical regions (`natural_earth/`)
 

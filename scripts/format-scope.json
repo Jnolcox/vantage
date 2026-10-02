@@ -813,6 +813,8 @@
   "src/data/windGrid.test.mjs",
   "src/data/windIfs.test.mjs",
   "src/data/windProxy.test.mjs",
+  "server/providers/weather.js",
+  "src/data/weatherProxy.test.mjs",
   "src/layers/weather/imageryHost.js",
   "src/layers/weather/imageryHost.test.mjs",
   "src/layers/weather/imageryOrder.js",

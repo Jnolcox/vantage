@@ -22,6 +22,7 @@ import { googlePlacesContextProxy } from './places.js';
 import { keySetupEndpoint } from '../standalone/key-setup.js';
 import { firePerimetersProxy } from './firePerimeters.js';
 import { windProxy } from './wind.js';
+import { weatherProxy } from './weather.js';
 
 /** Construct the local provider plugins in their established order. */
 function localProviderPlugins() {
@@ -49,6 +50,7 @@ function localProviderPlugins() {
     googlePlacesContextProxy(),
     firePerimetersProxy(),
     windProxy(),
+    weatherProxy(),
     keySetupEndpoint(),
   ];
 }

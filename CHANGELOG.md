@@ -59,6 +59,13 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   the same pattern, whose throwaway context is released immediately, with
   iOS/iPadOS detection as a backstop. Affected devices lose distance fog on 3D
   tiles and globe basemaps (ported from upstream, Sean Armstrong).
+- Expanding a panel at narrow widths (720px and below) no longer adds
+  spurious scrollbars to the panel stacks. Each panel's decorative glow,
+  absolutely positioned with a negative inset, became 18–20px of scrollable
+  overflow on both axes inside the scrolling stacks; the narrow-screen rules
+  now pin the glow to its panel box, so the stacks still scroll for genuinely
+  tall content and the Context radio popover is not clipped (ported from
+  upstream, Bilawal Sidhu).
 
 ## [1.0.0] - 2026-10-02
 

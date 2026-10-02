@@ -1,3 +1,5 @@
+import { syncChipGroup } from './chipGroup.js';
+import { syncRowList } from './rowList.js';
 import { layerFeedState } from '../data/feedState.js';
 export { layerFeedState } from '../data/feedState.js';
 import { GUIDANCE_STATUSES } from '../loadingFeedback.js';
@@ -308,29 +310,7 @@ export class LayerPanel {
         node.remove();
     }
 
-    const stale = new Map();
-    for (const node of [...container.children]) {
-      if (node.dataset?.chipId) stale.set(node.dataset.chipId, node);
-    }
-
-    for (const chip of chips) {
-      let button = stale.get(chip.id);
-      stale.delete(chip.id);
-      if (!button) {
-        button = document.createElement('button');
-        button.type = 'button';
-        button.dataset.chipId = chip.id;
-        container.appendChild(button);
-      }
-      const state = chip.state || (chip.active ? 'active' : 'idle');
-      button.className = `data-toggle-chip chip-${state}${chip.active ? ' active' : ''}`;
-      if (button.textContent !== chip.label) button.textContent = chip.label;
-      button.title = chip.title || '';
-      button.disabled = Boolean(chip.disabled);
-      button.setAttribute('aria-pressed', chip.active ? 'true' : 'false');
-      button.setAttribute('aria-busy', chip.busy ? 'true' : 'false');
-    }
-    for (const node of stale.values()) node.remove();
+    syncChipGroup(container, chips);
 
     for (const item of legend) {
       const entry = document.createElement('span');
@@ -359,69 +339,7 @@ export class LayerPanel {
    * @param {{ariaLabel?: string, items?: Array<object>}|null} list Descriptor.
    */
   _syncRowList(container, list) {
-    if (!container) return;
-    const items = list?.items || [];
-    container.hidden = items.length === 0;
-    if (list?.ariaLabel) container.setAttribute('aria-label', list.ariaLabel);
-
-    const stale = new Map();
-    for (const node of [...container.children]) {
-      if (node.dataset?.listItemId) stale.set(node.dataset.listItemId, node);
-    }
-    let previous = null;
-    let activeButton = null;
-    for (const item of items) {
-      let entry = stale.get(item.id);
-      stale.delete(item.id);
-      let button;
-      if (!entry) {
-        entry = document.createElement('li');
-        entry.dataset.listItemId = item.id;
-        button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'data-row-list-item';
-        button.dataset.listItemId = item.id;
-        const lead = document.createElement('span');
-        lead.className = 'data-row-list-lead';
-        const text = document.createElement('span');
-        text.className = 'data-row-list-text';
-        button.append(lead, text);
-        entry.appendChild(button);
-      } else {
-        button = entry.querySelector('.data-row-list-item');
-      }
-      // Keep DOM order in step with descriptor order without rebuilding.
-      const anchor = previous ? previous.nextSibling : container.firstChild;
-      if (entry !== anchor) container.insertBefore(entry, anchor);
-      previous = entry;
-      if (!button) continue;
-      const lead = button.querySelector('.data-row-list-lead');
-      const text = button.querySelector('.data-row-list-text');
-      const leadText = String(item.lead ?? '');
-      const bodyText = String(item.text ?? '');
-      if (lead && lead.textContent !== leadText) lead.textContent = leadText;
-      if (text && text.textContent !== bodyText) text.textContent = bodyText;
-      button.disabled = Boolean(item.disabled);
-      button.classList.toggle('note', Boolean(item.disabled));
-      button.classList.toggle('active', Boolean(item.active));
-      button.classList.toggle('current', Boolean(item.current));
-      button.setAttribute('aria-current', item.current ? 'step' : 'false');
-      button.setAttribute('aria-pressed', item.active ? 'true' : 'false');
-      button.title = bodyText;
-      if (item.current) activeButton = button;
-    }
-    for (const node of stale.values()) node.remove();
-    // Follow the flight, but never steal a scroll the reader is making
-    // themselves: only when the step actually changed.
-    if (
-      activeButton &&
-      container.dataset.currentId !== activeButton.dataset.listItemId
-    ) {
-      container.dataset.currentId = activeButton.dataset.listItemId;
-      activeButton.scrollIntoView?.({ block: 'nearest' });
-    } else if (!activeButton) {
-      delete container.dataset.currentId;
-    }
+    syncRowList(container, list);
   }
 
   _refreshTogglePanel() {

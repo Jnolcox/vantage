@@ -788,5 +788,9 @@
   "src/tooling/contentSecurityPolicy.test.mjs",
   "src/tooling/puppeteerConfig.test.mjs",
   "src/voice/viewImageSharing.test.mjs",
-  "src/hudLiveContext.test.mjs"
+  "src/hudLiveContext.test.mjs",
+  "src/ui/chipGroup.js",
+  "src/ui/chipGroup.test.mjs",
+  "src/ui/rowList.js",
+  "src/ui/railTestFixture.mjs"
 ]

@@ -2746,6 +2746,12 @@ function makeControlElement() {
     classList: { toggle() {} },
     appendChild(child) { child.parent = this; this.children.push(child); return child; },
     append(...nodes) { for (const n of nodes) n.parent = this; this.children.push(...nodes); },
+    insertBefore(child, anchor) {
+      child.parent = this;
+      const index = anchor ? this.children.indexOf(anchor) : this.children.length;
+      this.children.splice(index, 0, child);
+      return child;
+    },
     replaceChildren(...nodes) { this.children = [...nodes]; },
     remove() {
       const siblings = this.parent?.children;

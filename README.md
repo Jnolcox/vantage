@@ -1,8 +1,8 @@
 <div align="center">
 
-# 🌐 God's Eye View
+# 🌐 Vantage
 
-[![CI](https://github.com/bilawalsidhu/gods-eye-view/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/bilawalsidhu/gods-eye-view/actions/workflows/ci.yml)
+[![CI](https://github.com/Jnolcox/vantage/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Jnolcox/vantage/actions/workflows/ci.yml)
 
 ### A spy-satellite simulator in your browser — then you realize the sources are public and the data is real.
 
@@ -10,23 +10,9 @@ Photorealistic 3D globe. Live aircraft, ships, satellites, earthquakes, traffic,
 
 _No place left behind._
 
-![Orbital HUD, a tracked live globe, FLIR terrain — then OPEN SOURCED](docs/media/hero-open-source-reveal.gif)
+<!-- TODO: capture: hero — orbital HUD over a tracked live globe, then FLIR terrain -->
 
-<a href="https://www.youtube.com/@bilawalsidhu">
-  <img src="docs/media/youtube-popular-videos.png" alt="The God's Eye View video series on YouTube" width="100%">
-</a>
-
-▶️ **From the project behind the viral God's Eye View series** _(formerly WorldView)_ — [5M+ on YouTube](https://youtube.com/playlist?list=PL6qSg2I-7_koPbDnSMo0QeeHX_RknA2uv&si=nBGYMoHWQw41v93Q) · [25M+ across socials](https://www.google.com/search?q=god%27s+eye+view)
-
-[![Reached #1 on GitHub Trending](https://img.shields.io/badge/%231_GitHub_Trending-thank_you!-F0A63C?style=flat-square&logo=github)](https://x.com/bilawalsidhu/status/2093798887815348521)
-
-🏆 **Reached #1 on GitHub Trending, daily and weekly · August 2026**
-
-**[#8 Product of the Day](https://www.producthunt.com/products/god-s-eye-view?launch=god-s-eye-view)** · Hunted by Chris Messina, creator of the hashtag
-
-_“pretty cool”_ — [Brendan Eich](https://x.com/BrendanEich/status/2094592096401490266), creator of JavaScript and co-founder of Mozilla and Brave · Featured on **[Pinokio](https://pinokio.co/posts/01m1m4p9xxm3qw7dnnpj2wr93g)**
-
-⚡ **Start without API keys.** Install with [Pinokio](https://pinokio.co/apps/github-com-bilawalsidhu-gods-eye-view) or run locally from the terminal. Add optional keys inside the app. **[→ Quick Start](#-quick-start)**
+⚡ **Start without API keys.** Run locally from the terminal, or add this repository to Pinokio. Add optional keys inside the app. **[→ Quick Start](#-quick-start)**
 
 </div>
 
@@ -34,7 +20,7 @@ _“pretty cool”_ — [Brendan Eich](https://x.com/BrendanEich/status/20945920
 
 <div align="center">
 
-**[Quick Start](#-quick-start) · [First Five Minutes](#-the-first-five-minutes) · [Talk to It](#-talk-to-it) · [What's Live](#-whats-on-the-globe) · [Under the Hood](#-under-the-hood) · [Keys & Costs](#-api-keys) · [Contributing](CONTRIBUTING.md)**
+**[Quick Start](#-quick-start) · [First Five Minutes](#-the-first-five-minutes) · [Talk to It](#-talk-to-it) · [What's Live](#-whats-on-the-globe) · [Under the Hood](#-under-the-hood) · [Keys & Costs](#-api-keys) · [Privacy](#-privacy) · [Contributing](CONTRIBUTING.md)**
 
 </div>
 
@@ -42,9 +28,9 @@ _“pretty cool”_ — [Brendan Eich](https://x.com/BrendanEich/status/20945920
 
 ## 🌍 Why This Exists
 
-God's Eye View brings public signals into one explorable globe. Track the world live. Talk to it. Break it. Extend it.
+Vantage brings public signals into one explorable globe. Track the world live. Talk to it. Break it. Extend it.
 
-Flight transponders, ship beacons, orbital elements, seismographs, and public cameras already tell us a lot about the world. God's Eye View puts them in the same place, so you can move between a global picture and an individual aircraft, ship, or street. It runs locally in your browser, with source code you can inspect and extend.
+Flight transponders, ship beacons, orbital elements, seismographs, and public cameras already tell us a lot about the world. Vantage puts them in the same place, so you can move between a global picture and an individual aircraft, ship, or street. It runs locally in your browser, with source code you can inspect and extend.
 
 > Half the magic is that it looks like a forbidden cockpit. The other half is that every line of code is inspectable.
 
@@ -73,14 +59,6 @@ Start with the included data sources, then add your own. Each layer is a separat
 
 ---
 
-<div align="center">
-
-[![YouTube video about the God's Eye View open source release](https://img.youtube.com/vi/GRJaKcXZS94/maxresdefault.jpg)](https://www.youtube.com/watch?v=GRJaKcXZS94)
-
-▶️ **[The full walkthrough of everything below, on YouTube](https://www.youtube.com/watch?v=GRJaKcXZS94)**
-
-</div>
-
 ## ⚡ Quick Start
 
 **Start without an account or API keys.** Both paths open the same app with
@@ -93,19 +71,16 @@ non-commercial use, or a **Google Maps key** for the direct, metered route and
 in-app place search. Provider terms and quotas apply. Add keys through the
 app's **POWER UP** panel; [Keys & Costs](#-api-keys) explains the options.
 
-### Path 1 — One click, no terminal
+### Path 1 — Pinokio, no terminal
 
 1. Install or update [Pinokio](https://desktop.pinokio.co/) to **8.2 or later**.
-2. Open [God's Eye View in Pinokio](https://pinokio.co/apps/github-com-bilawalsidhu-gods-eye-view).
+2. In Pinokio, choose **Download from URL** and paste
+   `https://github.com/Jnolcox/vantage`.
 3. Click **Install**, then **Start**.
 
-Available on **Windows, macOS, and Linux**. The Pinokio maintainer reports
-cross-platform testing of the fixed installer. The launcher installs the
-locked dependencies, finds a free local port, and opens the app.
-
-**Tried before and installation failed?** Update Pinokio and try again.
-Version 8.2 fixes the launcher installation issue;
-[details from the Pinokio maintainer](https://pinokio.co/posts/01m1m4p9xxm3qw7dnnpj2wr93g).
+The repository ships its own Pinokio launcher, which installs the locked
+dependencies, finds a free local port, and opens the app. If you prefer, skip
+Pinokio and use Path 2.
 
 ### Path 2 — Terminal / coding agent
 
@@ -113,8 +88,8 @@ Use **Node.js 24.x (24.14.0 or later) or 26.x**. The setup doctor warns about
 Node 25, which is end-of-life.
 
 ```bash
-git clone https://github.com/bilawalsidhu/gods-eye-view.git
-cd gods-eye-view
+git clone https://github.com/Jnolcox/vantage.git
+cd vantage
 npm ci
 npm run doctor
 npm run dev
@@ -161,7 +136,7 @@ reopens the same panel.
 
 Do not enter credentials in Pinokio 8.0.40's native **Configure** panel: that
 release does not save this nested app file correctly, and it logs submitted
-values. Use **POWER UP → Provider Settings** inside GEV instead. The Pinokio
+values. Use **POWER UP → Provider Settings** inside Vantage instead. The Pinokio
 8.2 announcement fixes installation; it does not establish that this separate
 Configure issue is resolved. On macOS, the Keychain via
 `./scripts/dev-fresh.sh` remains the stronger storage option.
@@ -177,28 +152,28 @@ and it carries the LAN-sharing rules alongside [Keys & Costs](#-api-keys).
 
 ## 🕐 The First Five Minutes
 
-Choose a first-run mission, or try these in order. The GIFs show Google Photorealistic 3D; your starting basemap depends on the keys you've added.
+Choose a first-run mission, or try these in order. Your starting basemap depends on the keys you've added; Google Photorealistic 3D needs a Cesium ion token or a Google Maps key.
 
 1. **Light up the sky.** Take the **Live Contacts** mission (or turn on **Flights** yourself) — thousands of live aircraft, gliding on real telemetry, detection mesh already reading the scene. Click one: the camera locks on, a trail draws behind it, and its live telemetry card comes up.
 2. **Take the controls.** Hit **COCKPIT** on your tracked plane and ride it down, switching sensors mid-flight: NVG into Ironbow FLIR.
 
-![Riding with a live aircraft in cockpit view while switching sensor modes](docs/media/06-cockpit-ar.gif)
+<!-- TODO: capture: Riding with a live aircraft in cockpit view while switching sensor modes -->
 
 3. **Drop into a busy airport.** Search one and descend to the taxiways with **3D** aircraft on — grounded contacts, taxi trails, the whole apron working in real time.
 
-![Moving from a full airport overhead down to close taxiway inspection with 3D flight models](docs/media/start-here/airport-ground-traffic-google-3d.gif)
+<!-- TODO: capture: Moving from a full airport overhead down to close taxiway inspection with 3D flight models -->
 
 4. **Look through a public camera.** Turn on **CCTV** over Austin, London, California, or Finland. The feeds aren't webcam embeds — they project _into_ the 3D city. Cycle coverage to **VIEWSHED** and every camera draws its estimated coverage volume — where it reaches, and where it goes blind.
 
-![Diving into an Austin intersection with a live public camera projected into the 3D scene](docs/media/03-austin-cctv.gif)
+<!-- TODO: capture: Diving into an Austin intersection with a live public camera projected into the 3D scene -->
 
 5. **Track something in orbit.** Turn on **Satellites** and click the ISS — you ride along at orbital distance, orbit ring and all.
 
-![Tracking the ISS along its orbital path as it crosses over Ukraine](docs/media/14-iss-over-ukraine.gif)
+<!-- TODO: capture: Tracking the ISS along its orbital path as it crosses over Ukraine -->
 
 6. **Switch the optics.** Tap `1`–`7` — CRT, NVG, FLIR — and the whole live planet re-renders through a different sensor.
 
-![Cycling a dense live globe through CRT, FLIR, and NVG in one continuous view](docs/media/01-style-sweep.gif)
+<!-- TODO: capture: Cycling a dense live globe through CRT, FLIR, and NVG in one continuous view -->
 
 7. **Talk to it** _(needs an OpenAI key)_: _"Take me to LAX and select the nearest airborne aircraft."_
 8. **Come home.** Hit **Reset Globe** — or just say _"zoom out to a globe view."_
@@ -213,11 +188,11 @@ Choose a first-run mission, or try these in order. The GIFs show Google Photorea
 
 Real-time cockpit mode, built from live flight data: the camera rides your contact with real terrain holding underneath, all the way down — sensor styles come along for the ride, and **Contacts** keeps the 250 km roster one click away: jump plane to plane and fall straight into the next cockpit.
 
-![Jumping between live aircraft and falling straight into a cockpit view](docs/media/12-switch-aircraft-cockpit.gif)
+<!-- TODO: capture: Jumping between live aircraft and falling straight into a cockpit view -->
 
 The cockpit even carries its own briefing strip: nearby live signals, regional headlines, and real local weather — with an opt-in **WX** mode that renders volumetric clouds from actual observations around your aircraft.
 
-![A live military contact ridden through Normal, NVG, and Ironbow FLIR with dense detection](docs/media/start-here/military-cockpit-dense-google-3d.gif)
+<!-- TODO: capture: A live military contact ridden through Normal, NVG, and Ironbow FLIR with dense detection -->
 
 _Why cockpit mode exists: you're riding a real aircraft over real terrain — and you get to pick which sensor you see the world through._
 
@@ -227,7 +202,7 @@ _Why cockpit mode exists: you're riding a real aircraft over real terrain — an
 
 > Voice needs an **OpenAI key**. Without one the entire app still runs — the mic button just reports voice is unavailable. The same key drives the **AI HUD summary**: a terse, five-word intelligence-style readout of the current view that regenerates as you move.
 
-Click **GEV MIC**, grant the microphone, and just talk. This is more than a voice-controlled remote:
+Click **MIC**, grant the microphone, and just talk. This is more than a voice-controlled remote:
 
 - **🧠 It knows what it's looking at.** The agent pulls live scene context before answering — including coordinates, street names, active layers, and view scale. Ask _"what city is this?"_ mid-flight and it knows.
 - **🎯 Entity Q&A.** Click any plane, ship, or datacenter and ask _"what's this?"_ It answers using the object's live telemetry.
@@ -247,9 +222,9 @@ Twenty-eight tools, four jobs — the commands below come straight from the prod
 
 **✍️ Or draw it yourself** — DISPLAY ▸ **Draw**: pick Area, Line or Pin, click the vertices on the real world, double-click to finish, label it. Same whiteboard, same persistence, no microphone needed.
 
-![Zilker Park and Lady Bird Lake drawing onto the 3D city as persistent vector annotations, by voice](docs/media/01-voice-annotate-zilker.gif)
+<!-- TODO: capture: Zilker Park and Lady Bird Lake drawing onto the 3D city as persistent vector annotations, by voice -->
 
-![A spoken distance measurement spanning an airport, inspected from orbit](docs/media/04-airport-distance.gif)
+<!-- TODO: capture: A spoken distance measurement spanning an airport, inspected from orbit -->
 
 **🔎 Interrogate it** — analyst queries against the live layers:
 
@@ -263,7 +238,7 @@ Twenty-eight tools, four jobs — the commands below come straight from the prod
 
 > 🗣️ _"Show me global infrastructure."_ (stages the layers and pulls back to the globe) · _"Play Orbital Watch."_ (a full cinematic scene) · _"Set detection density to fifty percent."_ · _"Next contact — helicopters only."_ (mid-cockpit) · _"Show me space missions."_ · _"Switch to OSM."_ · _"Sharpen the image a touch."_ · _"Switch to the tactical layout."_ · _"What's turned on right now?"_
 
-![The globe populating with the world's radio stations as another live layer](docs/media/15-global-radio-layer.gif)
+<!-- TODO: capture: The globe populating with the world's radio stations as another live layer -->
 
 _Ask for radio near anywhere and the globe starts broadcasting — every station is a real place you can fly to._
 
@@ -299,13 +274,13 @@ Fifteen layers and map sources. **Thirteen have a keyless path.** Some offer add
 | 🟡 A free Cesium ion token | **Google Photorealistic 3D cities** and world terrain — eligible personal, non-commercial use; current ion terms and quotas apply                                            |
 | 🔴 A Google Maps key       | The same 3D direct from Google, plus in-app place search — the billing-enabled, metered route                                                                                |
 
-![A reconstructed Falcon 9 ascent climbing and curving into its projected orbit](docs/media/08-falcon9-replay.gif)
+<!-- TODO: capture: A reconstructed Falcon 9 ascent climbing and curving into its projected orbit -->
 
 _The Space Missions layer replaying a Falcon 9 ascent — labeled `RECONSTRUCTED ESTIMATE`, scrubbable 0.25×–4×._
 
 **Also on the globe:** neighborhood overlays · an optional cockpit WX cloud effect. **Bundled static infrastructure:** Datacenters (4,351), Dams (704), and Submarine Cables (712).
 
-![Diving into the Bahamas and revealing labeled submarine cable routes beneath the globe](docs/media/09-undersea-cables.gif)
+<!-- TODO: capture: Diving into the Bahamas and revealing labeled submarine cable routes beneath the globe -->
 
 **Missing a layer you want?** Open an issue — or add it and send the PR.
 
@@ -331,15 +306,15 @@ Once the basics click, run these:
 
 _🎙️ = voice missions — they need an OpenAI key._
 
-![Resolving a selected aircraft's recent flight path into stacked 3D loops above the terrain](docs/media/07-helicopter-loops.gif)
+<!-- TODO: capture: Resolving a selected aircraft's recent flight path into stacked 3D loops above the terrain -->
 
 _Ask the planet: a military contact's last ~24 hours of real trace history, resolved as stacked 3D loops._
 
-![Asking for a walking route and flying the generated path through the 3D city](docs/media/10-walking-route-flythrough.gif)
+<!-- TODO: capture: Asking for a walking route and flying the generated path through the 3D city -->
 
 _"Draw the walking route… now fly it" — banked turns, eased ends, the camera leading the path like a drone shot._
 
-![Descending from regional context into dense rows of retired aircraft at the boneyard](docs/media/08-boneyard.gif)
+<!-- TODO: capture: Descending from regional context into dense rows of retired aircraft at the boneyard -->
 
 _Walk the boneyard: rows of retired airframes, fully resolved in 3D._
 
@@ -397,7 +372,7 @@ Six keys. Four have a free tier, and the two 🔴 ones are metered:
 | 🟡  | **NASA FIRMS**  | 🔥 Live active fires                                                                                                                                                                 | [firms.modaps.eosdis.nasa.gov](https://firms.modaps.eosdis.nasa.gov/api/map_key/) — free                                                                             |
 | 🟡  | **TomTom**      | 🚦 Live flow speeds and congestion colors for the simulated traffic layer                                                                                                            | [developer.tomtom.com](https://developer.tomtom.com) — free tier available                                                                                           |
 
-![Diving from city-scale live congestion straight into an intersection's public camera](docs/media/05-traffic-to-cctv.gif)
+<!-- TODO: capture: Diving from city-scale live congestion straight into an intersection's public camera -->
 
 _What the TomTom key buys you: rush-hour density painted on the city — then dive from the jam straight into the camera watching it._
 
@@ -449,7 +424,7 @@ Honest numbers, roughly, as of mid-2026 — always check the provider pricing pa
 | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **🟢 Most layers**       | **$0, no signup.** OpenSky anon, USGS, CelesTrak, adsb.lol, city CCTV, Radio Browser, GBFS, Launch Library 2, bundled datasets.                                                                                                                                                                                                                                             |
 | **🟡 The free-key tier** | **$0 with a signup.** AISStream, FIRMS, TomTom, OpenSky, plus Cesium ion for eligible personal/non-commercial use. Provider quotas and eligibility still apply.                                                                                                                                                                                                             |
-| **🗺️ Google 3D tiles**   | **Free through an eligible Cesium ion Community account within its quota; metered through a direct Google key.** Use the direct route for GEV place search or commercial deployment, verify current provider terms, and set budget alerts where billing is enabled.                                                                                                         |
+| **🗺️ Google 3D tiles**   | **Free through an eligible Cesium ion Community account within its quota; metered through a direct Google key.** Use the direct route for Vantage place search or commercial deployment, verify current provider terms, and set budget alerts where billing is enabled.                                                                                                         |
 | **🔴 OpenAI voice**      | **The one that costs real money — so the app meters it for you.** Realtime audio runs a few cents per active minute; an evening of heavy use is single-digit dollars. A live session-spend readout sits next to the mic, with an STD/MINI model toggle, a $2 warning, and a **$5 hard cap that ends the session**. The voice context window is kept deliberately short too. |
 
 Google's direct 3D route is surprisingly generous: the first 1,000 Photorealistic
@@ -466,7 +441,7 @@ Everything above is the deliberately cheap baseline — enough to get a real tas
 
 ### 🔒 Sharing an instance
 
-By default nobody else can reach your server — it binds to localhost. To share on your LAN, opt in explicitly (`npm run dev -- --host 0.0.0.0 --port 4173`, or `HOST=0.0.0.0 ./scripts/dev-fresh.sh` on macOS/Linux) — but know that ⚠️ **a LAN-visible server brokers your configured API keys to anyone who can reach it.** Set the per-IP throttles (`GEV_RATELIMIT_OPENAI_PER_MIN`, `GEV_RATELIMIT_GOOGLE_PER_MIN` — see `.env.example`) and, before anything else, **configure provider quotas, usage limits, and billing alerts**: app-level throttles are not billing caps, and a budget alert alone does not stop spending. Full threat model in [SECURITY.md](SECURITY.md).
+By default nobody else can reach your server — it binds to `127.0.0.1`. To share on your LAN, opt in explicitly (`VANTAGE_HOST=0.0.0.0 npm run dev`, or `VANTAGE_HOST=0.0.0.0 ./scripts/dev-fresh.sh` on macOS/Linux; `HOST` still works as the old name) — but know that ⚠️ **a LAN-visible server brokers your configured API keys to anyone who can reach it.** In that mode the per-IP throttles (`VANTAGE_RATELIMIT_OPENAI_PER_MIN`, `VANTAGE_RATELIMIT_GOOGLE_PER_MIN` — see `.env.example`) switch on at 30 and 60 requests a minute unless you set them, and only local names, IP addresses, this machine's hostname and `VANTAGE_ALLOWED_HOSTS` are accepted as the `Host`. Before anything else, **configure provider quotas, usage limits, and billing alerts**: app-level throttles are not billing caps, and a budget alert alone does not stop spending. Full threat model in [SECURITY.md](SECURITY.md).
 
 Provider Settings is disabled when the server is shared, so remote users cannot
 access the key-entry panel.
@@ -477,22 +452,114 @@ a separately reviewed authentication proxy if remote access is required.
 
 ---
 
+## 🔒 Privacy
+
+- **No telemetry.** The app sends no analytics, crash reports, or usage data
+  anywhere.
+- **Self-hosted fonts.** Fonts ship with the app; nothing is loaded from a font
+  CDN.
+- **Third-party calls are the data you ask for.** Outbound requests go to
+  the data sources behind the layers you use and to the providers whose keys
+  you configure (Google, Cesium ion, OpenAI, and the rest of
+  [Keys & Costs](#-api-keys)). Most feeds are fetched by the local server;
+  some (map tiles, search, Radio streams, embedded media) are loaded directly
+  by your browser. [Network & privacy](#network--privacy) below lists every
+  destination, and [DATA_SOURCES.md](DATA_SOURCES.md) every source's terms.
+- **The page can only talk to listed hosts.** A Content-Security-Policy
+  (`build/content-security-policy.js`) names every third-party origin the
+  browser may reach; anything else is blocked. The referrer policy is
+  `strict-origin-when-cross-origin`, so other sites see only
+  `http://localhost:<port>/`, never the path or your share-link state.
+- **Other websites cannot drive your server.** Every `/api` route refuses a
+  foreign `Host` (DNS rebinding), a foreign `Origin`, and requests the browser
+  marks cross-site, so a page you visit cannot spend your keys.
+- **Voice debug log is opt-in.** Nothing is written to `.vantage-logs/` unless you
+  start the server with `VANTAGE_REALTIME_DEBUG_LOG=1` (in `.env`, or in
+  `pinokio/ENVIRONMENT` under Pinokio). When enabled, the log stays local,
+  contains full voice transcripts, and redacts keys, tokens, and image data.
+- **Identifiable requests.** Server-side requests that set a User-Agent
+  identify this fork through `src/sources/projectIdentity.js`, so data
+  providers can see who is calling them. The Live Traffic NSW camera host is
+  the one exception: it only serves frames to browsers, so it is sent a
+  browser User-Agent.
+
+### Network & privacy
+
+Every place data can leave your machine, when it happens, and what is sent.
+"Browser" means your browser connects to the provider directly (it sees your
+IP address and the origin `http://localhost:<port>/`); "server" means the
+local Vantage server makes the request (the provider sees your machine's IP
+address and the Vantage User-Agent, not your browser).
+
+**Automatic, without a click**
+
+| Destination | From | When | What is sent |
+| --- | --- | --- | --- |
+| `services.arcgisonline.com` (Esri), `tile.openstreetmap.org` | Browser | Keyless basemap, always | Tile coordinates of the area in view |
+| `terrain.reearth.land` | Browser, server | Keyless terrain; `/api/terrain/heights` for ground sampling | Tile coordinates; sampled points |
+| `tile.googleapis.com` | Browser | Google 3D Tiles, with a Google key | Tiles in view, browser key, origin |
+| `api.cesium.com`, `assets.ion.cesium.com`, `assets.cesium.com`, Bing/Azure imagery hosts | Browser | Only with a Cesium ion token | Assets and tiles in view, ion token |
+| `maps.googleapis.com` (Geocoding) | Browser | HUD **Context: Live**, every 15 s and after each move, with a Google key | View-target latitude/longitude |
+| `places.googleapis.com` | Server | Same HUD trigger, with a Google key | Latitude/longitude and radius |
+| `api.openai.com` (Responses) | Server | Same HUD trigger, with an OpenAI key | Place, street and nearby-place labels, enabled layer names |
+| `nominatim.openstreetmap.org`, `api.open-meteo.com`, `news.google.com`, `api.gdeltproject.org` | Server | Cockpit mode: regional brief and weather, refreshed as the contact moves | Latitude/longitude; locality name for news |
+| Layer feeds you have switched on | Server | Polling while the layer is on | See below |
+
+Set DISPLAY ▸ HUD ▸ **Context** to **Local** to stop the three HUD rows; the
+summary line then uses on-device data only.
+
+**Feeds the server polls for a layer you enabled** (no user data unless
+noted): OpenSky (`opensky-network.org`, `auth.opensky-network.org`) and
+`api.adsb.lol` (rounded latitude/longitude of the view for the fallback,
+selected aircraft hex for tracks); `api.adsbdb.com` (selected hex or
+callsign); `stream.aisstream.io` (bounding box from your settings);
+`celestrak.org`; `ll.thespacedevs.com`; `firms.modaps.eosdis.nasa.gov`;
+`earthquake.usgs.gov` (fetched by the browser); `api.tomtom.com` (tile
+coordinates in view); Overpass mirrors `overpass-api.de`,
+`lz4.overpass-api.de`, `overpass.kumi.systems`, `overpass.private.coffee`
+(bounding-box queries of the view); registered GTFS-realtime and GBFS feeds
+(`src/data/transitFeeds.js`, the GBFS catalog); the CCTV catalogs and
+snapshot hosts registered in `server/providers/cctv/` (TfL, Caltrans, Austin,
+Ontario 511, Fintraffic, DriveBC, TxDOT, Tallinn, Tarktee, Warendorf, NSW,
+Calgary); the Radio Browser directory (`*.api.radio-browser.info`).
+
+**Only when you act**
+
+| Destination | From | Trigger | What is sent |
+| --- | --- | --- | --- |
+| `maps.googleapis.com` (Geocoding), then `photon.komoot.io`, then `nominatim.openstreetmap.org` (server) | Browser, server | Search box or a voice search | Query text and a bias from the current view |
+| `places.googleapis.com` | Server | Place and nearby searches, with a Google key | Query, latitude/longitude, radius |
+| `routing.openstreetmap.de` | Server | Directions | Route coordinates |
+| `maps.googleapis.com` (Street View Static) | Server | CCTV fallback frame for a registered camera with no live image | That camera's registered location |
+| `api.openai.com` | Server, then browser | Starting voice | Server mints a short-lived secret; the browser then streams microphone audio, map context and tool results, and — with **VIEW** on — screenshots of local-scale views |
+| The station's stream host | Browser | Pressing play on Radio | Your IP address and origin; `radio-browser` hears about the play only with `VANTAGE_RADIO_REPORT_CLICKS=1` |
+| `www.youtube-nocookie.com`, `www.youtube.com`; `www.facebook.com`, `connect.facebook.net`; `platform.twitter.com` | Browser | Pressing **LOAD** or **ALWAYS ALLOW** on an embedded witness clip | Your IP address, origin and that provider's cookies |
+| `i.ytimg.com` | Browser | Opening the Bhote Koshi event | Your IP address and origin, no cookies (the event's YouTube thumbnail posters) |
+
+Nothing else leaves the machine: no analytics, crash reporting, geolocation
+or IP lookups. API keys stay on the server except `GOOGLE_MAPS_API_KEY` and
+`CESIUM_ION_TOKEN`, which the browser needs and which a production `vite
+build` writes into `dist/` (the build warns; restrict both keys by referrer).
+A plain `npm install` skips Puppeteer's Chrome download (`.puppeteerrc.cjs`).
+
+---
+
 ## 📋 Responsible & Open
 
-God's Eye View runs on **public data, clear sources, and local-first execution.** No secrets, no private datasets, no mystery scraping — anything involving a private key is brokered server-side. It has the visual grammar of a classified ops room, built entirely from open signals and inspectable code.
+Vantage runs on **public data, clear sources, and local-first execution.** No secrets, no private datasets, no mystery scraping — anything involving a private key is brokered server-side. It has the visual grammar of a classified ops room, built entirely from open signals and inspectable code.
 
 **The line.** This project models **events, assets, infrastructure, and systems** — aircraft, vessels, satellites, fires, cameras, cities. It does not build features for named-person search, face recognition, or tracking individuals, and pull requests that cross that line won't be merged. People are not a query type here.
 
-**Come build it.** This is the canonical live 3D client from the project that kicked off the recent wave of spatial-intelligence tools — and it's a canvas: the layers here are the signals one person could find and fuse. Add a city pack, a data source, a style, a voice tool. It's the window through which you see the world; bring that window to others.
+**Come build it.** This is a live 3D client and a canvas: the layers here are the signals one person could find and fuse. Add a city pack, a data source, a style, a voice tool. It's the window through which you see the world; bring that window to others.
 
 **Status:** An evolving open-source client for exploration and learning — a fast, hackable foundation, not a hardened production service. Released under the **[MIT License](LICENSE)**. Bundled and live datasets carry their own terms — see **[DATA_SOURCES.md](DATA_SOURCES.md)**. Security model: **[SECURITY.md](SECURITY.md)**. Want to contribute? **[CONTRIBUTING.md](CONTRIBUTING.md)**.
 
-**Maintainers:** [Bilawal Sidhu](https://github.com/bilawalsidhu) and [Sameh Khamis](https://github.com/samehkhamis) at [Halfpixel](https://halfpixel.ai).
+**Maintainer:** John Nolcox ([@Jnolcox](https://github.com/Jnolcox)).
 
-<sub>Media note: the capture GIFs on this page show Google Photorealistic 3D Tiles and live data layers, used promotionally with in-frame attribution; they aren't licensed for standalone reuse. See [media provenance and permissions](docs/media/README.md); full source terms in [DATA_SOURCES.md](DATA_SOURCES.md).</sub>
+**Origin:** Forked from [bilawalsidhu/gods-eye-view](https://github.com/bilawalsidhu/gods-eye-view) (MIT) and renamed from God's Eye View to Vantage. The original copyright notice is preserved in [LICENSE](LICENSE).
 
 > [!IMPORTANT]
-> God's Eye View is an exploratory visualization of public and third-party data.
+> Vantage is an exploratory visualization of public and third-party data.
 > Data may be delayed, incomplete, modeled, inferred, or wrong. Do not use it
 > for flight or maritime navigation, emergency response, medical or health
 > decisions, investment decisions, or other safety-critical or operational
@@ -500,24 +567,8 @@ God's Eye View runs on **public data, clear sources, and local-first execution.*
 
 ---
 
-## 🧭 What's Next
-
-First — thank you. To everyone who watched the God-view demos and went off to build their own, and to everyone who kept asking for the code: I'm grateful. And when I polled whether this should go open source, you weren't subtle about it:
-
-<img src="docs/media/open-source-survey.png" alt="Community survey on open-sourcing God's Eye View" width="460">
-
-So here it is. Step inside the spy-thriller cockpit — except the data is real — and let's turn this into our shared sandbox for making sense of the world, and have fun doing it. This repo is the baseline, it stays open, and the whole point is for you to break things and bolt on layers we haven't thought of yet.
-
-One heads-up from the inside: build in this space for a week and you learn that **the present is the cheap part**. The moment you try to go back in time — tiling, serving, and scrubbing _what happened_ and _what changed_ at any real resolution — the data gets expensive and the compute gets brutal. That's the long game.
-
-**Update — a hosted version is coming.** We originally planned to keep this repository as the open-source client and build a separate professional product. Then the launch happened, and the loudest request wasn't another feature — it was _"just give me a link."_ So we're building an official hosted God's Eye View at [Halfpixel](https://halfpixel.ai): no installation, just open it in your browser. The hosted version is the easiest way into this open-source project. More soon.
-
----
-
 <div align="center">
 
-▶️ [Watch the God's Eye View series](https://youtube.com/playlist?list=PL6qSg2I-7_koPbDnSMo0QeeHX_RknA2uv&si=nBGYMoHWQw41v93Q) · 📬 [Map the World](https://maptheworld.ai/) — the newsletter behind the project
-
-**🌐 God's Eye View. No place left behind.**
+**🌐 Vantage. No place left behind.**
 
 </div>

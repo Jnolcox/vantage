@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { GEV_ACTION_SCHEMAS, createActionTools } from './actionSchemas.js';
-import { GEV_REALTIME_TOOLS } from '../../server/providers/openai/tools.js';
+import { VANTAGE_ACTION_SCHEMAS, createActionTools } from './actionSchemas.js';
+import { VANTAGE_REALTIME_TOOLS } from '../../server/providers/openai/tools.js';
 
 const stable = (value) =>
   Array.isArray(value)
@@ -17,11 +17,11 @@ const stable = (value) =>
 
 test('the complete Realtime tool payload retains its pre-extraction contract and wording', () => {
   const digest = createHash('sha256')
-    .update(JSON.stringify(stable(GEV_REALTIME_TOOLS)))
+    .update(JSON.stringify(stable(VANTAGE_REALTIME_TOOLS)))
     .digest('hex');
   assert.equal(
     digest,
-    '956381c3456d3644ed7c9cda72910dc68a34d9191e0b3e414ee200c348245214',
+    '2c39d662b61936f0a566e8834b49da77716c55918745b09fe14aa8ed211f8335',
   );
 });
 
@@ -43,10 +43,10 @@ test('descriptions customize wording without changing immutable shared arguments
     'string',
   );
   assert.throws(() => {
-    GEV_ACTION_SCHEMAS[0].parameters.properties.query.type = 'number';
+    VANTAGE_ACTION_SCHEMAS[0].parameters.properties.query.type = 'number';
   }, TypeError);
   assert.equal(
-    JSON.stringify(GEV_ACTION_SCHEMAS).includes('"description"'),
+    JSON.stringify(VANTAGE_ACTION_SCHEMAS).includes('"description"'),
     false,
   );
 });

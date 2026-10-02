@@ -217,9 +217,6 @@ export class RadioControls {
       /* capture already released */
     }
     this._radioTuner?.classList.remove('is-dragging', 'is-static');
-    document
-      .getElementById('title-bar')
-      ?.classList.remove('radio-broadcasting');
     this.radio.endTuning();
   }
 }

@@ -150,18 +150,18 @@
     border: inherit;
   }
 
-  #command-dock:has(#location-bar:not(.collapsed)) > #gev-voice-control,
-  #command-dock:has(#control-panel:not(.collapsed)) > #gev-voice-control {
+  #command-dock:has(#location-bar:not(.collapsed)) > #vantage-voice-control,
+  #command-dock:has(#control-panel:not(.collapsed)) > #vantage-voice-control {
     flex-basis: var(--dock-voice-width);
     width: var(--dock-voice-width);
   }
 
-  #command-dock:has(#location-bar:not(.collapsed)) .gev-voice-visualizer,
-  #command-dock:has(#location-bar:not(.collapsed)) .gev-voice-kicker,
-  #command-dock:has(#location-bar:not(.collapsed)) .gev-voice-readout,
-  #command-dock:has(#control-panel:not(.collapsed)) .gev-voice-visualizer,
-  #command-dock:has(#control-panel:not(.collapsed)) .gev-voice-kicker,
-  #command-dock:has(#control-panel:not(.collapsed)) .gev-voice-readout {
+  #command-dock:has(#location-bar:not(.collapsed)) .vantage-voice-visualizer,
+  #command-dock:has(#location-bar:not(.collapsed)) .vantage-voice-kicker,
+  #command-dock:has(#location-bar:not(.collapsed)) .vantage-voice-readout,
+  #command-dock:has(#control-panel:not(.collapsed)) .vantage-voice-visualizer,
+  #command-dock:has(#control-panel:not(.collapsed)) .vantage-voice-kicker,
+  #command-dock:has(#control-panel:not(.collapsed)) .vantage-voice-readout {
     visibility: visible;
   }
 
@@ -347,11 +347,11 @@
 }
 
 /* Five-pixel standby baseline; live microphone analysis sets --audio-level. */
-#command-dock .gev-voice-visualizer span,
-#command-dock .gev-voice-visualizer span:nth-child(3n),
-#command-dock .gev-voice-visualizer span:nth-child(4n),
-#command-dock .gev-voice-visualizer span:nth-child(5n),
-#command-dock .gev-voice-visualizer span:nth-child(7n) {
+#command-dock .vantage-voice-visualizer span,
+#command-dock .vantage-voice-visualizer span:nth-child(3n),
+#command-dock .vantage-voice-visualizer span:nth-child(4n),
+#command-dock .vantage-voice-visualizer span:nth-child(5n),
+#command-dock .vantage-voice-visualizer span:nth-child(7n) {
   height: var(--audio-level, 5px);
   opacity: var(--audio-opacity, 0.56);
   animation: none;
@@ -361,37 +361,40 @@
 }
 
 #command-dock
-  #gev-voice-control[data-status='listening']
-  .gev-voice-visualizer
+  #vantage-voice-control[data-status='listening']
+  .vantage-voice-visualizer
   span,
 #command-dock
-  #gev-voice-control[data-status='executing']
-  .gev-voice-visualizer
+  #vantage-voice-control[data-status='executing']
+  .vantage-voice-visualizer
   span {
   animation: none;
 }
 
 #command-dock
-  #gev-voice-control[data-speaker='user']
-  :is(#gev-voice-status, #gev-voice-detail) {
+  #vantage-voice-control[data-speaker='user']
+  :is(#vantage-voice-status, #vantage-voice-detail) {
   color: #ffbf69;
 }
 
 #command-dock
-  #gev-voice-control[data-speaker='user']
-  .gev-voice-visualizer
+  #vantage-voice-control[data-speaker='user']
+  .vantage-voice-visualizer
   span {
   background: linear-gradient(to top, #d98a35, #ffcf8a);
   box-shadow: 0 0 0.35rem rgba(255, 191, 105, 0.32);
 }
 
 #command-dock
-  #gev-voice-control[data-speaker='ai']
-  :is(#gev-voice-status, #gev-voice-detail) {
+  #vantage-voice-control[data-speaker='ai']
+  :is(#vantage-voice-status, #vantage-voice-detail) {
   color: var(--accent);
 }
 
-#command-dock #gev-voice-control[data-speaker='ai'] .gev-voice-visualizer span {
+#command-dock
+  #vantage-voice-control[data-speaker='ai']
+  .vantage-voice-visualizer
+  span {
   background: linear-gradient(to top, #28b9db, #71eaff);
   box-shadow: 0 0 0.35rem rgba(54, 220, 255, 0.28);
 }
@@ -458,7 +461,7 @@
 }
 
 /* Keep the microphone neutral at rest; cyan signals hover and live states. */
-#command-dock .gev-mic-orbit {
+#command-dock .vantage-mic-orbit {
   background: rgba(232, 234, 237, 0.04);
   border-color: rgba(232, 234, 237, 0.36);
   box-shadow:
@@ -470,7 +473,7 @@
     box-shadow var(--transition-fast);
 }
 
-#command-dock .gev-mic-orbit img {
+#command-dock .vantage-mic-orbit img {
   filter: grayscale(1) saturate(0) brightness(1.65);
   opacity: 0.68;
   transition:
@@ -478,14 +481,14 @@
     opacity var(--transition-fast);
 }
 
-#command-dock #gev-voice-button:hover .gev-mic-orbit,
+#command-dock #vantage-voice-button:hover .vantage-mic-orbit,
 #command-dock
-  #gev-voice-control:is(
+  #vantage-voice-control:is(
     [data-status='connecting'],
     [data-status='listening']:not([data-microphone='muted']),
     [data-status='executing']
   )
-  .gev-mic-orbit {
+  .vantage-mic-orbit {
   background: rgba(0, 212, 255, 0.06);
   border-color: rgba(0, 212, 255, 0.48);
   box-shadow:
@@ -493,14 +496,14 @@
     0 0 0.9rem rgba(0, 212, 255, 0.12);
 }
 
-#command-dock #gev-voice-button:hover .gev-mic-orbit img,
+#command-dock #vantage-voice-button:hover .vantage-mic-orbit img,
 #command-dock
-  #gev-voice-control:is(
+  #vantage-voice-control:is(
     [data-status='connecting'],
     [data-status='listening']:not([data-microphone='muted']),
     [data-status='executing']
   )
-  .gev-mic-orbit
+  .vantage-mic-orbit
   img {
   filter: none;
   opacity: 1;
@@ -599,7 +602,7 @@
   display: none;
 }
 
-#gev-voice-control .gev-voice-help-tray {
+#vantage-voice-control .vantage-voice-help-tray {
   position: absolute;
   bottom: calc(100% + 0.7rem);
   left: 50%;
@@ -632,7 +635,7 @@
     transform 210ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-#gev-voice-control .gev-voice-help-kicker {
+#vantage-voice-control .vantage-voice-help-kicker {
   color: rgba(54, 220, 255, 0.72);
   font-family: var(--font-mono);
   font-size: 0.46rem;
@@ -640,28 +643,37 @@
   letter-spacing: 0.1rem;
 }
 
-#gev-voice-control .gev-voice-help-detail {
+#vantage-voice-control .vantage-voice-help-detail {
   font-family: var(--font-sans);
   font-size: 0.7rem;
   line-height: 1.35;
   white-space: nowrap;
 }
 
-#gev-voice-control:not([data-status='error']):hover .gev-voice-help-tray,
-#gev-voice-control:not([data-status='error'])
-  #gev-voice-button:focus-visible
-  ~ .gev-voice-help-tray {
+#vantage-voice-control .vantage-voice-help-privacy {
+  max-width: 20rem;
+  color: rgba(223, 245, 250, 0.68);
+  font-family: var(--font-sans);
+  font-size: 0.6rem;
+  line-height: 1.35;
+}
+
+#vantage-voice-control:not([data-status='error']):hover
+  .vantage-voice-help-tray,
+#vantage-voice-control:not([data-status='error'])
+  #vantage-voice-button:focus-visible
+  ~ .vantage-voice-help-tray {
   visibility: visible;
   opacity: 1;
   transform: translate(-50%, 0) scale(1);
 }
 
-#command-dock.dock-has-pinned-tray .gev-voice-help-tray {
+#command-dock.dock-has-pinned-tray .vantage-voice-help-tray {
   bottom: calc(100% + 1.7rem + var(--dock-pinned-stack-height));
 }
 
 @media (prefers-reduced-motion: reduce) {
-  #gev-voice-control .gev-voice-help-tray {
+  #vantage-voice-control .vantage-voice-help-tray {
     transition: none;
   }
   .radio-tuner-needle,

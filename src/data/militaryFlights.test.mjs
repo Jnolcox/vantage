@@ -125,7 +125,7 @@ test('military first update forwards caller cancellation into the feed request',
 test('nonempty adsb.lol payload with zero usable rows cannot prove share target absence', async () => {
   _setTrackedMilitaryRefreshStateForTest({
     icao24: 'ae1234',
-    entity: { gevLabelModel: { title: 'WARM', details: [] } },
+    entity: { vantageLabelModel: { title: 'WARM', details: [] } },
     billboard: { show: false },
     billboardCollection: { show: true, remove() {} },
     viewer: { camera: { positionCartographic: null }, scene: {} },
@@ -150,7 +150,7 @@ test('nonempty adsb.lol payload with zero usable rows cannot prove share target 
 
 test('military poll refreshes tracked callsign/altitude/kts and marks a missed poll STALE', async () => {
   const icao24 = 'ae01ce';
-  const entity = { gevLabelModel: { title: 'OLD', details: [] } };
+  const entity = { vantageLabelModel: { title: 'OLD', details: [] } };
   const billboard = {
     position: Cesium.Cartesian3.fromDegrees(-97.0, 31.0, 8_000),
     color: Cesium.Color.WHITE,
@@ -208,12 +208,12 @@ test('military poll refreshes tracked callsign/altitude/kts and marks a missed p
 
   try {
     await militaryFlightsLayer.update(viewer);
-    assert.equal(entity.gevLabelModel.title, 'RCH451');
-    assert.match(entity.gevLabelModel.details.join(' · '), /28000 ft/);
-    assert.match(entity.gevLabelModel.details.join(' · '), /400 kt/);
+    assert.equal(entity.vantageLabelModel.title, 'RCH451');
+    assert.match(entity.vantageLabelModel.details.join(' · '), /28000 ft/);
+    assert.match(entity.vantageLabelModel.details.join(' · '), /400 kt/);
 
     await militaryFlightsLayer.update(viewer);
-    assert.match(entity.gevLabelModel.title, /STALE/);
+    assert.match(entity.vantageLabelModel.title, /STALE/);
   } finally {
     globalThis.fetch = realFetch;
   }
@@ -226,7 +226,7 @@ test('cached military snapshots retain their observation time and expose stale f
   const viewer = { camera: { positionCartographic: null }, scene: {} };
   _setTrackedMilitaryRefreshStateForTest({
     icao24: 'ae01ce',
-    entity: { gevLabelModel: { title: 'RCH451', details: [] } },
+    entity: { vantageLabelModel: { title: 'RCH451', details: [] } },
     billboard: { position: Cesium.Cartesian3.fromDegrees(-97, 31, 8000), show: false },
     billboardCollection: { show: false, remove() {} },
     viewer,
@@ -322,7 +322,7 @@ test('real military track path creates no native label and publishes every cache
   const realFetch = globalThis.fetch;
   globalThis.window = new EventTarget();
   const selectionEvents = [];
-  globalThis.window.addEventListener('gev:awareness-subject-selected', (event) => {
+  globalThis.window.addEventListener('vantage:awareness-subject-selected', (event) => {
     selectionEvents.push(event.detail);
   });
   globalThis.fetch = async () => ({ ok: false });
@@ -357,7 +357,7 @@ test('real military track path creates no native label and publishes every cache
     assert.ok(entity instanceof Cesium.Entity, 'trackById must create the real Cesium entity');
     assert.equal(entity.label, undefined);
     assert.ok(entities.values.every((candidate) => candidate.label === undefined));
-    assert.deepEqual(entity.gevLabelModel, {
+    assert.deepEqual(entity.vantageLabelModel, {
       title: 'RCH451',
       details: [
         'C17 · 05-8152',
@@ -371,7 +371,7 @@ test('real military track path creates no native label and publishes every cache
     assert.equal(militaryFlightsLayer.trackById(icao24, { origin: 'user' }), true);
     assert.equal(cancelledFlights, initialCancelledFlights, 'ordinary repeated tracking stays camera-idempotent');
     assert.equal(selectionEvents.at(-1)?.origin, 'user', 'same-target selection upgrades durable authority');
-    assert.equal(entity.gevSelectionOrigin, 'user');
+    assert.equal(entity.vantageSelectionOrigin, 'user');
     assert.equal(militaryFlightsLayer.refocusTrackedById('different-flight'), false);
     assert.equal(militaryFlightsLayer.refocusTrackedById(icao24, { origin: 'voice' }), true);
     assert.equal(selectionEvents.at(-1)?.origin, 'voice', 'same-target refocus forwards explicit authority');
@@ -385,8 +385,8 @@ test('real military track path creates no native label and publishes every cache
     const entry = publication.entries[0];
     assert.equal(entry.protected, true);
     assert.equal(entry.paintLane, 'tracked');
-    assert.equal(entry.title, entity.gevLabelModel.title);
-    assert.deepEqual(entry.details, entity.gevLabelModel.details);
+    assert.equal(entry.title, entity.vantageLabelModel.title);
+    assert.deepEqual(entry.details, entity.vantageLabelModel.details);
 
     const display = entity.position.getValue(now);
     assert.ok(display, 'tracked position callback must seed its frame cache');

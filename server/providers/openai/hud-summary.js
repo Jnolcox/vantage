@@ -43,7 +43,7 @@ async function handleHudSummary(req, res) {
     return;
   }
 
-  // Opt-in per-IP throttle (GEV_RATELIMIT_OPENAI_PER_MIN). Keyless HUD
+  // Opt-in per-IP throttle (VANTAGE_RATELIMIT_OPENAI_PER_MIN). Keyless HUD
   // fallback has no provider cost and resolves above without consuming a
   // paid-endpoint quota slot.
   if (!enforceOptInRateLimit(openAiRateLimiter(), req, res)) return;
@@ -62,7 +62,7 @@ async function handleHudSummary(req, res) {
           process.env.OPENAI_HUD_SUMMARY_MODEL ||
           OPENAI_HUD_SUMMARY_MODEL_DEFAULT,
         instructions: [
-          "Write one concise intelligence-HUD summary for God's Eye View.",
+          'Write one concise intelligence-HUD summary for Vantage.',
           'Use only the supplied place, street, nearby-place, and enabled-layer text labels.',
           'Prefer the clearest named place and include a relevant enabled layer only when useful.',
           'Do not infer from coordinates or invent a place.',

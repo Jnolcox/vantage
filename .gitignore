@@ -12,6 +12,9 @@ dist
 screenshots/
 qa-shots/
 output/
+.vantage-logs/
+.vantage-cache/
+# Pre-rename names, kept ignored until the dev server moves them on start.
 .gev-logs/
 .gev-cache/
 .DS_Store

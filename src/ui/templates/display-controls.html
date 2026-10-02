@@ -17,6 +17,11 @@
           <option value="operator">Operator</option>
           <option value="minimal">Minimal</option>
         </select>
+        <label class="pp-slider-mini-label" for="hud-context-select">Context</label>
+        <select id="hud-context-select" class="pp-select" aria-label="HUD place context" title="Live: while the HUD is shown, every 15 s and after each camera move, the view's location goes to Google for place names and the place labels go to OpenAI for the summary line (only when those keys are set). Local: the summary uses on-device data only.">
+          <option value="live">Live</option>
+          <option value="local">Local</option>
+        </select>
       </div>
     </div>
     <div class="pp-toggle-group">

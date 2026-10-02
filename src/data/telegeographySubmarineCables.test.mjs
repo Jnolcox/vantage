@@ -268,7 +268,7 @@ test('a map-stack change re-classifies every cable line once, and destroy detach
   // The harness scene has no globe → BOTH at init (safe unknown fallback).
   const cableEntity = cableSource.entities.values[0];
   assert.equal(classificationOf(cableEntity), Cesium.ClassificationType.BOTH);
-  const listener = listeners.get('gev:map-stack-changed');
+  const listener = listeners.get('vantage:map-stack-changed');
   assert.equal(
     typeof listener,
     'function',
@@ -289,7 +289,7 @@ test('a map-stack change re-classifies every cable line once, and destroy detach
 
   env.layer.destroy(env.viewer);
   assert.equal(
-    listeners.has('gev:map-stack-changed'),
+    listeners.has('vantage:map-stack-changed'),
     false,
     'destroy must detach the stack listener',
   );

@@ -112,13 +112,13 @@ try {
   );
   await page.waitForFunction(
     () =>
-      window.__godsEyeView?.sceneDirector &&
+      window.__vantage?.sceneDirector &&
       document.getElementById('loading-screen')?.classList.contains('hidden'),
     { timeout: 60000 },
   );
   await page.click('[data-collapse-target="scene-panel"]');
   const before = await page.evaluate(() =>
-    JSON.stringify(window.__godsEyeView.sceneDirector._project),
+    JSON.stringify(window.__vantage.sceneDirector._project),
   );
   const input = await page.$('#scene-import-file');
   await input.uploadFile(file);
@@ -128,8 +128,7 @@ try {
     requests.length === 0 &&
       (await page.evaluate(
         (before) =>
-          JSON.stringify(window.__godsEyeView.sceneDirector._project) ===
-          before,
+          JSON.stringify(window.__vantage.sceneDirector._project) === before,
         before,
       )),
   );
@@ -149,7 +148,7 @@ try {
     await page.evaluate(
       (before) =>
         !document.querySelector('[data-director-dialog]') &&
-        JSON.stringify(window.__godsEyeView.sceneDirector._project) === before,
+        JSON.stringify(window.__vantage.sceneDirector._project) === before,
       before,
     ),
   );
@@ -164,8 +163,8 @@ try {
     requests.length === 0 &&
       (await page.evaluate(
         () =>
-          window.__godsEyeView.sceneDirector._project.scenes.length === 2 &&
-          !window.__godsEyeView.sceneDirector.running,
+          window.__vantage.sceneDirector._project.scenes.length === 2 &&
+          !window.__vantage.sceneDirector.running,
       )),
   );
   await click('EDIT DETAILS');
@@ -189,7 +188,7 @@ try {
   bad.camera.lat = 91;
   await value('Shot camera, timing, packs and actions', JSON.stringify(bad));
   const saved = await page.evaluate(() =>
-    localStorage.getItem('godsEyeView.sceneProject.v2'),
+    localStorage.getItem('vantage.sceneProject.v2'),
   );
   await page.click('[data-director-apply-details]');
   await page.waitForFunction(() =>
@@ -200,7 +199,7 @@ try {
   check(
     'invalid draft preserves saved bytes and existing authored content',
     await page.evaluate(
-      (saved) => localStorage.getItem('godsEyeView.sceneProject.v2') === saved,
+      (saved) => localStorage.getItem('vantage.sceneProject.v2') === saved,
       saved,
     ),
   );
@@ -212,7 +211,7 @@ try {
   check(
     'author controls preserve selected shot, pack attribution and action definitions',
     await page.evaluate(() => {
-      const d = window.__godsEyeView.sceneDirector,
+      const d = window.__vantage.sceneDirector,
         s = d._getSelectedScene();
       return (
         d._selectedShotId === 'shot' &&
@@ -264,7 +263,7 @@ try {
   const bundle = await page.evaluate(
     async () => await window.__shareExports.at(-1),
   );
-  const bundleFile = path.join(output, 'scene.gevbundle.json');
+  const bundleFile = path.join(output, 'scene.vantagebundle.json');
   fs.writeFileSync(bundleFile, bundle);
   check(
     'bundle contains the selected bytes and preserves attribution',
@@ -282,7 +281,7 @@ try {
         document
           .querySelector('[data-director-dialog]')
           .textContent.includes('bundled bytes verified') &&
-        window.__godsEyeView.sceneDirector.getSharingState().assets.count === 0,
+        window.__vantage.sceneDirector.getSharingState().assets.count === 0,
     ),
   );
   await page.screenshot({ path: path.join(output, 'preview.png') });
@@ -291,7 +290,7 @@ try {
     () => !document.querySelector('[data-director-dialog]'),
   );
   await page.evaluate(() =>
-    window.__godsEyeView.sceneDirector.loadShot('share', 'shot', {
+    window.__vantage.sceneDirector.loadShot('share', 'shot', {
       flyDuration: 0.3,
     }),
   );
@@ -300,12 +299,12 @@ try {
     requests.length === 0 &&
       (await page.evaluate(
         () =>
-          window.__godsEyeView.sceneDirector.getDataPackState().count === 1 &&
-          window.__godsEyeView.sceneDirector.getInteractionState().count === 1,
+          window.__vantage.sceneDirector.getDataPackState().count === 1 &&
+          window.__vantage.sceneDirector.getInteractionState().count === 1,
       )),
   );
   await page.waitForFunction(
-    () => window.__godsEyeView.tileset?.tilesLoaded === true,
+    () => window.__vantage.tileset?.tilesLoaded === true,
     { timeout: 60000 },
   );
   await page.screenshot({ path: path.join(output, 'rendered.png') });
@@ -313,15 +312,15 @@ try {
     path.join(output, 'report.json'),
     JSON.stringify(
       await page.evaluate(() => ({
-        tilesSettled: window.__godsEyeView.tileset?.tilesLoaded === true,
+        tilesSettled: window.__vantage.tileset?.tilesLoaded === true,
       })),
     ),
   );
-  await page.evaluate(() => window.__godsEyeView.sceneDirector.stopScene());
+  await page.evaluate(() => window.__vantage.sceneDirector.stopScene());
   check(
     'Stop releases rendered resources while retaining reusable project bytes',
     await page.evaluate(() => {
-      const d = window.__godsEyeView.sceneDirector;
+      const d = window.__vantage.sceneDirector;
       return (
         d.getDataPackState().count === 0 &&
         d.getSharingState().assets.count === 1
@@ -329,25 +328,25 @@ try {
     }),
   );
   await page.evaluate(() =>
-    window.__godsEyeView.sceneDirector.seekScene('share', 0),
+    window.__vantage.sceneDirector.seekScene('share', 0),
   );
   check(
     'seek reloads the bundle without a network fallback',
     requests.length === 0 &&
       (await page.evaluate(
-        () => window.__godsEyeView.sceneDirector.getDataPackState().count === 1,
+        () => window.__vantage.sceneDirector.getDataPackState().count === 1,
       )),
   );
   await click('EDIT DETAILS');
   await page.evaluate(() => {
-    window.__godsEyeView.sceneDirector._project.scenes[0].title = 'Newer edit';
+    window.__vantage.sceneDirector._project.scenes[0].title = 'Newer edit';
   });
   await page.click('[data-director-apply-details]');
   check(
     'stale author draft cannot overwrite a newer edit',
     await page.evaluate(
       () =>
-        window.__godsEyeView.sceneDirector._project.scenes[0].title ===
+        window.__vantage.sceneDirector._project.scenes[0].title ===
         'Newer edit',
     ),
   );
@@ -369,7 +368,7 @@ try {
   await page.screenshot({ path: path.join(output, 'narrow.png') });
   await page.keyboard.press('Escape');
   const pending = await page.evaluate(async () => {
-    const d = window.__godsEyeView.sceneDirector;
+    const d = window.__vantage.sceneDirector;
     let finish;
     const work = d._sharing.preview({
       name: 'pending.json',
@@ -385,7 +384,7 @@ try {
     pending,
   );
   const cancelledApply = await page.evaluate(async () => {
-    const d = window.__godsEyeView.sceneDirector;
+    const d = window.__vantage.sceneDirector;
     const before = JSON.stringify(d._project);
     const saved = JSON.stringify({ ...localStorage });
     let finish;
@@ -435,31 +434,29 @@ try {
   check(
     'removing a pack through authoring releases its retained bytes',
     await page.evaluate(
-      () =>
-        window.__godsEyeView.sceneDirector.getSharingState().assets.count === 0,
+      () => window.__vantage.sceneDirector.getSharingState().assets.count === 0,
     ),
   );
   await page.evaluate(
     (text) =>
-      window.__godsEyeView.sceneDirector.importProjectFile(
-        new File([text], 'again.gevbundle.json'),
+      window.__vantage.sceneDirector.importProjectFile(
+        new File([text], 'again.vantagebundle.json'),
       ),
     bundle,
   );
   await page.evaluate(() =>
-    window.__godsEyeView.sceneDirector.importProjectFile(
+    window.__vantage.sceneDirector.importProjectFile(
       new File([JSON.stringify({ version: 6, scenes: [] })], 'empty.json'),
     ),
   );
   check(
     'replacement releases stored bundle bytes',
     await page.evaluate(
-      () =>
-        window.__godsEyeView.sceneDirector.getSharingState().assets.count === 0,
+      () => window.__vantage.sceneDirector.getSharingState().assets.count === 0,
     ),
   );
   await page.evaluate(async () => {
-    const d = window.__godsEyeView.sceneDirector;
+    const d = window.__vantage.sceneDirector;
     void d._sharing.preview({
       name: 'pending.json',
       text: () => new Promise(() => {}),
@@ -472,7 +469,7 @@ try {
       () =>
         !document.querySelector('[data-director-dialog]') &&
         !document.querySelector('[data-director-authoring]') &&
-        !window.__godsEyeView.sceneDirector.getSharingState().open,
+        !window.__vantage.sceneDirector.getSharingState().open,
     ),
   );
   check('no uncaught browser errors', errors.length === 0);

@@ -1,4 +1,5 @@
 import { makeOptInRateLimiter, clientKey } from '../common/rate-limit.js';
+import { readVantageEnv } from '../common/env.js';
 
 // Built LAZILY on first request, NOT at module load: `.env` values are applied to process.env later
 // (the plugin config hook calls loadEnv → process.env, AFTER this module is imported), so reading
@@ -11,7 +12,7 @@ let _openAiRateLimiter;
 function openAiRateLimiter() {
   if (_openAiRateLimiter === undefined)
     _openAiRateLimiter = makeOptInRateLimiter(
-      process.env.GEV_RATELIMIT_OPENAI_PER_MIN,
+      readVantageEnv('RATELIMIT_OPENAI_PER_MIN'),
     );
   return _openAiRateLimiter;
 }

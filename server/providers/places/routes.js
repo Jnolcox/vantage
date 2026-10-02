@@ -1,6 +1,7 @@
 import { makeRateLimiter, clientKey } from '../common/rate-limit.js';
 import { haversineKm } from '../common/geo.js';
 import { readResponseTextCapped } from '../common/http.js';
+import { clientUserAgent } from '../../../src/sources/projectIdentity.js';
 import { normalizeOsrmSteps } from '../../../src/data/routeSteps.js';
 import {
   normalizeRouteProfile,
@@ -29,6 +30,9 @@ const _routeInflight = new Map();
 
 /** Hard cap on the OSRM route response we will buffer. */
 const ROUTE_MAX_RESPONSE_BYTES = 8 * 1024 * 1024; // 8 MB
+
+/** Identifies the proxy to the OSRM routing endpoint. */
+const ROUTES_USER_AGENT = clientUserAgent('routes-proxy');
 
 /**
  * Minimum gap between two OUTBOUND route requests, across every client and
@@ -176,7 +180,7 @@ async function fetchRoute({
         // The endpoint is configured above; a redirect is the one way out of
         // it, so it is refused rather than followed.
         redirect: 'error',
-        headers: { 'User-Agent': 'gods-eye-view/dev (local)' },
+        headers: { 'User-Agent': ROUTES_USER_AGENT },
       }),
     );
     if (upstreamRes.status === 429) {

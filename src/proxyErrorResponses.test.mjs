@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { readResponseTextCapped, coalesceProxyRequest } from './sources/httpBody.js';
+import { clientUserAgent } from './sources/projectIdentity.js';
 
 const source = ['local.js', 'common/http.js', 'aircraft/enrichment.js', 'terrain.js', 'space/celestrak.js', 'space/launch-library.js', '../../src/data/spaceProviderRequests.js']
   .map(file => readFileSync(new URL(`../server/providers/${file}`, import.meta.url), 'utf8'))
@@ -32,6 +33,7 @@ function fixture(name, overrides = {}, preview = false) {
     console: { warn: (...args) => logs.push(args.join(' ')), error: (...args) => logs.push(args.join(' ')) },
     setInterval: () => ({ unref() {} }),
     LL2_CACHE_TTL_MS: 15 * 60_000,
+    CELESTRAK_USER_AGENT: clientUserAgent('celestrak-proxy'),
     parseTerrainPoints: () => [[1, 2]],
     resolveTerrainHeightRequest: async () => { throw new Error(detail); },
     ...overrides,
@@ -60,7 +62,7 @@ for (const status of [401, 429, 500]) {
       assert.equal(res.status, status);
       assert.deepEqual(JSON.parse(res.body), { error: 'Launch Library 2 unavailable' });
       assert.equal(res.headers['Cache-Control'], 'no-store');
-      assert.equal(res.headers['X-GEV-Cache'], 'NONE');
+      assert.equal(res.headers['X-Vantage-Cache'], 'NONE');
       assert.equal(app.logs.length, 1);
       assert.match(app.logs[0], new RegExp(`HTTP ${status}`));
       assert.ok(app.logs[0].length < 100);
@@ -96,14 +98,14 @@ test('Launch Library retains single-flight, fresh cache, stale fallback, and met
   const second = app.request();
   release();
   const pair = await Promise.all([first, second]);
-  assert.deepEqual(pair.map(res => res.headers['X-GEV-Cache']).sort(), ['INFLIGHT', 'MISS']);
+  assert.deepEqual(pair.map(res => res.headers['X-Vantage-Cache']).sort(), ['INFLIGHT', 'MISS']);
   assert.equal(calls, 1);
-  assert.equal((await app.request()).headers['X-GEV-Cache'], 'HIT');
+  assert.equal((await app.request()).headers['X-Vantage-Cache'], 'HIT');
   now += 16 * 60_000;
   const stale = await app.request();
   assert.equal(stale.status, 200);
   assert.equal(stale.body, '{"results":[]}');
-  assert.equal(stale.headers['X-GEV-Cache'], 'STALE-ERROR');
+  assert.equal(stale.headers['X-Vantage-Cache'], 'STALE-ERROR');
   assert.equal(calls, 2);
 });
 

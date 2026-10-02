@@ -5,6 +5,7 @@ import {
   CCTV_FRAME_MAX_BODY_BYTES,
   CCTV_MEDIA_FETCH_TIMEOUT_MS,
   CCTV_MEDIA_MAX_BODY_BYTES,
+  CCTV_USER_AGENT,
   NSW_IMAGE_ORIGIN,
   NSW_IMAGE_USER_AGENT,
 } from './constants.js';
@@ -340,7 +341,7 @@ export async function fetchTxdotSnapshot(
     const upstream = await fetchImpl(parsed.toString(), {
       headers: {
         Accept: 'application/json',
-        'User-Agent': 'gods-eye-view-cctv-proxy/1.0',
+        'User-Agent': CCTV_USER_AGENT,
       },
       signal: controller.signal,
       redirect: 'manual',
@@ -452,11 +453,10 @@ const CCTV_IMAGE_USER_AGENT_BY_HOST = Object.freeze({
 export function cctvUpstreamUserAgent(url) {
   try {
     return (
-      CCTV_IMAGE_USER_AGENT_BY_HOST[new URL(url).hostname] ||
-      'gods-eye-view-cctv-proxy/1.0'
+      CCTV_IMAGE_USER_AGENT_BY_HOST[new URL(url).hostname] || CCTV_USER_AGENT
     );
   } catch {
-    return 'gods-eye-view-cctv-proxy/1.0';
+    return CCTV_USER_AGENT;
   }
 }
 

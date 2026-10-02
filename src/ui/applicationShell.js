@@ -30,7 +30,7 @@ import { ShellFeedback } from './shellFeedback.js';
 import { runCctvLayerEnableTransition } from '../cctvFocusPolicy.js';
 
 /**
- * Central UI orchestrator for the God's Eye View application.
+ * Central UI orchestrator for the Vantage application.
  *
  * Responsibilities:
  * - Visual controls and presets backed by the VisualEffects controller.
@@ -678,9 +678,9 @@ export class StyleManager extends ShellFacade {
       statusElement: this._mapStackStatus,
       controller: this.mapStackController,
       subscribe: (onChange) => {
-        window.addEventListener('gev:map-stack-changed', onChange);
+        window.addEventListener('vantage:map-stack-changed', onChange);
         return () =>
-          window.removeEventListener('gev:map-stack-changed', onChange);
+          window.removeEventListener('vantage:map-stack-changed', onChange);
       },
       claimSelection: () => this.shareLinkManager?.claimRestoreLane?.('map'),
       onStateChanged: () => this._syncShareState(),

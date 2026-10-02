@@ -2,7 +2,12 @@
 set -euo pipefail
 
 SOURCE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-ROOT_DIR="$(cd "${GEV_PROJECT_ROOT:-$SOURCE_ROOT}" && pwd)"
+# GEV_PROJECT_ROOT is the pre-rename name, still honoured as a fallback.
+if [[ -z "${VANTAGE_PROJECT_ROOT:-}" && -n "${GEV_PROJECT_ROOT:-}" ]]; then
+  echo "[vantage] GEV_PROJECT_ROOT is deprecated; rename it to VANTAGE_PROJECT_ROOT." >&2
+  VANTAGE_PROJECT_ROOT="${GEV_PROJECT_ROOT}"
+fi
+ROOT_DIR="$(cd "${VANTAGE_PROJECT_ROOT:-$SOURCE_ROOT}" && pwd)"
 cd "${ROOT_DIR}"
 
 if ! command -v security >/dev/null 2>&1; then

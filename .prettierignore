@@ -1,4 +1,6 @@
 dist
+.vantage-cache
+.vantage-logs
 .gev-cache
 .gev-logs
 screenshots

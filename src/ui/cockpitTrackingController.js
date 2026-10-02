@@ -11,7 +11,7 @@ export function readAircraftInfo() {
   return resolveTrackedAircraftInfo({
     civilian: this.services.flightsLayer.getTrackedInfo?.() || null,
     military: this.services.militaryFlightsLayer.getTrackedInfo?.() || null,
-    trackedId: trackedEntity?.gevTrackedId || '',
+    trackedId: trackedEntity?.vantageTrackedId || '',
   });
 }
 
@@ -26,7 +26,7 @@ export function dispatchCockpitModeChanged(active, info = null) {
       ? info.layerId
       : null;
   window.dispatchEvent(
-    new CustomEvent('gev:cockpit-mode-changed', {
+    new CustomEvent('vantage:cockpit-mode-changed', {
       detail: { active: active === true, subjectId, layerId },
     }),
   );

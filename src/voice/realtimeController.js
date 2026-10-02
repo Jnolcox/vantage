@@ -1,6 +1,7 @@
 import { RealtimeConnection } from './realtimeConnection.js';
 import { RealtimeTurns } from './realtimeTurns.js';
-import { RealtimeViewport } from './realtimeViewport.js';
+import { RealtimeViewport, captureViewportImage } from './realtimeViewport.js';
+import { readStoredViewImageSharing } from './realtimePreferences.js';
 import { RealtimeDiagnostics } from './realtimeDiagnostics.js';
 import { RealtimeRadio } from './realtimeRadio.js';
 import { RealtimeFacade } from './realtimeFacade.js';
@@ -53,7 +54,7 @@ const STATUS = {
 };
 
 /** Compose voice state owners and coordinate ordered session startup/teardown. */
-export class GevRealtimeController extends RealtimeFacade {
+export class VantageRealtimeController extends RealtimeFacade {
   constructor({
     runner,
     ui,
@@ -79,6 +80,9 @@ export class GevRealtimeController extends RealtimeFacade {
     this.dataManager = dataManager;
     this._viewport = new RealtimeViewport({
       readChannel: () => this.dc,
+      // The viewer can stop screenshots from reaching OpenAI (VIEW toggle).
+      capture: () =>
+        readStoredViewImageSharing() ? captureViewportImage() : null,
 
       operations: {
         sendRealtimeEvent: (...args) => this.sendRealtimeEvent(...args),
@@ -185,6 +189,7 @@ export class GevRealtimeController extends RealtimeFacade {
         syncCostUi: (...args) => this.syncCostUi(...args),
         setStatus: (...args) => this.setStatus(...args),
         debugLog: (...args) => this.debugLog(...args),
+        setDebugLogEnabled: (...args) => this.setDebugLogEnabled(...args),
         connectionDiagnostics: (...args) => this.connectionDiagnostics(...args),
         setMicrophoneEnabled: (...args) => this.setMicrophoneEnabled(...args),
         startVoiceVisualizer: (...args) => this.startVoiceVisualizer(...args),

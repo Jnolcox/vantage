@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════
-   GOD'S EYE VIEW — Dark Sci-Fi UI
+   VANTAGE — Dark Sci-Fi UI
    Apple meets Blade Runner
    ═══════════════════════════════════════════════ */
 
@@ -293,7 +293,7 @@ body.cockpit-mode #cockpit-cloud-effects.active {
    Styled to be unobtrusive but legible against the dark UI. */
 #cesium-credits {
   position: fixed;
-  /* Bottom-LEFT corner, mirrored from the GEV mic pill (right:36/bottom:36) so the two bottom
+  /* Bottom-LEFT corner, mirrored from the Vantage mic pill (right:36/bottom:36) so the two bottom
      corners are symmetric; sits below the coordinate HUD (.hud-bottom-left, bottom:180). Was
      dead-center at the bottom, tucked under the LOCATIONS/STYLE panels. Must stay visible (Google
      /Cesium attribution ToS). */
@@ -390,13 +390,13 @@ body:has(.data-toggle-row[data-layer-id='alpr-cameras'] .data-toggle-btn.active)
    and launch videos, so hiding #cesium-credits here (as it was before) shipped
    non-compliant footage. The full credit line — Cesium/Ion logo, "Google Maps",
    and the "Data attribution" link that opens the per-layer license popover —
-   stays on screen; it's already styled small and unobtrusive above. The GEV
+   stays on screen; it's already styled small and unobtrusive above. The Vantage
    chrome (panels/HUD) still fades via its own rules; only the required notice
    is exempt. (Note: Cesium re-applies inline styles on the credit elements each
    frame, so the on-screen credit content is owned by Cesium's update loop, not
    CSS overrides — we deliberately don't fight it here.) */
 
-#gev-voice-control {
+#vantage-voice-control {
   position: fixed;
   right: 36px;
   bottom: 36px;
@@ -422,7 +422,7 @@ body:has(.data-toggle-row[data-layer-id='alpr-cameras'] .data-toggle-btn.active)
   pointer-events: auto;
 }
 
-#gev-voice-button {
+#vantage-voice-button {
   width: 72px;
   height: 34px;
   flex: 0 0 auto;
@@ -436,24 +436,24 @@ body:has(.data-toggle-row[data-layer-id='alpr-cameras'] .data-toggle-btn.active)
   cursor: pointer;
 }
 
-#gev-voice-button:hover {
+#vantage-voice-button:hover {
   color: #ffffff;
   border-color: var(--accent);
   box-shadow: 0 0 12px rgba(0, 212, 255, 0.22);
 }
 
-.gev-voice-readout {
+.vantage-voice-readout {
   min-width: 0;
   line-height: 1.2;
   text-align: right;
 }
 
-#gev-voice-status {
+#vantage-voice-status {
   font-size: 10px;
   color: var(--accent);
 }
 
-#gev-voice-detail {
+#vantage-voice-detail {
   max-width: 132px;
   margin-top: 2px;
   overflow: hidden;
@@ -463,23 +463,23 @@ body:has(.data-toggle-row[data-layer-id='alpr-cameras'] .data-toggle-btn.active)
   white-space: nowrap;
 }
 
-#gev-voice-control[data-status='listening'] {
+#vantage-voice-control[data-status='listening'] {
   border-color: rgba(92, 255, 198, 0.45);
 }
 
-#gev-voice-control[data-status='listening'] #gev-voice-status {
+#vantage-voice-control[data-status='listening'] #vantage-voice-status {
   color: #5cffc6;
 }
 
-#gev-voice-control[data-status='executing'] {
+#vantage-voice-control[data-status='executing'] {
   border-color: rgba(255, 220, 120, 0.55);
 }
 
-#gev-voice-control[data-status='executing'] #gev-voice-status {
+#vantage-voice-control[data-status='executing'] #vantage-voice-status {
   color: #ffdc78;
 }
 
-#gev-voice-control[data-status='error'] {
+#vantage-voice-control[data-status='error'] {
   align-items: flex-start;
   width: min(440px, calc(100vw - 72px));
   border-color: rgba(255, 92, 110, 0.6);
@@ -487,16 +487,16 @@ body:has(.data-toggle-row[data-layer-id='alpr-cameras'] .data-toggle-btn.active)
   border-radius: var(--panel-radius);
 }
 
-#gev-voice-control[data-status='error'] #gev-voice-status {
+#vantage-voice-control[data-status='error'] #vantage-voice-status {
   color: #ff5c6e;
 }
 
-#gev-voice-control[data-status='error'] .gev-voice-readout {
+#vantage-voice-control[data-status='error'] .vantage-voice-readout {
   flex: 1;
   text-align: left;
 }
 
-#gev-voice-control[data-status='error'] #gev-voice-detail {
+#vantage-voice-control[data-status='error'] #vantage-voice-detail {
   max-width: none;
   overflow: visible;
   color: #ffb4bd;
@@ -507,7 +507,7 @@ body:has(.data-toggle-row[data-layer-id='alpr-cameras'] .data-toggle-btn.active)
   user-select: text;
 }
 
-/* ── Title Bar ────────────────────────────────── */
+/* ── Frame-Rate Readout Host ──────────────────── */
 #title-bar {
   position: fixed;
   top: 32px;
@@ -517,123 +517,7 @@ body:has(.data-toggle-row[data-layer-id='alpr-cameras'] .data-toggle-btn.active)
   user-select: none;
 }
 
-#title-bar .title-glow {
-  position: absolute;
-  top: -20px;
-  left: -20px;
-  width: 200px;
-  height: 80px;
-  background: radial-gradient(ellipse, var(--accent-dim) 0%, transparent 70%);
-  filter: blur(20px);
-  opacity: 0.6;
-}
-
-#title-bar h1 {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-family: var(--font-mono);
-  font-size: 26px;
-  font-weight: 600;
-  letter-spacing: 8px;
-  color: var(--text-primary);
-  text-shadow: 0 0 30px var(--accent-glow);
-  position: relative;
-}
-
-#title-bar .title-logo {
-  position: relative;
-  display: block;
-  width: 52px;
-  height: auto;
-  filter: drop-shadow(0 0 12px rgba(0, 246, 255, 0.5));
-}
-
-#title-bar .title-logo::before,
-#title-bar .title-logo::after {
-  --radio-broadcast-opacity: 0.28;
-  content: '';
-  position: absolute;
-  z-index: 1;
-  left: 50%;
-  top: -9px;
-  width: 13px;
-  height: 7px;
-  border: 1px solid var(--accent);
-  border-bottom: 0;
-  border-radius: 999px 999px 0 0;
-  opacity: 0;
-  pointer-events: none;
-  transform: translateX(-50%);
-  transform-origin: 50% 100%;
-}
-
-#title-bar .title-logo::after {
-  --radio-broadcast-opacity: 0.17;
-  top: -15px;
-  width: 27px;
-  height: 13px;
-}
-
-#title-bar.radio-broadcasting .title-logo::before,
-#title-bar.radio-broadcasting .title-logo::after {
-  opacity: var(--radio-broadcast-opacity);
-  animation: title-radio-broadcast 1.8s ease-in-out infinite;
-}
-
-#title-bar.radio-broadcasting .title-logo::after {
-  animation-delay: 0.28s;
-}
-
-@keyframes title-radio-broadcast {
-  0%,
-  100% {
-    opacity: calc(var(--radio-broadcast-opacity) * 0.55);
-    transform: translateX(-50%) scale(0.94);
-  }
-  50% {
-    opacity: var(--radio-broadcast-opacity);
-    transform: translateX(-50%) scale(1);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  #title-bar.radio-broadcasting .title-logo::before,
-  #title-bar.radio-broadcasting .title-logo::after {
-    animation: none;
-  }
-}
-
-.brand-logo {
-  aspect-ratio: 775 / 520;
-  overflow: visible;
-  pointer-events: none;
-}
-
-.brand-logo > img,
-.brand-logo > svg {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-#title-bar .title-accent,
-.loader-content .title-accent {
-  color: var(--accent);
-  font-weight: 300;
-}
-
-#title-bar .subtitle {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 5px;
-  color: var(--text-dim);
-  margin-top: 8px;
-  text-transform: uppercase;
-}
-
 #title-bar .frame-rate-readout {
-  margin-top: 6px;
   font-family: var(--font-mono);
   font-size: 11px;
   font-variant-numeric: tabular-nums;

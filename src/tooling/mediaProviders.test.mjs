@@ -31,7 +31,7 @@ function install(plugin, hook = 'configureServer') {
 }
 
 function fixture(t, id) {
-  const root = mkdtempSync(path.join(tmpdir(), 'gev-cctv-'));
+  const root = mkdtempSync(path.join(tmpdir(), 'vantage-cctv-'));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   mkdirSync(path.join(root, 'config'));
   writeFileSync(
@@ -152,7 +152,7 @@ for (const hook of ['configureServer', 'configurePreviewServer']) {
 
 test('a failed CCTV media fetch reports a fixed health message, not the error text', async (t) => {
   isolate(t);
-  const root = mkdtempSync(path.join(tmpdir(), 'gev-cctv-'));
+  const root = mkdtempSync(path.join(tmpdir(), 'vantage-cctv-'));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   mkdirSync(path.join(root, 'config'));
   writeFileSync(
@@ -190,4 +190,41 @@ test('a failed CCTV media fetch reports a fixed health message, not the error te
   assert.equal(camera.message, 'Media fetch failed');
   assert.equal(camera.message.includes('ETIMEDOUT'), false);
   assert.equal(camera.message.includes('secret-path'), false);
+});
+
+test('the Street View fallback frames the registered camera, not client coordinates', async (t) => {
+  isolate(t);
+  process.env.GOOGLE_MAPS_SERVER_API_KEY = 'server-fixture';
+  const requested = [];
+  t.mock.restoreAll();
+  t.mock.method(globalThis, 'fetch', async (url) => {
+    requested.push(new URL(url));
+    return new Response(new Uint8Array([1, 2, 3]), {
+      headers: { 'Content-Type': 'image/jpeg' },
+    });
+  });
+  const call = install(cctvProxy({ sourceRoot: fixture(t, 'registered') }));
+  const frame = await call('/frame/registered?lat=48.85&lon=2.35&heading=90');
+  assert.equal(frame.headers['X-CCTV-Source'], 'streetview');
+  assert.equal(requested.length, 1);
+  assert.equal(requested[0].searchParams.get('location'), '30.27,-97.74');
+  assert.equal(requested[0].searchParams.get('heading'), '90');
+});
+
+test('an unregistered camera id never reaches Street View', async (t) => {
+  isolate(t);
+  process.env.GOOGLE_MAPS_SERVER_API_KEY = 'server-fixture';
+  const requested = [];
+  t.mock.restoreAll();
+  t.mock.method(globalThis, 'fetch', async (url) => {
+    requested.push(String(url));
+    return new Response(new Uint8Array([1, 2, 3]), {
+      headers: { 'Content-Type': 'image/jpeg' },
+    });
+  });
+  const call = install(cctvProxy({ sourceRoot: fixture(t, 'registered') }));
+  const frame = await call('/frame/anything?lat=48.85&lon=2.35');
+  assert.equal(frame.status, 200);
+  assert.equal(frame.headers['X-CCTV-Source'], 'synthetic');
+  assert.deepEqual(requested, []);
 });

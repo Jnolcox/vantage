@@ -15,9 +15,9 @@ const WINDOWS_ACL_VERIFY_SCRIPT = [
   // through the Sysnative bridge, and it cannot be steered by anything the
   // parent environment set.
   "$env:PSModulePath = Join-Path $PSHOME 'Modules'",
-  '$acl = Get-Acl -LiteralPath $env:GEV_ACL_FILE',
+  '$acl = Get-Acl -LiteralPath $env:VANTAGE_ACL_FILE',
   'if (-not $acl.AreAccessRulesProtected) { exit 2 }',
-  "$allowed = @($env:GEV_ACL_USER_SID, 'S-1-5-18', 'S-1-5-32-544')",
+  "$allowed = @($env:VANTAGE_ACL_USER_SID, 'S-1-5-18', 'S-1-5-32-544')",
   '$seen = @{}',
   '$rules = @($acl.GetAccessRules($true, $true, [System.Security.Principal.SecurityIdentifier]))',
   'if ($rules.Count -ne 3) { exit 7 }',
@@ -203,8 +203,8 @@ export function hardenCredentialFile(
       {
         env: {
           ...verifyEnvironment,
-          GEV_ACL_FILE: filepath,
-          GEV_ACL_USER_SID: sid,
+          VANTAGE_ACL_FILE: filepath,
+          VANTAGE_ACL_USER_SID: sid,
           PSModulePath: powershellModuleDirectory,
         },
         stdio: 'ignore',

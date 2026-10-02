@@ -93,6 +93,7 @@ export class RealtimeConnection {
       });
       const token = minted.token;
       if (this.abandonStart(epoch, { localStream, localPc })) return;
+      this.setDebugLogEnabled(minted.debugLogEnabled);
       // Bind the session meter to the model actually served. An env override
       // (OPENAI_REALTIME_MODEL[_MINI]) can point a tier at a different model,
       // and pricing by the tier we asked for would then under-meter and let the
@@ -100,7 +101,7 @@ export class RealtimeConnection {
       const costState = this.cost.bindServedModel(minted.model);
       if (!costState.ratesRecognized) {
         console.warn(
-          `[GEV voice] unrecognised Realtime model "${costState.modelId}" — ` +
+          `[Vantage voice] unrecognised Realtime model "${costState.modelId}" — ` +
             'billing this session at the most expensive known rates. Update the ' +
             'rate table in src/voice/voiceCost.js.',
         );
@@ -128,11 +129,11 @@ export class RealtimeConnection {
       this.startVoiceVisualizer(localStream);
 
       document
-        .querySelectorAll('audio[data-gev-realtime-audio="true"]')
+        .querySelectorAll('audio[data-vantage-realtime-audio="true"]')
         .forEach((el) => el.remove());
       this.audioEl = document.createElement('audio');
       this.audioEl.autoplay = true;
-      this.audioEl.dataset.gevRealtimeAudio = 'true';
+      this.audioEl.dataset.vantageRealtimeAudio = 'true';
       this.audioEl.style.display = 'none';
       document.body.appendChild(this.audioEl);
 
@@ -243,6 +244,10 @@ export class RealtimeConnection {
         releaseStartResources({ localStream, localPc });
         return;
       }
+      // A failed token mint still reports the server's debug-log setting, so
+      // the records explaining this failure reach an enabled log.
+      if (typeof error?.debugLogEnabled === 'boolean')
+        this.setDebugLogEnabled(error.debugLogEnabled);
       const diagnostics = this.connectionDiagnostics();
       this.stop({ preserveStatus: true });
       this.reportError('Realtime connection', error, diagnostics);

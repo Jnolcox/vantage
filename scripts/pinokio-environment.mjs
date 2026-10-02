@@ -17,22 +17,36 @@ export const PINOKIO_CONFIG_FIELDS = Object.freeze([
   'OPENSKY_CLIENT_ID',
   'OPENSKY_CLIENT_SECRET',
   'LL2_API_TOKEN',
-  'GEV_RATELIMIT_OPENAI_PER_MIN',
-  'GEV_RATELIMIT_GOOGLE_PER_MIN',
+  'VANTAGE_RATELIMIT_OPENAI_PER_MIN',
+  'VANTAGE_RATELIMIT_GOOGLE_PER_MIN',
+  'VANTAGE_REALTIME_DEBUG_LOG',
   'PINOKIO_SHARE_CLOUDFLARE',
   'PINOKIO_SHARE_LOCAL',
   'PINOKIO_SHARE_VAR',
 ]);
 
 const PINOKIO_DEFAULTS = Object.freeze({
-  GEV_RATELIMIT_OPENAI_PER_MIN: '30',
-  GEV_RATELIMIT_GOOGLE_PER_MIN: '120',
+  VANTAGE_RATELIMIT_OPENAI_PER_MIN: '30',
+  VANTAGE_RATELIMIT_GOOGLE_PER_MIN: '120',
   PINOKIO_SHARE_CLOUDFLARE: 'false',
   PINOKIO_SHARE_LOCAL: 'false',
-  PINOKIO_SHARE_VAR: '__gev_sharing_disabled__',
+  PINOKIO_SHARE_VAR: '__vantage_sharing_disabled__',
 });
 
-const PINOKIO_SHARE_SENTINEL = '__gev_sharing_disabled__';
+/**
+ * Pre-rename names for the Vantage-prefixed fields above. An ENVIRONMENT
+ * written by an older install still configures the app: when the new name is
+ * absent from the file, the legacy line's value (blank included) is used.
+ */
+const PINOKIO_LEGACY_FIELDS = Object.freeze(
+  Object.fromEntries(
+    PINOKIO_CONFIG_FIELDS.filter((field) => field.startsWith('VANTAGE_')).map(
+      (field) => [field, field.replace(/^VANTAGE_/, 'GEV_')],
+    ),
+  ),
+);
+
+const PINOKIO_SHARE_SENTINEL = '__vantage_sharing_disabled__';
 const PINOKIO_SHARING_FIELDS = Object.freeze([
   'PINOKIO_SHARE_CLOUDFLARE',
   'PINOKIO_SHARE_LOCAL',
@@ -120,6 +134,13 @@ export function readPinokioEnvironment(filepath = DEFAULT_ENVIRONMENT_FILE) {
   }
 }
 
+function legacyPinokioValue(configured, field) {
+  const legacyField = PINOKIO_LEGACY_FIELDS[field];
+  if (!legacyField || configured[legacyField] === undefined) return undefined;
+  console.warn(`[Pinokio] pinokio/ENVIRONMENT uses the deprecated ${legacyField}; rename it to ${field}.`);
+  return configured[legacyField];
+}
+
 /**
  * Make the app-scoped Pinokio file authoritative over Pinokio-global values.
  * Pinokio removes blank entries before merging environments, so each child
@@ -131,7 +152,15 @@ export function applyPinokioEnvironment({
 } = {}) {
   const configured = ensurePinokioSharingBoundary(filepath);
   for (const field of PINOKIO_CONFIG_FIELDS) {
-    environment[field] = String(configured[field] ?? PINOKIO_DEFAULTS[field] ?? '');
+    environment[field] = String(
+      configured[field] ?? legacyPinokioValue(configured, field) ?? PINOKIO_DEFAULTS[field] ?? '',
+    );
+  }
+  // The pre-rename names were resolved from the app file above. Drop any copy
+  // Pinokio merged in from its global environment, or the server's GEV_
+  // fallback would let it override a blank the app file set on purpose.
+  for (const legacyField of Object.values(PINOKIO_LEGACY_FIELDS)) {
+    delete environment[legacyField];
   }
 
   // Sharing is unsupported on Pinokio 8.0.40. Never let a global passcode

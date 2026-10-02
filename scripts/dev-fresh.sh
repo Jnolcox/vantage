@@ -2,14 +2,20 @@
 set -euo pipefail
 
 SOURCE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-ROOT_DIR="$(cd "${GEV_PROJECT_ROOT:-$SOURCE_ROOT}" && pwd)"
+# GEV_PROJECT_ROOT is the pre-rename name, still honoured as a fallback.
+if [[ -z "${VANTAGE_PROJECT_ROOT:-}" && -n "${GEV_PROJECT_ROOT:-}" ]]; then
+  echo "[vantage] GEV_PROJECT_ROOT is deprecated; rename it to VANTAGE_PROJECT_ROOT." >&2
+  VANTAGE_PROJECT_ROOT="${GEV_PROJECT_ROOT}"
+fi
+ROOT_DIR="$(cd "${VANTAGE_PROJECT_ROOT:-$SOURCE_ROOT}" && pwd)"
 cd "$ROOT_DIR"
 
 PORT="${PORT:-4173}"
 # Local-only by default: the dev server brokers configured API keys, so it
 # should not be reachable from the network unless explicitly requested.
-# Set HOST=0.0.0.0 to opt in to LAN exposure (a warning is printed).
-HOST="${HOST:-localhost}"
+# Set VANTAGE_HOST=0.0.0.0 to opt in to LAN exposure (a warning is printed).
+# HOST is still read as the pre-rename name.
+HOST="${VANTAGE_HOST:-${HOST:-127.0.0.1}}"
 # CCTV source packs (all keyless): Austin (~815 live upstream), Caltrans
 # districts 4,7,11,3 = SF/LA/San Diego/Sacramento (~1,860 live upstream),
 # TfL London JamCams (~870 live upstream), Ontario 511 (~944 live upstream,
@@ -255,7 +261,7 @@ if ! grep -q "return createApplicationCatalog(" "$SOURCE_ROOT/src/standalone/cat
   exit 1
 fi
 
-echo "Stopping all existing God's Eye View dev servers..."
+echo "Stopping all existing Vantage dev servers..."
 pkill -f "${ROOT_DIR}/node_modules/.bin/vite" >/dev/null 2>&1 || true
 pkill -f "${ROOT_DIR}/node_modules/vite/bin/vite.js" >/dev/null 2>&1 || true
 
@@ -271,10 +277,10 @@ fi
 echo "Clearing Vite cache..."
 rm -rf node_modules/.vite
 
-echo "Starting fresh God's Eye View dev server..."
+echo "Starting fresh Vantage dev server..."
 case "${HOST}" in
   localhost|127.0.0.1|::1)
-    echo "Local-only mode: reachable at http://localhost:${PORT}/ (set HOST=0.0.0.0 for LAN)"
+    echo "Local-only mode: reachable at http://localhost:${PORT}/ (set VANTAGE_HOST=0.0.0.0 for LAN)"
     ;;
   *)
     LAN_IP=""
@@ -290,13 +296,14 @@ case "${HOST}" in
     fi
     echo ""
     echo "!! =============================================================="
-    echo "!! WARNING: HOST=${HOST} — network-exposed mode."
+    echo "!! WARNING: VANTAGE_HOST=${HOST} — network-exposed mode."
     echo "!! This dev server brokers your configured API keys (OpenAI,"
     echo "!! OpenSky, AISStream, TomTom, FIRMS, LL2, Google) to ANYONE who can"
     echo "!! reach it on the network. Use only on networks you trust."
-    echo "!! Consider the opt-in per-IP throttles GEV_RATELIMIT_OPENAI_PER_MIN"
-    echo "!! and GEV_RATELIMIT_GOOGLE_PER_MIN (see .env.example) — and note"
-    echo "!! they are NOT billing caps; set provider-side budget alerts too."
+    echo "!! Per-IP throttles VANTAGE_RATELIMIT_OPENAI_PER_MIN (default 30)"
+    echo "!! and VANTAGE_RATELIMIT_GOOGLE_PER_MIN (default 60) apply in this mode"
+    echo "!! unless you set them (see .env.example). They are NOT billing caps;"
+    echo "!! set provider-side budget alerts too."
     if [[ -n "${LAN_IP}" ]]; then
       echo "!! LAN URL: http://${LAN_IP}:${PORT}/"
     else
@@ -310,7 +317,7 @@ esac
 echo "Google Maps key source: ${GOOGLE_MAPS_API_KEY_SOURCE}"
 echo "Tip: after server starts, hard refresh browser (Cmd+Shift+R)."
 echo "The CCTV panel starts collapsed; open it from its header, or in browser console:"
-echo "localStorage.setItem('godsEyeView.v6.panelCollapsed.cctv-panel', '0'); location.reload();"
+echo "localStorage.setItem('vantage.v6.panelCollapsed.cctv-panel', '0'); location.reload();"
 echo "OpenSky auth mode: ${OPENSKY_AUTH_MODE}"
 if [[ -n "${OPENSKY_CREDENTIALS_FILE}" ]]; then
   if [[ -f "${OPENSKY_CREDENTIALS_FILE}" ]]; then
@@ -347,7 +354,7 @@ case "${OPENSKY_AUTH_MODE}" in
     echo "OpenSky auth: disabled (anonymous mode)"
     ;;
 esac
-[[ -n "${OPENAI_API_KEY}" ]] && echo "OpenAI key (voice + HUD summary): configured" || echo "OpenAI key (voice + HUD summary): not set — GEV MIC disabled"
+[[ -n "${OPENAI_API_KEY}" ]] && echo "OpenAI key (voice + HUD summary): configured" || echo "OpenAI key (voice + HUD summary): not set — MIC disabled"
 [[ -n "${AISSTREAM_API_KEY}" ]] && echo "AISStream key (live vessels): configured" || echo "AISStream key (live vessels): not set — ships layer empty"
 if [[ -n "${GOOGLE_MAPS_API_KEY}" ]]; then
   echo "Startup map: Google Photorealistic 3D Tiles (direct)"
@@ -420,7 +427,11 @@ put_env_if_set CESIUM_ION_TOKEN "${CESIUM_ION_TOKEN}"
 put_env_if_set TOMTOM_API_KEY "${TOMTOM_API_KEY}"
 put_env_if_set FIRMS_MAP_KEY "${FIRMS_MAP_KEY}"
 put_env_if_set LL2_API_TOKEN "${LL2_API_TOKEN}"
-put_env GEV_LAUNCHER "dev-fresh"
-put_env GEV_KEY_SETUP_EXTERNAL_KEYS "${KEY_SETUP_EXTERNAL_KEYS_CSV}"
+put_env VANTAGE_HOST "${HOST}"
+put_env VANTAGE_LAUNCHER "dev-fresh"
+put_env VANTAGE_KEY_SETUP_EXTERNAL_KEYS "${KEY_SETUP_EXTERNAL_KEYS_CSV}"
+# The explicit markers above replace their pre-rename names; never let a stale
+# GEV_ value inherited from the parent shell act as a fallback in the child.
+DEV_UNSET+=(-u GEV_LAUNCHER -u GEV_KEY_SETUP_EXTERNAL_KEYS)
 
 env ${DEV_UNSET[@]+"${DEV_UNSET[@]}"} "${DEV_ENV[@]}" "${DEV_COMMAND[@]}" --host "${HOST}" --port "${PORT}" --force

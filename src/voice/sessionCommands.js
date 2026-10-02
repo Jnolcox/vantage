@@ -13,7 +13,7 @@ export function createVoiceCommands({
   debugSink,
   createControl = createVoiceControl,
 }) {
-  window.__gevVoiceCommands?.stop?.({ removeUi: true });
+  window.__vantageVoiceCommands?.stop?.({ removeUi: true });
   const ui = createControl({ reset: true });
   const session = createVoiceSession({
     runner,
@@ -34,6 +34,7 @@ export function createVoiceCommands({
   const capabilities = adapter.capabilities || {};
   if (ui.tierButton) ui.tierButton.hidden = !capabilities.costControls;
   if (ui.costValue) ui.costValue.hidden = !capabilities.costControls;
+  if (ui.viewImageButton) ui.viewImageButton.hidden = !capabilities.viewImage;
   if (!capabilities.pushToTalk) {
     ui.button.setAttribute('aria-label', 'Toggle voice control');
     if (ui.helpDetail) ui.helpDetail.textContent = 'Activate to toggle voice';
@@ -81,6 +82,6 @@ export function createVoiceCommands({
     updateStatus();
     ui.root.remove();
   } else adapter.bindControls?.();
-  window.__gevVoiceCommands = controls;
+  window.__vantageVoiceCommands = controls;
   return controls;
 }

@@ -1,4 +1,9 @@
 import * as Cesium from 'cesium';
+import {
+  EMBEDDED_MEDIA_PROVIDER_NAMES,
+  browserConsentStorage,
+  createEmbeddedMediaConsent,
+} from './embeddedMediaConsent.js';
 
 const YOUTUBE_HOSTS = new Set([
   'youtube.com',
@@ -406,7 +411,7 @@ function loadXWidgets(documentRef, globalRef = globalThis) {
       script.src = X_WIDGET_URL;
       script.async = true;
       script.charset = 'utf-8';
-      script.dataset.gevXWidgets = 'true';
+      script.dataset.vantageXWidgets = 'true';
       documentRef.head?.append(script);
     }
     script.addEventListener?.(
@@ -428,12 +433,12 @@ function loadXWidgets(documentRef, globalRef = globalThis) {
     script.addEventListener?.('load', waitForApi, { once: true });
     if (typeof globalRef.twttr?.ready === 'function')
       globalRef.twttr.ready(ready);
-    if (script.dataset?.gevXLoaded === 'true') waitForApi();
+    if (script.dataset?.vantageXLoaded === 'true') waitForApi();
     else
       script.addEventListener?.(
         'load',
         () => {
-          script.dataset.gevXLoaded = 'true';
+          script.dataset.vantageXLoaded = 'true';
         },
         {
           once: true,
@@ -468,14 +473,16 @@ function isPortraitMedia(media = {}) {
 function ensureProviderConnections(documentRef, provider) {
   for (const origin of MEDIA_PRECONNECT_ORIGINS[provider] || []) {
     if (
-      documentRef.querySelector?.(`link[data-gev-media-preconnect="${origin}"]`)
+      documentRef.querySelector?.(
+        `link[data-vantage-media-preconnect="${origin}"]`,
+      )
     )
       continue;
     const link = documentRef.createElement('link');
     link.rel = 'preconnect';
     link.href = origin;
     link.crossOrigin = 'anonymous';
-    link.dataset.gevMediaPreconnect = origin;
+    link.dataset.vantageMediaPreconnect = origin;
     documentRef.head?.append(link);
   }
 }
@@ -594,6 +601,7 @@ export function createBhoteKoshiEmbeddedMedia({
   xLoader = loadXWidgets,
   facebookLoader = loadFacebookSdk,
   youtubeLoader = loadYouTubeApi,
+  consent = createEmbeddedMediaConsent(browserConsentStorage(globalRef)),
 } = {}) {
   // Pinokio externalizes HTTPS iframe navigation, including hidden preloads.
   // Use the existing source-card/local-clip fallback before allocating provider
@@ -828,7 +836,12 @@ export function createBhoteKoshiEmbeddedMedia({
   function warm({ observation, sourceUrl } = {}) {
     const media = observation?.media || {};
     const source = resolveEmbeddedMediaSource(sourceUrl || media.sourceUrl);
-    if (!source || source.provider === 'x') {
+    // No preconnect or hidden frame for a provider the viewer has not allowed.
+    if (
+      !source ||
+      source.provider === 'x' ||
+      !consent.isAllowed(source.provider)
+    ) {
       clearWarm();
       return false;
     }
@@ -946,7 +959,6 @@ export function createBhoteKoshiEmbeddedMedia({
       source.provider === 'youtube'
         ? Math.max(0, Number(media.embedStartAtSec ?? media.clipInSec) || 0)
         : 0;
-    ensureProviderConnections(documentRef, source.provider);
     const endAtSec = media.embedEndAtSec;
     const warmKey = `${source.provider}:${source.id || source.url}:${startAtSec}:${endAtSec ?? ''}`;
     const key =
@@ -1010,70 +1022,125 @@ export function createBhoteKoshiEmbeddedMedia({
       entered: false,
     };
 
-    if (source.provider === 'x') {
-      void mountX(record, token);
-    } else if (source.provider === 'facebook') {
-      bindFacebook(record, token, warmKey, autoplay);
-    } else {
-      const iframe = documentRef.createElement('iframe');
-      iframe.src = embeddedMediaFrameUrl(source, {
-        autoplay,
-        startAtSec,
-        endAtSec,
-      });
-      const controlled =
-        autoplay &&
-        Number.isFinite(Number(endAtSec)) &&
-        Number(endAtSec) > startAtSec;
-      if (controlled) {
-        const url = new URL(iframe.src);
-        url.searchParams.set('enablejsapi', '1');
-        if (globalRef.location?.origin)
-          url.searchParams.set('origin', globalRef.location.origin);
-        iframe.src = url.href;
-      }
-      iframe.title = `${providerLabel(source.provider)} media: ${observation?.title || 'witness source'}`;
-      iframe.allow =
-        'autoplay; encrypted-media; picture-in-picture; fullscreen';
-      iframe.allowFullscreen = true;
-      iframe.loading = 'eager';
-      iframe.referrerPolicy = 'strict-origin-when-cross-origin';
-      iframe.addEventListener?.(
-        'load',
-        () => {
-          if (token !== generation || record?.key !== key) return;
-          clearWarm(warmKey);
-          if (
-            !record.youtubeSession ||
-            ['starting', 'playing'].includes(
-              record.youtubeSession.getState().phase,
-            )
-          ) {
-            status.textContent = `${providerLabel(source.provider)} · PROVIDER CONTROLS`;
-          }
-          position();
-        },
-        { once: true },
-      );
-      player.append(iframe);
-      if (controlled) {
-        const current = record;
-        current.youtubeSession = createTrimmedYouTubePlayback({
-          iframe,
-          endAtSec: Number(endAtSec),
+    const current = record;
+    const mountProvider = () => {
+      if (token !== generation || record !== current) return;
+      ensureProviderConnections(documentRef, source.provider);
+      if (source.provider === 'x') {
+        void mountX(current, token);
+      } else if (source.provider === 'facebook') {
+        bindFacebook(current, token, warmKey, autoplay);
+      } else {
+        mountYouTube(current, token, {
+          observation,
+          autoplay,
           startAtSec,
-          globalRef,
-          loadApi: () => youtubeLoader(documentRef, globalRef),
-          isCurrent: () => token === generation && record === current,
-          onStatus: (phase) => {
-            if (phase !== 'completed')
-              status.textContent = `YOUTUBE ${phase.toUpperCase()} · OPEN ORIGINAL`;
-          },
+          endAtSec,
+          warmKey,
         });
       }
-    }
+      position();
+    };
+    if (consent.isAllowed(source.provider)) mountProvider();
+    else renderConsentGate(current, mountProvider);
     position();
     return true;
+  }
+
+  /** Ask before connecting to the provider; the card and its link stay usable. */
+  function renderConsentGate(current, mountProvider) {
+    const { provider } = current.source;
+    const label = providerLabel(provider);
+    current.card.classList.add('is-awaiting-consent');
+    current.status.textContent = `${label} · CLICK TO LOAD`;
+    const gate = documentRef.createElement('div');
+    gate.className = 'bhote-embedded-consent';
+    const note = documentRef.createElement('p');
+    note.textContent = `Loading this post connects your browser to ${EMBEDDED_MEDIA_PROVIDER_NAMES[provider]}, which receives your IP address and may set cookies.`;
+    const actions = documentRef.createElement('div');
+    actions.className = 'bhote-embedded-consent-actions';
+    const choice = (text, remember) => {
+      const button = documentRef.createElement('button');
+      button.type = 'button';
+      button.textContent = text;
+      button.dataset.consent = remember ? 'always' : 'once';
+      button.addEventListener?.('click', () => {
+        consent.allow(provider, { remember });
+        gate.remove();
+        current.card.classList.remove('is-awaiting-consent');
+        current.status.textContent = `${label} · EMBEDDED SOURCE`;
+        mountProvider();
+      });
+      return button;
+    };
+    actions.append(
+      choice(`LOAD FROM ${label}`, false),
+      choice(`ALWAYS ALLOW ${label}`, true),
+    );
+    gate.append(note, actions);
+    current.player.append(gate);
+  }
+
+  function mountYouTube(
+    current,
+    token,
+    { observation, autoplay, startAtSec, endAtSec, warmKey },
+  ) {
+    const { source, key, player, status } = current;
+    const iframe = documentRef.createElement('iframe');
+    iframe.src = embeddedMediaFrameUrl(source, {
+      autoplay,
+      startAtSec,
+      endAtSec,
+    });
+    const controlled =
+      autoplay &&
+      Number.isFinite(Number(endAtSec)) &&
+      Number(endAtSec) > startAtSec;
+    if (controlled) {
+      const url = new URL(iframe.src);
+      url.searchParams.set('enablejsapi', '1');
+      if (globalRef.location?.origin)
+        url.searchParams.set('origin', globalRef.location.origin);
+      iframe.src = url.href;
+    }
+    iframe.title = `${providerLabel(source.provider)} media: ${observation?.title || 'witness source'}`;
+    iframe.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+    iframe.allowFullscreen = true;
+    iframe.loading = 'eager';
+    iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+    iframe.addEventListener?.(
+      'load',
+      () => {
+        if (token !== generation || record?.key !== key) return;
+        clearWarm(warmKey);
+        if (
+          !record.youtubeSession ||
+          ['starting', 'playing'].includes(
+            record.youtubeSession.getState().phase,
+          )
+        ) {
+          status.textContent = `${providerLabel(source.provider)} · PROVIDER CONTROLS`;
+        }
+        position();
+      },
+      { once: true },
+    );
+    player.append(iframe);
+    if (controlled) {
+      current.youtubeSession = createTrimmedYouTubePlayback({
+        iframe,
+        endAtSec: Number(endAtSec),
+        startAtSec,
+        globalRef,
+        loadApi: () => youtubeLoader(documentRef, globalRef),
+        isCurrent: () => token === generation && record === current,
+        onStatus: (phase) => {
+          if (phase !== 'completed')
+            status.textContent = `YOUTUBE ${phase.toUpperCase()} · OPEN ORIGINAL`;
+        },
+      });
+    }
   }
 
   function destroy() {

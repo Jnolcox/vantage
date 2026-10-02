@@ -207,7 +207,7 @@
   bottom: calc(100% + 1.2rem + var(--dock-lower-pinned-height));
 }
 
-#command-dock.dock-has-pinned-tray .gev-voice-error-tray {
+#command-dock.dock-has-pinned-tray .vantage-voice-error-tray {
   bottom: calc(100% + 1.7rem + var(--dock-pinned-stack-height));
 }
 
@@ -222,7 +222,7 @@
   font-size: 0.68rem;
 }
 
-#command-dock > #gev-voice-control {
+#command-dock > #vantage-voice-control {
   grid-template-columns: 3rem minmax(0, 1fr);
   grid-template-rows: 0.8rem 2.25rem 0.85rem;
   gap: 0.12rem 0.28rem;
@@ -235,7 +235,7 @@
   overflow: visible;
 }
 
-#command-dock .gev-voice-heading {
+#command-dock .vantage-voice-heading {
   grid-column: 2;
   grid-row: 1;
   display: flex;
@@ -245,7 +245,7 @@
   min-width: 0;
 }
 
-#command-dock .gev-voice-kicker {
+#command-dock .vantage-voice-kicker {
   position: static;
   padding-right: 0;
   font-size: 0.46rem;
@@ -253,7 +253,7 @@
   letter-spacing: 0.08rem;
 }
 
-#command-dock #gev-voice-button {
+#command-dock #vantage-voice-button {
   grid-column: 1;
   grid-row: 1 / 4;
   align-self: center;
@@ -265,7 +265,7 @@
   box-shadow: none;
 }
 
-#command-dock .gev-mic-orbit {
+#command-dock .vantage-mic-orbit {
   flex: 0 0 2.45rem;
   width: 2.45rem;
   height: 2.45rem;
@@ -279,14 +279,14 @@
     0 0 0.9rem rgba(0, 212, 255, 0.12);
 }
 
-#command-dock .gev-mic-label {
+#command-dock .vantage-mic-label {
   display: block;
   margin-top: 0.18rem;
   font-size: 0.42rem;
   letter-spacing: 0.035rem;
 }
 
-#command-dock .gev-voice-visualizer {
+#command-dock .vantage-voice-visualizer {
   grid-column: 2;
   grid-row: 2;
   align-self: stretch;
@@ -301,18 +301,20 @@
 }
 
 #command-dock
-  #gev-voice-control[data-status='connecting']
-  .gev-voice-visualizer,
-#command-dock #gev-voice-control[data-status='listening'] .gev-voice-visualizer,
+  #vantage-voice-control[data-status='connecting']
+  .vantage-voice-visualizer,
 #command-dock
-  #gev-voice-control[data-status='executing']
-  .gev-voice-visualizer {
+  #vantage-voice-control[data-status='listening']
+  .vantage-voice-visualizer,
+#command-dock
+  #vantage-voice-control[data-status='executing']
+  .vantage-voice-visualizer {
   visibility: visible;
   opacity: 1;
   transform: none;
 }
 
-#command-dock #gev-voice-status {
+#command-dock #vantage-voice-status {
   position: static;
   width: auto;
   padding-top: 0;
@@ -321,7 +323,7 @@
   text-align: left;
 }
 
-#command-dock #gev-voice-detail {
+#command-dock #vantage-voice-detail {
   grid-column: 2;
   grid-row: 3;
   align-self: start;
@@ -336,14 +338,20 @@
   white-space: nowrap;
 }
 
-#command-dock #gev-voice-control[data-status='connecting'] #gev-voice-detail,
-#command-dock #gev-voice-control[data-status='listening'] #gev-voice-detail,
-#command-dock #gev-voice-control[data-status='executing'] #gev-voice-detail {
+#command-dock
+  #vantage-voice-control[data-status='connecting']
+  #vantage-voice-detail,
+#command-dock
+  #vantage-voice-control[data-status='listening']
+  #vantage-voice-detail,
+#command-dock
+  #vantage-voice-control[data-status='executing']
+  #vantage-voice-detail {
   grid-row: 3;
   font-size: 0.43rem;
 }
 
-#command-dock #gev-voice-control[data-status='error'] {
+#command-dock #vantage-voice-control[data-status='error'] {
   display: grid;
   align-items: initial;
   width: var(--dock-voice-width);
@@ -351,11 +359,15 @@
   border-radius: 0.4rem;
 }
 
-#command-dock #gev-voice-control[data-status='error'] .gev-voice-readout {
+#command-dock
+  #vantage-voice-control[data-status='error']
+  .vantage-voice-readout {
   display: contents;
 }
 
-#command-dock #gev-voice-control[data-status='error'] #gev-voice-detail {
+#command-dock
+  #vantage-voice-control[data-status='error']
+  #vantage-voice-detail {
   max-width: none;
   overflow: hidden;
   color: #ffb4bd;
@@ -365,7 +377,7 @@
   white-space: nowrap;
 }
 
-#command-dock .gev-voice-error-tray {
+#command-dock .vantage-voice-error-tray {
   position: absolute;
   bottom: calc(100% + 0.7rem);
   left: 50%;
@@ -393,15 +405,15 @@
 }
 
 #command-dock
-  #gev-voice-control[data-status='error']:not(.error-dismissed)
-  .gev-voice-error-tray {
+  #vantage-voice-control[data-status='error']:not(.error-dismissed)
+  .vantage-voice-error-tray {
   visibility: visible;
   opacity: 1;
   pointer-events: auto;
   transform: translate(-50%, 0) scale(1);
 }
 
-#command-dock .gev-voice-error-header {
+#command-dock .vantage-voice-error-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -413,7 +425,7 @@
   letter-spacing: 0.1rem;
 }
 
-#command-dock .gev-voice-error-dismiss {
+#command-dock .vantage-voice-error-dismiss {
   padding: 0.25rem 0.42rem;
   color: rgba(255, 220, 224, 0.72);
   background: rgba(255, 255, 255, 0.04);
@@ -425,7 +437,7 @@
   cursor: pointer;
 }
 
-#command-dock #gev-voice-error-detail {
+#command-dock #vantage-voice-error-detail {
   margin-top: 0.65rem;
   color: rgba(255, 232, 235, 0.92);
   font-family: var(--font-sans);
@@ -433,7 +445,7 @@
   line-height: 1.45;
 }
 
-#command-dock .gev-voice-error-hint {
+#command-dock .vantage-voice-error-hint {
   margin-top: 0.5rem;
   color: rgba(255, 196, 203, 0.58);
   font-family: var(--font-mono);
@@ -487,7 +499,7 @@ body:not(.ui-clean-view):not(.recording-mode):has(
     max-width: calc(100vw - 1.5rem);
   }
 
-  #command-dock .gev-voice-error-tray {
+  #command-dock .vantage-voice-error-tray {
     width: min(24rem, calc(100vw - 1.5rem));
   }
 }

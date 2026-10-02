@@ -7,8 +7,10 @@ import {
 import { registerDataCredits } from '../data/dataCredits.js';
 import { configureCreditKeyboardAccess } from '../creditKeyboard.js';
 import { MapStackController } from '../mapStackController.js';
-import { loadPhotorealisticTileset } from '../mapStartup.js';
-import { initLogoGaze } from '../logoGaze.js';
+import {
+  configureCesiumNetworkDefaults,
+  loadPhotorealisticTileset,
+} from '../mapStartup.js';
 import {
   uninstallRenderGovernor,
   governorRequestRender,
@@ -31,7 +33,6 @@ export async function createApplicationScene({
     requests: requestServices,
     signal,
   });
-  defer(initLogoGaze());
   const previousKey = window.__GOOGLE_MAPS_API_KEY__;
   if (googleApiKey) {
     window.__GOOGLE_MAPS_API_KEY__ = googleApiKey;
@@ -42,6 +43,7 @@ export async function createApplicationScene({
     });
   }
   loaderStatus.textContent = 'Configuring viewer...';
+  configureCesiumNetworkDefaults(Cesium, { cesiumToken });
   // Provider attribution stays visible, including clean-view and recording.
   const creditContainer = document.createElement('div');
   creditContainer.id = 'cesium-credits';
@@ -108,7 +110,7 @@ export async function createApplicationScene({
     // live scene state, so intermediate emissions are harmless.
     onChange: (state) => {
       window.dispatchEvent(
-        new CustomEvent('gev:map-stack-changed', { detail: state }),
+        new CustomEvent('vantage:map-stack-changed', { detail: state }),
       );
     },
     onError: (message) => console.warn('[MapStack]', message),

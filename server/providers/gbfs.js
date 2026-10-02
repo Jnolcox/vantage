@@ -1,4 +1,5 @@
 import { readResponseTextCapped } from './common/http.js';
+import { clientUserAgent } from '../../src/sources/projectIdentity.js';
 import {
   isAllowedGbfsHost,
   isAllowedGbfsPath,
@@ -10,6 +11,8 @@ import {
 // ---------------------------------------------------------------------------
 /** Upstream fetch timeout for GBFS requests (ms). */
 const GBFS_PROXY_TIMEOUT_MS = 12000;
+/** Identifies the proxy to every GBFS operator it polls. */
+const GBFS_USER_AGENT = clientUserAgent('gbfs-proxy');
 
 export const GBFS_MAX_BODY_BYTES = 5 * 1024 * 1024; // 5 MB
 
@@ -59,7 +62,7 @@ export async function fetchGbfsUpstream(
       method: 'GET',
       headers: {
         Accept: 'application/json',
-        'User-Agent': 'gods-eye-view-gbfs-proxy/1.0',
+        'User-Agent': GBFS_USER_AGENT,
       },
       redirect: 'manual',
       signal: controller.signal,

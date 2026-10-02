@@ -43,7 +43,7 @@ export function setContextCollapsed(collapsed) {
     if (icon) icon.textContent = expanded ? 'chevron_left' : 'chevron_right';
   }
   if (this.active && wasCollapsed && !this.contextCollapsed) {
-    window.dispatchEvent(new CustomEvent('gev:cockpit-context-expanded'));
+    window.dispatchEvent(new CustomEvent('vantage:cockpit-context-expanded'));
   }
   this.scheduleContextLayout();
 }
@@ -69,7 +69,7 @@ export function setSignalCollapsed(collapsed, { user = false } = {}) {
   if (this.signalCollapsed) this.stopBriefRotation();
   else this.startBriefRotation({ reset: true });
   if (this.active && wasCollapsed && !this.signalCollapsed) {
-    window.dispatchEvent(new CustomEvent('gev:cockpit-signal-expanded'));
+    window.dispatchEvent(new CustomEvent('vantage:cockpit-signal-expanded'));
   }
   this.scheduleContextLayout();
 }

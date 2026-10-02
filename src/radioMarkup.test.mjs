@@ -1,5 +1,5 @@
 import { readRealtimeSource } from './testSupport/readRealtimeSource.mjs';
-import { GEV_REALTIME_TOOLS } from '../server/providers/openai/tools.js';
+import { VANTAGE_REALTIME_TOOLS } from '../server/providers/openai/tools.js';
 import { readShellSource } from './testSupport/readShellSource.mjs';
 import { expandApplicationHtml } from '../build/application-html.js';
 import { readLayerSource } from './testSupport/readLayerSource.mjs';
@@ -23,7 +23,7 @@ const realtime = readRealtimeSource();
 const voice = readFileSync(new URL('./voice/actionSchemas.js', import.meta.url), 'utf8') + '\n' + ['toolDescriptions', 'instructions'].map(name => readFileSync(new URL(`../server/providers/openai/${name}.js`, import.meta.url), 'utf8')).join('\n');
 const css = readStylesheet(new URL('../style.css', import.meta.url));
 
-function realtimeTools() { return GEV_REALTIME_TOOLS; }
+function realtimeTools() { return VANTAGE_REALTIME_TOOLS; }
 
 test('Realtime schema exposes the authoritative 28-tool inventory', () => {
   const tools = realtimeTools();
@@ -188,27 +188,27 @@ test('no unchanged Realtime tool definition drifts silently', () => {
     .digest('hex')
     .slice(0, 16);
   // ALPR intentionally extends the two layer enums; retain the complete pin.
-  assert.equal(digest, '6963175a0c9a76de', 'an unchanged Realtime tool definition drifted');
+  assert.equal(digest, 'c19553500476059a', 'an unchanged Realtime tool definition drifted');
 });
 
 test('Radio volume and mission speed share the Sharpen slider visual language', () => {
   for (const id of ['cockpit-radio-volume', 'context-radio-mini-volume', 'radio-volume']) {
     assert.match(
       html,
-      new RegExp(`id="${id}"[^>]*class="gev-quantitative-slider"[^>]*type="range"`),
+      new RegExp(`id="${id}"[^>]*class="vantage-quantitative-slider"[^>]*type="range"`),
     );
   }
   assert.match(
     rocketLaunches,
-    /id="space-mission-replay-speed" class="gev-quantitative-slider" type="range" min="0\.25" max="4" step="0\.25" value="1"/,
+    /id="space-mission-replay-speed" class="vantage-quantitative-slider" type="range" min="0\.25" max="4" step="0\.25" value="1"/,
   );
-  assert.match(rocketLaunches, /class="gev-slider-value"[^>]*data-mission-replay-speed-output/);
-  assert.match(css, /\.gev-quantitative-slider\s*\{[\s\S]*?min-width: 0;[\s\S]*?height: 18px;/);
-  assert.match(css, /\.gev-quantitative-slider::-webkit-slider-runnable-track\s*\{[\s\S]*?height: 3px;[\s\S]*?background: rgba\(255, 255, 255, 0\.08\);/);
-  assert.match(css, /\.gev-quantitative-slider::-webkit-slider-thumb\s*\{[\s\S]*?width: 10px;[\s\S]*?height: 10px;[\s\S]*?border-radius: 50%;[\s\S]*?background: var\(--accent\);/);
-  assert.match(css, /\.gev-quantitative-slider:focus-visible\s*\{[\s\S]*?outline: 1px solid/);
-  assert.match(css, /\.gev-quantitative-slider:disabled\s*\{[\s\S]*?opacity: 0\.42;[\s\S]*?cursor: not-allowed;/);
-  assert.match(css, /\.gev-slider-value\s*\{[\s\S]*?color: var\(--accent\);[\s\S]*?font-size: 9px;/);
+  assert.match(rocketLaunches, /class="vantage-slider-value"[^>]*data-mission-replay-speed-output/);
+  assert.match(css, /\.vantage-quantitative-slider\s*\{[\s\S]*?min-width: 0;[\s\S]*?height: 18px;/);
+  assert.match(css, /\.vantage-quantitative-slider::-webkit-slider-runnable-track\s*\{[\s\S]*?height: 3px;[\s\S]*?background: rgba\(255, 255, 255, 0\.08\);/);
+  assert.match(css, /\.vantage-quantitative-slider::-webkit-slider-thumb\s*\{[\s\S]*?width: 10px;[\s\S]*?height: 10px;[\s\S]*?border-radius: 50%;[\s\S]*?background: var\(--accent\);/);
+  assert.match(css, /\.vantage-quantitative-slider:focus-visible\s*\{[\s\S]*?outline: 1px solid/);
+  assert.match(css, /\.vantage-quantitative-slider:disabled\s*\{[\s\S]*?opacity: 0\.42;[\s\S]*?cursor: not-allowed;/);
+  assert.match(css, /\.vantage-slider-value\s*\{[\s\S]*?color: var\(--accent\);[\s\S]*?font-size: 9px;/);
   assert.doesNotMatch(css, /#space-mission-panel \[data-mission-replay-speed\]::-webkit-slider-thumb/);
 });
 
@@ -249,12 +249,8 @@ test('Radio is nested inside Context with separate disclosure and power controls
   assert.match(css, /\.radio-tuner\.is-dragging \.radio-tuner-needle,[\s\S]*?\.radio-tuner\.is-dragging \.radio-tuner-tick\s*\{\s*transition: none;/);
   assert.match(css, /\.radio-tuner\s*\{[\s\S]*?max-width: 100%;[\s\S]*?overflow: hidden;/);
   assert.match(css, /#radio-tuner-slider\s*\{[\s\S]*?max-width: 100%;[\s\S]*?touch-action: none;/);
-  assert.match(css, /#title-bar\.radio-broadcasting \.title-logo::before/);
-  assert.match(css, /#title-bar\.radio-broadcasting \.title-logo::after/);
-  assert.match(css, /--radio-broadcast-opacity: 0\.17/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.radio-tuner-needle,[\s\S]*?\.radio-tuner-tick\s*\{\s*transition: none;/);
   assert.doesNotMatch(ui, /_radioTunerCameraRemove = this\.viewer\?\.camera\?\.changed/);
-  assert.match(radioPresentation, /classList\.toggle\('radio-broadcasting', state\.audioState === 'playing'\)/);
   assert.match(radioBindings, /cycleStation\(direction, \{[\s\S]*?rotate,[\s\S]*?stationIds:/);
   const cycleStart = radioBindings.indexOf('const cycleRadio = (direction, { rotate = true } = {}) =>');
   const cycleMethod = radioBindings.slice(cycleStart, radioBindings.indexOf('const toggleRadio', cycleStart));
@@ -264,7 +260,6 @@ test('Radio is nested inside Context with separate disclosure and power controls
   assert.match(radioBindings, /previewTuningStation\(station\?\.id \|\| null, \{ rotate \}\)/);
   assert.match(radioBindings, /tunerPreview\(\{\s*coordinate: this\._radioTunerCoordinate,\s*rotate: commit,?\s*\}\)/);
   assert.match(radioBindings, /this\.radio\.cancelTuning\(\)/);
-  assert.match(radioControlsSource, /classList\.remove\('radio-broadcasting'\)/);
   assert.match(radioBindings, /this\.radio\.getTunerStations\(750\)/);
   assert.match(radioBindings, /radioTunerPointerPosition\(/);
   assert.doesNotMatch(css, /#right-context-rail\s*>\s*#radio-panel/);

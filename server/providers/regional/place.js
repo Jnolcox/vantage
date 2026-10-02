@@ -1,6 +1,10 @@
 import { makeRateLimiter, clientKey } from '../common/rate-limit.js';
 import { coalesceProxyRequest } from '../common/http.js';
 import { fetchRegionalJson } from './http.js';
+import {
+  PROJECT_URL,
+  PROJECT_USER_AGENT,
+} from '../../../src/sources/projectIdentity.js';
 import { normalizeRegionalPlace } from '../../../src/data/regionalModel.js';
 import {
   nominatimToGeocodeResult,
@@ -13,9 +17,8 @@ import {
  * agents will not do. Both are sent.
  */
 const NOMINATIM_HEADERS = Object.freeze({
-  'User-Agent':
-    'gods-eye-view/0.1 (+https://github.com/bilawalsidhu/gods-eye-view)',
-  Referer: 'https://github.com/bilawalsidhu/gods-eye-view',
+  'User-Agent': PROJECT_USER_AGENT,
+  Referer: PROJECT_URL,
 });
 
 /**

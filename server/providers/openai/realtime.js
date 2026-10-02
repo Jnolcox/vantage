@@ -12,7 +12,11 @@ import {
   OPENAI_REALTIME_CONTEXT_RETENTION_DEFAULT,
 } from './constants.js';
 import { realtimeInstructions } from './instructions.js';
-import { GEV_REALTIME_TOOLS } from './tools.js';
+import { VANTAGE_REALTIME_TOOLS } from './tools.js';
+import {
+  isRealtimeDebugLogEnabled,
+  REALTIME_DEBUG_LOG_HEADER,
+} from './debug-log.js';
 
 function createRealtimeTokenHandler({
   annotationGuidance,
@@ -23,14 +27,22 @@ function createRealtimeTokenHandler({
 } = {}) {
   return async (req, res) => {
     res.setHeader('Cache-Control', 'no-store');
-    if (req.method !== 'GET' && req.method !== 'POST') {
+    // Set before any early return so the browser learns the debug-log setting
+    // whichever way this mint turns out.
+    res.setHeader(
+      REALTIME_DEBUG_LOG_HEADER,
+      isRealtimeDebugLogEnabled() ? '1' : '0',
+    );
+    // POST only: a GET mint could be triggered by any page's <img> tag.
+    if (req.method !== 'POST') {
       res.statusCode = 405;
+      res.setHeader('Allow', 'POST');
       res.setHeader('Content-Type', 'application/json');
       res.end(JSON.stringify({ error: 'Method not allowed' }));
       return;
     }
 
-    // Opt-in per-IP throttle (GEV_RATELIMIT_OPENAI_PER_MIN). No-op when unset.
+    // Opt-in per-IP throttle (VANTAGE_RATELIMIT_OPENAI_PER_MIN). No-op when unset.
     if (!enforceOptInRateLimit(openAiRateLimiter(), req, res)) return;
 
     const apiKey = resolveApiKey();
@@ -113,7 +125,7 @@ function createRealtimeTokenHandler({
           output: { voice },
         },
         instructions: realtimeInstructions(annotationGuidance),
-        tools: GEV_REALTIME_TOOLS,
+        tools: VANTAGE_REALTIME_TOOLS,
         tool_choice: 'auto',
       },
     };
@@ -126,7 +138,7 @@ function createRealtimeTokenHandler({
         headers: {
           Authorization: `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
-          'OpenAI-Safety-Identifier': 'gev-local-dev',
+          'OpenAI-Safety-Identifier': 'vantage-local-dev',
         },
         body: JSON.stringify(sessionConfig),
       });
@@ -136,10 +148,10 @@ function createRealtimeTokenHandler({
       // success body is passed through untouched (the client parses it
       // verbatim), so these headers are the authoritative echo — including the
       // case where a bogus ?tier= was silently downgraded to standard.
-      res.setHeader('X-GEV-Voice-Tier', tier);
-      res.setHeader('X-GEV-Voice-Model', model);
+      res.setHeader('X-Vantage-Voice-Tier', tier);
+      res.setHeader('X-Vantage-Voice-Model', model);
       if (requestedTier && !isKnownVoiceTier(requestedTier)) {
-        res.setHeader('X-GEV-Voice-Tier-Fallback', '1');
+        res.setHeader('X-Vantage-Voice-Tier-Fallback', '1');
       }
       if (!response.ok) {
         console.warn(`[realtime-token] upstream HTTP ${response.status}`);

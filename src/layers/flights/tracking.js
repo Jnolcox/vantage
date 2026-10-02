@@ -63,8 +63,8 @@ export function createTracking({
     const info = flightState.records.data.get(icao24);
     if (!bb?.position || !info) return false;
     if (flightState._trackedEntity)
-      flightState._trackedEntity.gevSelectionOrigin = origin;
-    _emitAwarenessEvent('gev:awareness-subject-selected', {
+      flightState._trackedEntity.vantageSelectionOrigin = origin;
+    _emitAwarenessEvent('vantage:awareness-subject-selected', {
       layerId: 'flights',
       id: icao24,
       // Canonical display chain (callsign → registration → hex). Publishing a
@@ -401,9 +401,9 @@ export function createTracking({
     // 12 Hz icon instead of lagging ~1 s behind it.
     if (!flightState._trailHeadEntity && flightState._viewer) {
       flightState._trailHeadEntity = flightState._viewer.entities.add({
-        // 'gev-trail' namespace (round 6): claimed by trailRenderer's pick
+        // 'vantage-trail' namespace (round 6): claimed by trailRenderer's pick
         // owner so a click on the head segment never reads as empty space.
-        id: `gev-trail:fl-head-${++flightState._trailHeadSeq}`,
+        id: `vantage-trail:fl-head-${++flightState._trailHeadSeq}`,
         show: !flightState._cockpitContactMode,
         polyline: {
           positions: new Cesium.CallbackProperty(() => {
@@ -671,7 +671,7 @@ export function createTracking({
       flightState._billboards.get(clearedIcao),
     );
     clearTrackedSubjectContext('flights');
-    _emitAwarenessEvent('gev:awareness-subject-cleared', {
+    _emitAwarenessEvent('vantage:awareness-subject-cleared', {
       layerId: 'flights',
       id: clearedIcao,
       origin,
@@ -777,7 +777,7 @@ export function createTracking({
   function _updateTrackedLabelModel(icao24) {
     if (!flightState._trackedEntity || icao24 !== flightState._trackedIcao)
       return;
-    flightState._trackedEntity.gevLabelModel = trackedLabelModelFromText(
+    flightState._trackedEntity.vantageLabelModel = trackedLabelModelFromText(
       _trackedLabelText(icao24),
       '#39d0ff',
     );
@@ -996,9 +996,9 @@ export function createTracking({
         }, false),
       },
     });
-    flightState._trackedEntity.gevSelectionOrigin = origin;
-    flightState._trackedEntity.gevTrackedId = `flights:${icao24}`;
-    flightState._trackedEntity.gevLabelModel = trackedLabelModelFromText(
+    flightState._trackedEntity.vantageSelectionOrigin = origin;
+    flightState._trackedEntity.vantageTrackedId = `flights:${icao24}`;
+    flightState._trackedEntity.vantageLabelModel = trackedLabelModelFromText(
       _trackedLabelText(icao24),
       '#39d0ff',
     );
@@ -1024,12 +1024,12 @@ export function createTracking({
     // Expose the camera's already-settled position to cross-module HUD consumers (the tracked-target
     // readout) so they draw at the SAME spot the camera framed, without recomputing the dead-reckon in
     // postRender (which would jitter the label against the now-stable plane).
-    flightState._trackedEntity.gevDisplayPosition =
+    flightState._trackedEntity.vantageDisplayPosition =
       parts.motion._trackedDisplayCached;
-    // Separate accessor on purpose: `gevDisplayPosition` carries the follow-camera
+    // Separate accessor on purpose: `vantageDisplayPosition` carries the follow-camera
     // anti-jitter contract and must keep returning the cached DR position. Presentation
-    // that should weld to the AIRCRAFT YOU SEE reads `gevVisualPosition` instead.
-    flightState._trackedEntity.gevVisualPosition =
+    // that should weld to the AIRCRAFT YOU SEE reads `vantageVisualPosition` instead.
+    flightState._trackedEntity.vantageVisualPosition =
       parts.motion._trackedVisualCached;
     refreshTrackedReadout(flightState._trackedEntity);
     flightState._viewer.camera.cancelFlight();
@@ -1144,7 +1144,7 @@ export function createTracking({
           ) {
             _clearTracking(true, {
               origin:
-                flightState._viewer.trackedEntity?.gevSelectionOrigin ||
+                flightState._viewer.trackedEntity?.vantageSelectionOrigin ||
                 'programmatic',
             });
           }

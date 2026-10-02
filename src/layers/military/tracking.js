@@ -64,8 +64,8 @@ export function createTracking({
     const info = flightState.records.data.get(icao24);
     if (!bb?.position || !info) return false;
     if (flightState._trackedEntity)
-      flightState._trackedEntity.gevSelectionOrigin = origin;
-    _emitAwarenessEvent('gev:awareness-subject-selected', {
+      flightState._trackedEntity.vantageSelectionOrigin = origin;
+    _emitAwarenessEvent('vantage:awareness-subject-selected', {
       layerId: 'military',
       id: icao24,
       label:
@@ -250,7 +250,7 @@ export function createTracking({
   function _updateTrackedLabelModel(icao24) {
     if (!flightState._trackedEntity || icao24 !== flightState._trackedIcao)
       return;
-    flightState._trackedEntity.gevLabelModel = trackedLabelModelFromText(
+    flightState._trackedEntity.vantageLabelModel = trackedLabelModelFromText(
       _buildTrackedLabel(flightState.records.data.get(icao24), icao24),
       '#ffd166',
     );
@@ -525,9 +525,9 @@ export function createTracking({
     // to the 12 Hz icon instead of lagging ~1 s behind it.
     if (!flightState._trailHeadEntity && flightState._viewer) {
       flightState._trailHeadEntity = flightState._viewer.entities.add({
-        // 'gev-trail' namespace (round 6): claimed by trailRenderer's pick
+        // 'vantage-trail' namespace (round 6): claimed by trailRenderer's pick
         // owner so a click on the head segment never reads as empty space.
-        id: `gev-trail:mil-head-${++flightState._trailHeadSeq}`,
+        id: `vantage-trail:mil-head-${++flightState._trailHeadSeq}`,
         show: !flightState._cockpitContactMode,
         polyline: {
           positions: new Cesium.CallbackProperty(() => {
@@ -809,7 +809,7 @@ export function createTracking({
       flightState._billboards.get(clearedIcao),
     );
     clearTrackedSubjectContext('military');
-    _emitAwarenessEvent('gev:awareness-subject-cleared', {
+    _emitAwarenessEvent('vantage:awareness-subject-cleared', {
       layerId: 'military',
       id: clearedIcao,
       origin,
@@ -960,9 +960,9 @@ export function createTracking({
         }, false),
       },
     });
-    flightState._trackedEntity.gevSelectionOrigin = origin;
-    flightState._trackedEntity.gevTrackedId = `military:${icao24}`;
-    flightState._trackedEntity.gevLabelModel = trackedLabelModelFromText(
+    flightState._trackedEntity.vantageSelectionOrigin = origin;
+    flightState._trackedEntity.vantageTrackedId = `military:${icao24}`;
+    flightState._trackedEntity.vantageLabelModel = trackedLabelModelFromText(
       _buildTrackedLabel(info, icao24),
       '#ffd166',
     );
@@ -984,12 +984,12 @@ export function createTracking({
     // mid-fly_to_location) would follow the plane WITHOUT centering it like a click does.
     // Cross-module HUD consumers (tracked-target readout) read the camera's settled position, not a
     // postRender recompute, so the label doesn't jitter against the now-stable plane (mirror of flights).
-    flightState._trackedEntity.gevDisplayPosition =
+    flightState._trackedEntity.vantageDisplayPosition =
       parts.motion._trackedDisplayCached;
-    // Separate accessor on purpose (mirror of flights.js): `gevDisplayPosition` keeps the
+    // Separate accessor on purpose (mirror of flights.js): `vantageDisplayPosition` keeps the
     // follow-camera anti-jitter contract; presentation that must weld to the aircraft you
-    // can see reads `gevVisualPosition`.
-    flightState._trackedEntity.gevVisualPosition =
+    // can see reads `vantageVisualPosition`.
+    flightState._trackedEntity.vantageVisualPosition =
       parts.motion._trackedVisualCached;
     refreshTrackedReadout(flightState._trackedEntity);
     flightState._viewer.camera.cancelFlight();
@@ -1054,7 +1054,7 @@ export function createTracking({
           ) {
             _clearTracking(true, {
               origin:
-                flightState._viewer.trackedEntity?.gevSelectionOrigin ||
+                flightState._viewer.trackedEntity?.vantageSelectionOrigin ||
                 'programmatic',
             });
           }

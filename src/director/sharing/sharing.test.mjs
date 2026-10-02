@@ -157,6 +157,29 @@ test('preview reports unavailable sources/layers and missing bundle assets witho
   );
 });
 
+test('a bundle exported under the former gev-scene-bundle format still imports', async () => {
+  const current = JSON.parse(await createSceneBundle(fixture(), () => asset()));
+  const legacy = JSON.stringify({ ...current, format: 'gev-scene-bundle' });
+
+  const parsed = await parseSceneShare(legacy);
+
+  const pack = parsed.project.scenes[0].dataPacks[0];
+  assert.equal(pack.source.adapter, BUNDLE_SOURCE);
+  assert.deepEqual(parsed.assets.get(pack.source.path).bytes, bytes);
+});
+
+test('a legacy .gevbundle.json file keeps the 50 MiB bundle budget', async () => {
+  const text = await createSceneBundle(fixture(), () => asset());
+
+  const parsed = await readSceneShare({
+    name: 'scene.gevbundle.json',
+    size: 6 * 1024 * 1024,
+    text: () => text,
+  });
+
+  assert.equal(parsed.assets.size, 1);
+});
+
 test('bundle byte owner releases replacement data and has no network fallback', async () => {
   const parsed = await parseSceneShare(
     await createSceneBundle(fixture(), () => asset()),
@@ -189,7 +212,7 @@ test('oversized files fail before reading and cancellation settles a stalled fil
   );
   await assert.rejects(
     readSceneShare({
-      name: 'large.gevbundle.json',
+      name: 'large.vantagebundle.json',
       size: SHARE_LIMITS.bytes + 1,
       text: () => {
         reads++;

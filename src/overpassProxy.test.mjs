@@ -41,7 +41,7 @@ const DATA = { status: 200, body: '{"elements":[]}' };
 
 test('disk cache rejects old refusals for fresh and stale reads but preserves last-good data', async () => {
   const key = `overpass-cache-regression-${randomUUID()}`;
-  const directory = path.join(process.cwd(), '.gev-cache', 'overpass');
+  const directory = path.join(process.cwd(), '.vantage-cache', 'overpass');
   const file = path.join(directory, `${createHash('sha1').update(key).digest('hex')}.json`);
   await mkdir(directory, { recursive: true });
   try {
@@ -124,7 +124,7 @@ test('every mirror is asked with a User-Agent that identifies the application', 
     const agent = String(request.agent || '');
     assert.match(
       agent,
-      /^gods-eye-view\/\d/,
+      /^vantage\/\d/,
       `${request.url} must name the application and its version`,
     );
     assert.ok(
@@ -133,7 +133,7 @@ test('every mirror is asked with a User-Agent that identifies the application', 
     );
     assert.match(
       agent,
-      /github\.com\/bilawalsidhu\/gods-eye-view/,
+      /github\.com\/Jnolcox\/vantage/,
       `${request.url} must carry a route back to the project`,
     );
   }
@@ -144,7 +144,7 @@ test('a mirror that refuses the old label serves the same query under the identi
   // is answered with a 406 Not Acceptable HTML page before the query is read,
   // and the identifying one is served. This stub replays that shape so the
   // behaviour the header change buys is pinned without a live mirror.
-  const REFUSED = 'gods-eye-view-overpass-proxy/1.0';
+  const REFUSED = 'vantage-overpass-proxy/1.0';
   const answer = (agent) =>
     String(agent || '').startsWith(REFUSED)
       ? {
@@ -270,7 +270,7 @@ test('coalesced outage callers both receive last-good data, never a cached refus
   for (const status of [406, 503, 429]) {
     const query = `[out:json][timeout:12];node(around:10,30.27,-97.74)["name"="${randomUUID()}"];out;`;
     const body = `data=${encodeURIComponent(query)}`;
-    const directory = path.join(process.cwd(), '.gev-cache', 'overpass');
+    const directory = path.join(process.cwd(), '.vantage-cache', 'overpass');
     const file = path.join(directory, `${createHash('sha1').update(body).digest('hex')}.json`);
     await mkdir(directory, { recursive: true });
     const stale = { ...DATA, cachedAt: Date.now() - 40 * 86400000 };

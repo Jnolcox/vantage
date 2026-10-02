@@ -1,18 +1,18 @@
 {
-  "name": "gods-eye-view",
+  "name": "vantage",
   "private": true,
-  "version": "0.1.1",
-  "description": "A real-time intelligence console for planet Earth \u2014 photorealistic 3D globe, live aircraft/ships/satellites/earthquakes/CCTV, and hands-free voice control. Runs in a browser.",
+  "version": "1.0.0",
+  "description": "A real-time intelligence console for planet Earth — photorealistic 3D globe, live aircraft/ships/satellites/earthquakes/CCTV, and hands-free voice control. Runs in a browser.",
   "type": "module",
   "license": "MIT",
-  "author": "Bilawal Sidhu",
-  "homepage": "https://github.com/bilawalsidhu/gods-eye-view#readme",
+  "author": "John Nolcox",
+  "homepage": "https://github.com/Jnolcox/vantage#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/bilawalsidhu/gods-eye-view.git"
+    "url": "https://github.com/Jnolcox/vantage.git"
   },
   "bugs": {
-    "url": "https://github.com/bilawalsidhu/gods-eye-view/issues"
+    "url": "https://github.com/Jnolcox/vantage/issues"
   },
   "engines": {
     "node": ">=24.14.0 <25 || >=26 <27"
@@ -33,8 +33,10 @@
   ],
   "scripts": {
     "doctor": "node scripts/setup-doctor.mjs",
+    "version": "node scripts/sync-version.mjs && git add src/sources/version.js",
     "format": "node scripts/format.mjs --write",
     "format:check": "node scripts/format.mjs --check",
+    "fonts:fetch": "node scripts/fetch-fonts.mjs",
     "dev": "vite",
     "dev:secure": "./scripts/dev-secure.sh",
     "opensky:import": "./scripts/opensky-import-client.sh",
@@ -189,7 +191,7 @@
     "./ui/composition": "./src/ui/composition.js",
     "./ui/hud": "./src/hud.js",
     "./standalone/settings": "./src/keySetup.js",
-    "./voice/actions": "./src/voice/gevActions.js",
+    "./voice/actions": "./src/voice/vantageActions.js",
     "./annotations": "./src/annotations/index.js",
     "./context": "./src/data/contextStore.js",
     "./build/html": {

@@ -6,11 +6,18 @@ import {
   serializeCostLimits,
 } from './voiceCost.js';
 
-// Voice cost control (repo-wide `godsEyeView.<feature>.<field>` convention;
+// Voice cost control (repo-wide `vantage.<feature>.<field>` convention;
 // the neighbouring ERROR_STORAGE_KEY predates it).
-export const VOICE_TIER_STORAGE_KEY = 'godsEyeView.voiceCost.tier';
+export const VOICE_TIER_STORAGE_KEY = 'vantage.voiceCost.tier';
 
-export const VOICE_LIMITS_STORAGE_KEY = 'godsEyeView.voiceCost.limits';
+export const VOICE_LIMITS_STORAGE_KEY = 'vantage.voiceCost.limits';
+
+/**
+ * Whether voice turns may include a screenshot of the current view. On unless
+ * the viewer turned it off; voice still answers from structured map context.
+ */
+export const VOICE_VIEW_IMAGE_STORAGE_KEY = 'vantage.voice.shareViewImage';
+const VIEW_IMAGE_OFF = 'off';
 
 /** Best-effort localStorage handle; absent in tests and locked-down browsers. */
 export function voiceStorage(storage) {
@@ -81,4 +88,29 @@ export function writeStoredVoiceLimits(limits, storage) {
     /* best effort */
   }
   return normalized;
+}
+
+/** Read whether voice may send view screenshots. Defaults to on. */
+export function readStoredViewImageSharing(storage) {
+  try {
+    return (
+      voiceStorage(storage)?.getItem(VOICE_VIEW_IMAGE_STORAGE_KEY) !==
+      VIEW_IMAGE_OFF
+    );
+  } catch {
+    return true;
+  }
+}
+
+/** Persist the view-screenshot choice. Never throws. */
+export function writeStoredViewImageSharing(enabled, storage) {
+  try {
+    voiceStorage(storage)?.setItem(
+      VOICE_VIEW_IMAGE_STORAGE_KEY,
+      enabled ? 'on' : VIEW_IMAGE_OFF,
+    );
+  } catch {
+    /* best effort */
+  }
+  return Boolean(enabled);
 }

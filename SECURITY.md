@@ -1,13 +1,13 @@
 # Security
 
-God's Eye View is a local-first client for **public** data. It is built for exploration, demos, and learning — not as a hardened production service. This document explains the security model so you can run it safely and report issues responsibly.
+Vantage is a local-first client for **public** data. It is built for exploration, demos, and learning — not as a hardened production service. This document explains the security model so you can run it safely and report issues responsibly.
 
 ## Reporting a vulnerability
 
 Please report security issues **privately** — do not open a public issue for anything exploitable.
 
-- Use GitHub's [private vulnerability reporting](https://github.com/bilawalsidhu/gods-eye-view/security/advisories/new) (Security tab → "Report a vulnerability"), or
-- Reach the maintainer directly via the contact on the GitHub profile.
+- Use GitHub's [private vulnerability reporting](https://github.com/Jnolcox/vantage/security/advisories/new) (Security tab → "Report a vulnerability"), or
+- Reach the maintainer, John Nolcox ([@Jnolcox](https://github.com/Jnolcox)), via the contact on the GitHub profile.
 
 Include repro steps and impact. We'll acknowledge, investigate, and credit you (if you'd like) once a fix ships.
 
@@ -26,7 +26,7 @@ The golden rule: **secret-bearing API keys stay on the server side.** The dev/pr
 
 These are designed to be used directly in the browser (like a Mapbox public token). They are injected into the client bundle via Vite's `define`, so they **will** be visible in browser devtools. Scope and restrict them rather than trying to hide them:
 
-1. **Google Maps API key** — loads Photorealistic 3D Tiles directly and powers GEV place search. **Restrict it** (HTTP referrer + API restriction to the required Google APIs) in the Google Cloud Console. An unrestricted key in a public deployment can be abused and billed to you.
+1. **Google Maps API key** — loads Photorealistic 3D Tiles directly and powers Vantage place search. **Restrict it** (HTTP referrer + API restriction to the required Google APIs) in the Google Cloud Console. An unrestricted key in a public deployment can be abused and billed to you.
 2. **Cesium ion token** (`CESIUM_ION_TOKEN`, optional — for ion-hosted Google Photorealistic 3D Tiles, Bing world imagery, and world terrain) — used as `Cesium.Ion.defaultAccessToken` client-side. Use a public **`assets:read`** token with **URL restrictions** for any hosted deployment. The Community plan has eligibility and usage limits; a public token is not a secret, but it can still consume the account's quota.
 
 > The explicit browser `define` block in `build/vite.js` controls exactly what reaches the client: only these two keys. Everything else stays server-side.
@@ -62,21 +62,24 @@ browser-key fallback for existing single-key setups.
 The data proxies under `server/providers/` are written so the browser cannot turn the server into an open relay:
 
 - **No arbitrary-URL fetching.** The CCTV frame proxy fetches only server-registered camera/frame URLs — clients cannot pass an upstream URL to fetch (SSRF mitigation). Other proxies target fixed upstream hosts.
-- **Radio is not an audio relay.** `/api/radio/stations` contacts only allowlisted Radio Browser HTTPS hosts and paths, rejects redirects, rejects any hostname with a loopback/private/link-local/metadata/non-public A or AAAA result, and pins each TLS connection to a validated address. It returns normalized public HTTPS stream URLs; `/api/radio/click/:uuid` applies the same destination policy and accepts only station IDs from the current bounded catalog. The browser then connects directly to the broadcaster after an explicit playback action, so the broadcaster sees the listener's IP address. GEV never proxies, caches, records, or redistributes audio.
+- **Radio is not an audio relay.** `/api/radio/stations` contacts only allowlisted Radio Browser HTTPS hosts and paths, rejects redirects, rejects any hostname with a loopback/private/link-local/metadata/non-public A or AAAA result, and pins each TLS connection to a validated address. It returns normalized public HTTPS stream URLs; `/api/radio/click/:uuid` applies the same destination policy and accepts only station IDs from the current bounded catalog. The browser then connects directly to the broadcaster after an explicit playback action, so the broadcaster sees the listener's IP address. Vantage never proxies, caches, records, or redistributes audio.
 - **No verbatim client headers upstream.** The CCTV media route is the one route that relays a request header (`Range`, for video seeking). It is parsed and canonicalized before it is forwarded: one `bytes=` range only, with every accepted form — explicit span, open-ended and suffix — bounded to the same 64 MiB ceiling the relay applies to a declared response body. Multi-range, malformed, inverted and non-`bytes` values are dropped and the request proceeds without a `Range`, as RFC 7233 §3.1 prescribes. Bounding the request bounds what is asked for: a response that declares no length — live streamed media, or a chunked body from an upstream that ignores the `Range` — has no ceiling. An upstream request the browser has stopped waiting for is cancelled rather than left running, whether the viewer leaves before the headers arrive or during the body.
 - **Transit fetches registered feeds only.** `/api/transit/vehicles/<id>` resolves the id against `src/data/transitFeeds.js`; the browser never supplies a URL, and a feed that is registered but disabled does not resolve at all. Redirects are followed manually and each hop is validated against the feed's own https origin before it is requested, so an off-origin or downgraded hop is refused rather than contacted. Bodies are capped at 8 MB, the protobuf is decoded server-side under entity-count and string-length ceilings, a differential feed is refused, and snapshots live 15 s in memory with no disk cache. A per-feed admission limiter and a failure cooldown ladder bound what this process can ask of any operator.
 - **Response-size caps and timeouts** on proxied responses.
 - **Sanitized errors** — internal error details are not echoed back to clients.
 - **Coalesced OAuth refresh** and cached successful responses only (OpenSky).
-- **Redacted debug logging.** The voice debug log (`.gev-logs/`, gitignored) strips API keys, bearer tokens, client secrets, and image data URLs before writing.
+- **Opt-in, redacted debug logging.** The voice debug log (`.vantage-logs/`, gitignored) is written only when the server runs with `VANTAGE_REALTIME_DEBUG_LOG=1`, and strips API keys, bearer tokens, client secrets, and image data URLs before writing. When enabled it records full voice transcripts.
 
 ## Network exposure — the operator threat model
 
 The dev server is a **key broker**: every server-side key above is spendable by anyone who can send HTTP requests to it. That shapes the defaults:
 
-- **Local-only by default.** `./scripts/dev-fresh.sh` (and the Vite config itself) bind to `localhost`, so only your machine can reach the server — and only local names are accepted (`allowedHosts` stays restricted, which also blunts DNS-rebinding tricks).
-- **LAN exposure is an explicit opt-in**: `HOST=0.0.0.0 ./scripts/dev-fresh.sh`. The launcher prints a prominent warning plus your LAN URL. Understand what opting in means: **every device on that network can drive the proxies and spend your OpenAI / Google / OpenSky / AISStream / TomTom / FIRMS quota** for as long as the server runs. Do this only on networks you trust.
-- **App-level throttles (opt-in):** `GEV_RATELIMIT_OPENAI_PER_MIN` and `GEV_RATELIMIT_GOOGLE_PER_MIN` cap the cost-bearing endpoints per client IP per minute (over-limit requests receive a sanitized `429`). They are **per-IP, process-local, in-memory guards** — they reset on restart and are **not billing caps**.
+- **Local-only by default.** `./scripts/dev-fresh.sh`, `npm run dev` and Pinokio bind to `127.0.0.1`, so only your machine can reach the server.
+- **Only expected `Host` names are answered — on `/api` too.** `allowedHosts` is always an explicit list (localhost, `*.local`, IP addresses, plus this machine's hostname in LAN mode and anything in `VANTAGE_ALLOWED_HOSTS`). Vite applies it to the page; because provider middleware runs before Vite's own checks, a separate guard (`server/standalone/api-request-guard.js`) applies it to every `/api` route, which closes DNS rebinding.
+- **Other websites cannot drive the proxies.** The same guard refuses any `Origin` other than the server's own and any request the browser labels `Sec-Fetch-Site: cross-site` or `same-site` (which covers `<img>` and no-cors loads that carry no `Origin`). CORS is off, `/api/realtime/token` answers only `POST`, and the CCTV Street View fallback frames only registered cameras. Local tools without those headers (curl, the QA scripts) still work.
+- **Local data is never served.** `.vantage-logs/` (voice transcripts when the debug log is on) and `.vantage-cache/` are in the dev server's `fs.deny`, alongside `.env*`, certificates, `.git` and `pinokio/ENVIRONMENT`.
+- **LAN exposure is an explicit opt-in**: `VANTAGE_HOST=0.0.0.0 ./scripts/dev-fresh.sh` (`HOST` is still read as the old name). The launcher prints a prominent warning plus your LAN URL. Understand what opting in means: **every device on that network can drive the proxies and spend your OpenAI / Google / OpenSky / AISStream / TomTom / FIRMS quota** for as long as the server runs. Do this only on networks you trust.
+- **App-level throttles:** `VANTAGE_RATELIMIT_OPENAI_PER_MIN` and `VANTAGE_RATELIMIT_GOOGLE_PER_MIN` cap the cost-bearing endpoints per client IP per minute (over-limit requests receive a sanitized `429`). They are off on a loopback bind and default to 30 and 60 in LAN mode unless you set them (`0` means unlimited). They are **per-IP, process-local, in-memory guards** — they reset on restart and are **not billing caps**.
 - **Provider-side budgets are the real backstop.** For hard spend protection, configure limits where the money is: OpenAI platform usage limits, Google Cloud budget alerts + per-API quotas, and equivalent controls for any other keyed provider.
 - **Pinokio LAN and Cloudflare sharing are refused.** The current supported
   Pinokio release re-reads sharing state when an app registers its Open URL and
@@ -84,9 +87,46 @@ The dev server is a **key broker**: every server-side key above is spendable by 
   stream. Before preflight, the launcher rewrites its app-scoped sharing controls
   to disabled values, clears any Pinokio-global passcode from the child, and
   pins the platform share trigger to a disabled sentinel. A stale or requested
-  sharing value is therefore discarded rather than honored, and GEV starts on
+  sharing value is therefore discarded rather than honored, and Vantage starts on
   loopback only. Use a separately reviewed authentication proxy for remote
   access and keep provider-side quotas as the spend backstop.
+
+## Network & privacy — what the browser may contact
+
+The README's [Network & privacy](README.md#network--privacy) section lists
+every outbound destination, when it is contacted and what is sent. The
+controls that keep it that way:
+
+- **Content-Security-Policy.** `build/content-security-policy.js` lists each
+  third-party origin the page may load from or connect to, with the
+  directives it needs and why; everything else is `'self'` and goes through
+  `/api`. The dev and preview servers send it as a header (with
+  `frame-ancestors 'none'` and `X-Frame-Options: DENY`), and `vite build`
+  writes it into `dist/index.html` as a meta tag. `script-src` allows
+  `'unsafe-eval'` only because the Knockout copy inside Cesium's widgets
+  compiles its bindings with `new Function`, and `blob:` only because the
+  production Cesium build starts its workers from blob URLs; script origins
+  stay pinned.
+  `src/tooling/contentSecurityPolicy.test.mjs` fails when browser code names
+  a host the policy does not classify. If something is blocked while you
+  investigate, `VANTAGE_CSP=report-only` reports instead of blocking.
+- **Referrer-Policy `strict-origin-when-cross-origin`** (header and meta).
+  Google referrer-restricted keys and YouTube embeds need the origin, so it
+  is never tightened to `no-referrer`; paths and share-link state are never
+  sent.
+- **Embedded media is click-to-load.** YouTube (`youtube-nocookie`), Facebook
+  and X load nothing — no preconnect, warm-up frame or SDK — until the viewer
+  presses LOAD or ALWAYS ALLOW for that provider. Opening the Bhote Koshi
+  event fetches its YouTube thumbnail posters from `i.ytimg.com` without
+  cookies.
+- **Automatic AI context is visible and switchable.** DISPLAY ▸ HUD ▸
+  Context (Live/Local) controls the HUD's periodic Google and OpenAI lookups;
+  the mic's VIEW toggle controls voice screenshots.
+- **Cesium fails closed.** `Ion.defaultAccessToken` is the configured token
+  or empty, so no implicit call reaches Cesium ion with the SDK's demo token,
+  and the Google 3D Tiles credit logo is served locally.
+- **Opt-in third-party reporting only.** Radio plays reach Radio Browser's
+  click counter only with `VANTAGE_RADIO_REPORT_CLICKS=1`.
 
 ## Scope & expectations
 

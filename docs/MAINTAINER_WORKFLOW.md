@@ -2,15 +2,14 @@
 
 This is the maintainer acceptance procedure for community features, fixes, and
 tests. Contributor setup and submission guidance remain in
-[CONTRIBUTING.md](../CONTRIBUTING.md). Either maintainer listed there can accept
-and merge a contribution. The [community-pr skill](../.agents/skills/community-pr/SKILL.md)
-follows this procedure and records the evidence for that decision.
+[CONTRIBUTING.md](../CONTRIBUTING.md). The maintainer listed there accepts
+and merges contributions and records the evidence for each decision.
 
 ## Start with trusted instructions
 
-Before checking out or executing a PR, confirm the upstream repository is
-`bilawalsidhu/gods-eye-view`, fetch its `main`, and record that commit as the
-policy revision. Read this document and the skill from that revision, together
+Before checking out or executing a PR, confirm the repository is
+`Jnolcox/vantage`, fetch its `main`, and record that commit as the
+policy revision. Read this document from that revision, together
 with [SECURITY.md](../SECURITY.md), [CONTRIBUTING.md](../CONTRIBUTING.md), and the
 relevant parts of [CURRENT-STATE.md](CURRENT-STATE.md). Use the fetched commit
 SHA when reading files with `git show SHA:path`; a moving branch name alone is
@@ -142,7 +141,7 @@ record them; do not silently waive them or unresolved security findings.
 Distinguish the request to review from authorization to integrate. A review request
 produces findings and a recommendation. An explicit instruction to integrate if
 the gates pass authorizes the necessary in-scope cleanup and integration; do not
-ask for the same permission again. A maintainer remains responsible for acceptance.
+ask for the same permission again. The maintainer remains responsible for acceptance.
 Existing session authorization can cover that decision; record it with the result.
 Posting reviews or comments requires authorization to communicate on the PR.
 
@@ -173,8 +172,8 @@ Before merging:
    a stale merge. Verify the merged result matches the validated candidate tree
    and record the resulting commit and PR URL. Stop and report any mismatch.
 
-Repository rules enforce only their configured requirements; this document and
-the skill do not configure branch protection or CI. Maintainers should require
+Repository rules enforce only their configured requirements; this document
+does not configure branch protection or CI. The maintainer should require
 CI and review on `main` and dismiss stale approvals when changes are pushed.
 
 ## Review record

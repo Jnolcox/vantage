@@ -1,3 +1,5 @@
+// Must stay the first import: renames legacy storage before any module reads it.
+import './standalone/legacyStorage.js';
 import { createStandaloneApplication } from './standalone/application.js';
 import { describeError } from './standalone/errors.js';
 
@@ -8,7 +10,7 @@ const application = createStandaloneApplication({
 });
 
 application.start().catch((error) => {
-  console.error("God's Eye View initialization failed:", error);
+  console.error('Vantage initialization failed:', error);
   const loaderStatus = document.querySelector('#loading-screen .loader-status');
   loaderStatus.textContent = `Error: ${describeError(error)}`;
   loaderStatus.style.color = '#ff4444';

@@ -26,7 +26,11 @@
   "vite-build": {
     "runtime": "node",
     "exports": ["./build/vite", "./build/html"],
-    "modules": ["build/vite.js", "build/application-html.js"],
+    "modules": [
+      "build/vite.js",
+      "build/application-html.js",
+      "build/content-security-policy.js"
+    ],
     "external": ["vite-plugin-cesium"]
   },
   "live-providers": {
@@ -45,7 +49,9 @@
       "src/data/adsbLolFallback.js",
       "src/data/aisStreamAdapter.js",
       "src/data/aisWatchdog.js",
-      "src/sources/httpBody.js"
+      "src/sources/httpBody.js",
+      "src/sources/projectIdentity.js",
+      "src/sources/version.js"
     ],
     "external": ["ws"]
   },
@@ -58,6 +64,7 @@
     "runtime": "node",
     "exports": ["./server/providers/places"],
     "modules": [
+      "server/providers/common/env.js",
       "server/providers/places.js",
       "server/providers/places/google.js",
       "server/providers/places/google-key.js",
@@ -69,7 +76,9 @@
       "src/data/placeProviderPayloads.js",
       "src/data/routeSteps.js",
       "src/sources/httpBody.js",
-      "src/sources/rateLimit.js"
+      "src/sources/rateLimit.js",
+      "src/sources/projectIdentity.js",
+      "src/sources/version.js"
     ],
     "external": []
   },
@@ -87,7 +96,9 @@
       "server/providers/space/launch-library.js",
       "server/providers/common/http.js",
       "src/data/spaceProviderRequests.js",
-      "src/sources/httpBody.js"
+      "src/sources/httpBody.js",
+      "src/sources/projectIdentity.js",
+      "src/sources/version.js"
     ],
     "external": []
   },
@@ -139,7 +150,9 @@
       "server/providers/gbfs.js",
       "server/providers/common/http.js",
       "src/data/gbfsSource.js",
-      "src/sources/httpBody.js"
+      "src/sources/httpBody.js",
+      "src/sources/projectIdentity.js",
+      "src/sources/version.js"
     ],
     "external": []
   },
@@ -168,7 +181,9 @@
       "scripts/google-server-key.mjs",
       "src/data/cctvFootprint.js",
       "src/sources/cctvTypes.js",
-      "src/sources/httpBody.js"
+      "src/sources/httpBody.js",
+      "src/sources/projectIdentity.js",
+      "src/sources/version.js"
     ],
     "external": []
   },
@@ -183,8 +198,11 @@
       "server/providers/radio/transport.js",
       "src/data/radioCountry.js",
       "server/providers/common/http.js",
+      "server/providers/common/env.js",
       "src/sources/radioBrowser.js",
-      "src/sources/httpBody.js"
+      "src/sources/httpBody.js",
+      "src/sources/projectIdentity.js",
+      "src/sources/version.js"
     ],
     "external": []
   },
@@ -207,7 +225,9 @@
       "src/data/routeSteps.js",
       "src/sources/httpBody.js",
       "src/sources/overpass.js",
-      "src/sources/rateLimit.js"
+      "src/sources/rateLimit.js",
+      "src/sources/projectIdentity.js",
+      "src/sources/version.js"
     ],
     "external": []
   },
@@ -226,7 +246,9 @@
       "server/providers/overpass/geometry.js",
       "server/providers/overpass/transport.js",
       "src/sources/httpBody.js",
-      "src/sources/rateLimit.js"
+      "src/sources/rateLimit.js",
+      "src/sources/projectIdentity.js",
+      "src/sources/version.js"
     ],
     "external": []
   },
@@ -248,7 +270,9 @@
       "src/data/regionalModel.js",
       "src/nominatimGeocode.js",
       "src/sources/httpBody.js",
-      "src/sources/rateLimit.js"
+      "src/sources/rateLimit.js",
+      "src/sources/projectIdentity.js",
+      "src/sources/version.js"
     ],
     "external": []
   },
@@ -256,6 +280,7 @@
     "runtime": "node",
     "exports": ["./server/providers/openai"],
     "modules": [
+      "server/providers/common/env.js",
       "server/providers/common/rate-limit.js",
       "server/providers/common/request.js",
       "server/providers/common/source-root.js",
@@ -279,6 +304,7 @@
     "runtime": "node",
     "exports": ["./server/standalone/key-setup"],
     "modules": [
+      "server/providers/common/env.js",
       "scripts/pinokio-environment.mjs",
       "server/providers/common/source-root.js",
       "server/standalone/key-setup.js",
@@ -1203,6 +1229,7 @@
       "src/scenes/nepalEvidencePack.js",
       "src/data/bhoteKoshiEvent.js",
       "src/data/bhoteKoshiEmbeddedMedia.js",
+      "src/data/embeddedMediaConsent.js",
       "src/data/bhoteKoshiLocator.js",
       "src/data/bhoteKoshiIncidentPlaces.js",
       "src/data/bhoteKoshiFloodPath.js",
@@ -1353,6 +1380,7 @@
       "src/data/vesselLabels.js",
       "src/firstRunExperience.js",
       "src/hud.js",
+      "src/hudLiveContext.js",
       "src/hudLocality.js",
       "src/hudSummaryResponse.js",
       "src/keySetup.js",
@@ -1567,7 +1595,6 @@
       "src/loadingFeedback.js",
       "src/locationStatus.js",
       "src/locations.js",
-      "src/logoGaze.js",
       "src/mapStackChips.js",
       "src/mapStackController.js",
       "src/mapStartup.js",
@@ -1694,8 +1721,8 @@
       "src/ui/visualSettings.js",
       "src/voice/commands.js",
       "src/voice/control.js",
-      "src/voice/gevActions.js",
-      "src/voice/gevRealtime.js",
+      "src/voice/vantageActions.js",
+      "src/voice/vantageRealtime.js",
       "src/voice/layerSummary.js",
       "src/voice/realtimeBackend.js",
       "src/voice/realtimeController.js",
@@ -1809,7 +1836,9 @@
       "src/director/sharing/lifetime.js",
       "src/director/authoring.js",
       "src/scenes/sharing.js",
-      "src/ui/sceneSharing.js"
+      "src/ui/sceneSharing.js",
+      "src/sources/projectIdentity.js",
+      "src/sources/version.js"
     ],
     "external": [
       "@mapbox/vector-tile",
@@ -1830,6 +1859,7 @@
     "modules": [
       "src/data/bhoteKoshiEvent.js",
       "src/data/bhoteKoshiEmbeddedMedia.js",
+      "src/data/embeddedMediaConsent.js",
       "src/data/bhoteKoshiLocator.js",
       "src/data/bhoteKoshiIncidentPlaces.js",
       "src/data/bhoteKoshiFloodPath.js",
@@ -2203,7 +2233,9 @@
       "src/sources/overpassFeaturesRecords.js",
       "src/sources/overpassFeatures.js",
       "src/sources/featureSource.js",
-      "src/sources/overpassRoads.js"
+      "src/sources/overpassRoads.js",
+      "src/sources/projectIdentity.js",
+      "src/sources/version.js"
     ],
     "external": [
       "cesium",
@@ -2552,7 +2584,9 @@
       "src/sources/transitHistory.js",
       "src/sources/transitService.js",
       "src/sources/transitHistoryStore.js",
-      "src/sources/rateLimit.js"
+      "src/sources/rateLimit.js",
+      "src/sources/projectIdentity.js",
+      "src/sources/version.js"
     ],
     "external": ["pbf"]
   },
@@ -2562,7 +2596,9 @@
       "src/data/gtfsRealtime.js",
       "src/data/transitFeeds.js",
       "src/data/transitProxy.js",
-      "src/sources/transitHistory.js"
+      "src/sources/transitHistory.js",
+      "src/sources/projectIdentity.js",
+      "src/sources/version.js"
     ],
     "external": ["pbf"]
   },
@@ -2622,7 +2658,9 @@
       "src/sources/featureGeometry.js",
       "src/sources/overpassFeaturesRecords.js",
       "src/sources/overpassFeatures.js",
-      "src/sources/featureSource.js"
+      "src/sources/featureSource.js",
+      "src/sources/projectIdentity.js",
+      "src/sources/version.js"
     ],
     "external": ["cesium", "egm96-universal", "pbf"]
   },
@@ -2659,7 +2697,9 @@
       "scripts/qa-transit-controls.mjs",
       "scripts/qa-transit-browser.mjs",
       "src/layers/transit/source.js",
-      "src/sources/transitHistory.js"
+      "src/sources/transitHistory.js",
+      "src/sources/projectIdentity.js",
+      "src/sources/version.js"
     ],
     "external": ["cesium", "pbf"]
   },
@@ -2681,7 +2721,9 @@
       "src/sources/transitHistory.js",
       "src/sources/transitService.js",
       "src/sources/transitHistoryStore.js",
-      "src/sources/rateLimit.js"
+      "src/sources/rateLimit.js",
+      "src/sources/projectIdentity.js",
+      "src/sources/version.js"
     ],
     "external": ["pbf"]
   },

@@ -1,5 +1,8 @@
 import { DEFAULT_VOICE_TIER, resolveVoiceModel } from './voiceCost.js';
 
+/** Token-mint response header carrying the server's opt-in debug-log setting. */
+const DEBUG_LOG_ENABLED_HEADER = 'X-Vantage-Debug-Log';
+
 /** Realtime-compatible token and SDP requests, independent of microphone/UI ownership. */
 export function createRealtimeBackend({
   tokenEndpoint = '/api/realtime/token',
@@ -20,20 +23,29 @@ export function createRealtimeBackend({
       signal.throwIfAborted();
       const separator = tokenEndpoint.includes('?') ? '&' : '?';
       const url = `${tokenEndpoint}${separator}tier=${encodeURIComponent(resolveVoiceModel(tier).tier)}`;
+      // POST only: the mint spends OpenAI quota, and a GET could be fired by
+      // any page through an <img> tag.
       const response = await tokenTransport(url, {
+        method: 'POST',
         signal,
         cache: 'no-store',
         redirect: 'error',
       });
       signal.throwIfAborted();
+      // The server sends its debug-log setting on failed mints too, which is
+      // when the log matters most, so read it before any error is thrown.
+      const debugLogEnabled =
+        response.headers?.get?.(DEBUG_LOG_ENABLED_HEADER) === '1';
       const data = await response.json().catch(() => null);
       signal.throwIfAborted();
       if (!response.ok) {
         const reason =
           typeof data?.error === 'string' ? data.error : data?.error?.message;
-        throw new Error(
+        const error = new Error(
           reason || `Realtime token failed: HTTP ${response.status}`,
         );
+        error.debugLogEnabled = debugLogEnabled;
+        throw error;
       }
       const token =
         data?.value || data?.client_secret?.value || data?.client_secret;
@@ -52,10 +64,11 @@ export function createRealtimeBackend({
       return {
         token,
         model:
-          response.headers?.get?.('X-GEV-Voice-Model') ||
+          response.headers?.get?.('X-Vantage-Voice-Model') ||
           data?.session?.model ||
           null,
-        tier: response.headers?.get?.('X-GEV-Voice-Tier') || null,
+        tier: response.headers?.get?.('X-Vantage-Voice-Tier') || null,
+        debugLogEnabled,
         expiresAt,
       };
     },

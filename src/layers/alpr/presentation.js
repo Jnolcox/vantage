@@ -50,9 +50,9 @@ export function createAlprPresentation({ state, services, source }) {
     }
     if (entity.polygon)
       entity.polygon.material = color.withAlpha(selected ? 0.8 : 0.2);
-    if (entity.gevLabelModel) {
-      entity.gevLabelModel.accent = color.toCssColorString();
-      entity.gevLabelModel.leaderAnimationStartedAt = selected
+    if (entity.vantageLabelModel) {
+      entity.vantageLabelModel.accent = color.toCssColorString();
+      entity.vantageLabelModel.leaderAnimationStartedAt = selected
         ? selectionStartedAt
         : 0;
     }
@@ -174,7 +174,7 @@ export function createAlprPresentation({ state, services, source }) {
     removeEntityContextsForLayer(LAYER_ID, { retainIds: visibleIds });
     for (const record of visible) {
       const existing = state.dataSource.entities.getById(record.id);
-      if (existing?.gevAlprRecord === record) {
+      if (existing?.vantageAlprRecord === record) {
         updateAppearance(existing, record.id === state.selectedId);
         continue;
       }
@@ -215,7 +215,7 @@ export function createAlprPresentation({ state, services, source }) {
       let entity = existing;
       // Keep the Cesium entity and its ground-clamping subscription while its
       // geometry is unchanged. Updating metadata must not rebuild the marker.
-      const previous = entity?.gevAlprRecord;
+      const previous = entity?.vantageAlprRecord;
       if (!entity) entity = state.dataSource.entities.add(entityDef);
       else {
         if (
@@ -223,8 +223,8 @@ export function createAlprPresentation({ state, services, source }) {
           previous.longitude !== record.longitude
         ) {
           entity.position = position;
-          entity.gevAlprCanvasPosition = null;
-          entity.gevAlprDisplayPosition = null;
+          entity.vantageAlprCanvasPosition = null;
+          entity.vantageAlprDisplayPosition = null;
         }
         if (
           previous.latitude !== record.latitude ||
@@ -233,18 +233,18 @@ export function createAlprPresentation({ state, services, source }) {
         ) {
           entity.polyline = entityDef.polyline;
           entity.polygon = entityDef.polygon;
-          entity.gevAlprCanvasPosition = null;
-          entity.gevAlprWedge = null;
+          entity.vantageAlprCanvasPosition = null;
+          entity.vantageAlprWedge = null;
         }
       }
-      entity.gevAlprRecord = record;
-      entity.gevTrackedId = record.id;
+      entity.vantageAlprRecord = record;
+      entity.vantageTrackedId = record.id;
       // The mapped camera datum has no elevation; it is not the clamped marker's
       // visual anchor. Only the selected marker samples the rendered surface,
       // at most once per second, through Cesium's public height APIs.
-      entity.gevAlprDisplayPosition ??= null;
-      entity.gevDisplayPosition = () => entity.gevAlprDisplayPosition;
-      entity.gevLabelModel = {
+      entity.vantageAlprDisplayPosition ??= null;
+      entity.vantageDisplayPosition = () => entity.vantageAlprDisplayPosition;
+      entity.vantageLabelModel = {
         title: alprDisplayId(record),
         details: alprLabelDetails(record, source),
         accent: color.toCssColorString(),
@@ -383,8 +383,8 @@ export function createAlprPresentation({ state, services, source }) {
     }
     const entity = state.dataSource?.entities.getById(state.selectedId);
     const record = state.recordById.get(state.selectedId);
-    if (entity?.gevAlprCanvasPosition) {
-      entity.gevAlprDisplayPosition = entity.gevAlprCanvasPosition;
+    if (entity?.vantageAlprCanvasPosition) {
+      entity.vantageAlprDisplayPosition = entity.vantageAlprCanvasPosition;
       return;
     }
     if (!entity || !record || Date.now() - state.lastAnchorSampleAt < 1000)
@@ -414,10 +414,10 @@ export function createAlprPresentation({ state, services, source }) {
       height,
     );
     if (
-      !entity.gevAlprDisplayPosition ||
-      Cesium.Cartesian3.distance(next, entity.gevAlprDisplayPosition) > 0.1
+      !entity.vantageAlprDisplayPosition ||
+      Cesium.Cartesian3.distance(next, entity.vantageAlprDisplayPosition) > 0.1
     ) {
-      entity.gevAlprDisplayPosition = next;
+      entity.vantageAlprDisplayPosition = next;
       governorRequestRender('alpr-anchor');
     }
   }

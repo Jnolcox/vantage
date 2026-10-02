@@ -23,17 +23,16 @@ try {
     `${process.env.QA_BASE_URL || 'http://localhost:4173'}/?welcome=0`,
     { waitUntil: 'domcontentloaded' },
   );
-  await page.waitForFunction(
-    () => window.__godsEyeView?.dataManager?._layerPanel,
-    { timeout: 60000 },
-  );
+  await page.waitForFunction(() => window.__vantage?.dataManager?._layerPanel, {
+    timeout: 60000,
+  });
   const results = await page.evaluate(async () => {
-    const manager = window.__godsEyeView.dataManager;
+    const manager = window.__vantage.dataManager;
     const container = manager._toggleContainer;
     const id = 'qa-panel-lifecycle';
     let listener = null;
     let enabled = 0;
-    window.__gevQaRegisterLayer(manager, {
+    window.__vantageQaRegisterLayer(manager, {
       id,
       name: '<b>Literal layer</b>',
       icon: '◌',
@@ -82,7 +81,7 @@ try {
         'feed state reflects the settled layer snapshot',
         row().querySelector('.data-toggle-btn').dataset.feedState === 'stale',
       ]);
-      const ui = window.__godsEyeView.styleManager;
+      const ui = window.__vantage.styleManager;
       ui._clearSelectedLayersBtn.click();
       result.push([
         'native clear activation presents busy state',
@@ -111,7 +110,7 @@ try {
     } finally {
       manager._layerPanel?.destroy();
       manager._layerPanel = null;
-      await window.__gevQaUnregisterLayer(manager, id);
+      await window.__vantageQaUnregisterLayer(manager, id);
       manager.buildTogglePanel(container);
     }
     result.push([

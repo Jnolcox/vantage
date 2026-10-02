@@ -11,16 +11,16 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { overpassProxy } from 'gods-eye-view/server/providers/overpass';
-import { militaryInstallationsProxy } from 'gods-eye-view/server/providers/military-installations';
+import { overpassProxy } from 'vantage/server/providers/overpass';
+import { militaryInstallationsProxy } from 'vantage/server/providers/military-installations';
 import {
   regionalBriefProxy,
   weatherEffectsProxy,
-} from 'gods-eye-view/server/providers/regional';
-import { openAiRealtimeProxy } from 'gods-eye-view/server/providers/openai';
-import { keySetupEndpoint } from 'gods-eye-view/server/standalone/key-setup';
+} from 'vantage/server/providers/regional';
+import { openAiRealtimeProxy } from 'vantage/server/providers/openai';
+import { keySetupEndpoint } from 'vantage/server/standalone/key-setup';
 import { realtimeInstructions } from '../../server/providers/openai/instructions.js';
-import { GEV_REALTIME_TOOLS } from '../../server/providers/openai/tools.js';
+import { VANTAGE_REALTIME_TOOLS } from '../../server/providers/openai/tools.js';
 
 function install(plugin, preview = false) {
   const routes = new Map();
@@ -83,7 +83,7 @@ function env(t, name, value) {
   });
 }
 function root(t) {
-  const dir = mkdtempSync(path.join(tmpdir(), 'gev-services-'));
+  const dir = mkdtempSync(path.join(tmpdir(), 'vantage-services-'));
   t.after(() => rmSync(dir, { recursive: true, force: true }));
   return dir;
 }
@@ -158,7 +158,7 @@ test('weather-only requests share upstream work and retain fresh and stale respo
 
 test('Realtime handler preserves tools and default instructions, isolates supplied annotation guidance, and keeps the upstream key server-side', async (t) => {
   env(t, 'OPENAI_API_KEY', 'fixture-upstream-secret');
-  env(t, 'GEV_RATELIMIT_OPENAI_PER_MIN', undefined);
+  env(t, 'VANTAGE_RATELIMIT_OPENAI_PER_MIN', undefined);
   const sent = [];
   t.mock.method(globalThis, 'fetch', async (url, options) => {
     assert.equal(url, 'https://api.openai.com/v1/realtime/client_secrets');
@@ -179,23 +179,24 @@ test('Realtime handler preserves tools and default instructions, isolates suppli
   ]) {
     const response = await request(
       install(openAiRealtimeProxy(options)).get('/api/realtime/token'),
-      { url: '/?tier=unknown' },
+      { method: 'POST', url: '/?tier=unknown' },
     );
     assert.equal(response.status, 200);
-    assert.equal(response.headers['x-gev-voice-tier'], 'standard');
-    assert.equal(response.headers['x-gev-voice-tier-fallback'], '1');
+    assert.equal(response.headers['x-vantage-voice-tier'], 'standard');
+    assert.equal(response.headers['x-vantage-voice-tier-fallback'], '1');
     assert.equal(response.body.includes('fixture-upstream-secret'), false);
     assert.equal(
       sent.at(-1).session.instructions,
       realtimeInstructions(guidance),
     );
-    assert.deepEqual(sent.at(-1).session.tools, GEV_REALTIME_TOOLS);
+    assert.deepEqual(sent.at(-1).session.tools, VANTAGE_REALTIME_TOOLS);
   }
   assert.notEqual(sent[0].session.instructions, sent[1].session.instructions);
   assert.equal(sent[0].session.instructions, sent[2].session.instructions);
 });
 
 test('debug logging resolves each supplied application directory independently', async (t) => {
+  env(t, 'VANTAGE_REALTIME_DEBUG_LOG', '1');
   const first = root(t),
     second = root(t);
   for (const [sourceRoot, marker] of [
@@ -216,10 +217,53 @@ test('debug logging resolves each supplied application directory independently',
     );
     const file = path.join(
       sourceRoot,
-      '.gev-logs/realtime-conversations.jsonl',
+      '.vantage-logs/realtime-conversations.jsonl',
     );
     assert.equal(JSON.parse(readFileSync(file, 'utf8')).marker, marker);
   }
+});
+
+test('the debug log is off by default: the sink answers 204 and writes nothing', async (t) => {
+  // `env` restores once per call in registration order, so it is called once
+  // and the loop below varies the value directly.
+  env(t, 'VANTAGE_REALTIME_DEBUG_LOG', undefined);
+  for (const value of ['', '0', 'false', 'yes', undefined]) {
+    if (value === undefined) delete process.env.VANTAGE_REALTIME_DEBUG_LOG;
+    else process.env.VANTAGE_REALTIME_DEBUG_LOG = value;
+    const sourceRoot = root(t);
+    const response = await request(
+      install(openAiRealtimeProxy({ sourceRoot })).get(
+        '/api/realtime/debug-log',
+      ),
+      { method: 'POST', body: JSON.stringify({ transcript: 'private' }) },
+    );
+    assert.equal(response.status, 204);
+    assert.equal(existsSync(path.join(sourceRoot, '.vantage-logs')), false);
+  }
+});
+
+test('the token mint answers only POST, so a cross-site image load cannot mint', async (t) => {
+  env(t, 'OPENAI_API_KEY', 'fixture-upstream-secret');
+  t.mock.method(globalThis, 'fetch', async () =>
+    assert.fail('a GET must not reach OpenAI'),
+  );
+  const response = await request(
+    install(openAiRealtimeProxy()).get('/api/realtime/token'),
+  );
+  assert.equal(response.status, 405);
+  assert.equal(response.headers.allow, 'POST');
+});
+
+test('the token mint tells the browser whether the debug log is enabled', async (t) => {
+  env(t, 'OPENAI_API_KEY', undefined);
+  const mint = () =>
+    request(install(openAiRealtimeProxy()).get('/api/realtime/token'), {
+      method: 'POST',
+    });
+  env(t, 'VANTAGE_REALTIME_DEBUG_LOG', undefined);
+  assert.equal((await mint()).headers['x-vantage-debug-log'], '0');
+  process.env.VANTAGE_REALTIME_DEBUG_LOG = '1';
+  assert.equal((await mint()).headers['x-vantage-debug-log'], '1');
 });
 
 test('key setup writes only the supplied application root, retains request guards and stays absent from preview', async (t) => {
@@ -270,25 +314,26 @@ test('Realtime service configuration selects compatible endpoint/model without f
           assert.equal(options.headers.Authorization, 'Bearer server-fixture');
           const payload = JSON.parse(options.body);
           assert.equal(payload.session.model, 'configured-model');
-          assert.deepEqual(payload.session.tools, GEV_REALTIME_TOOLS);
+          assert.deepEqual(payload.session.tools, VANTAGE_REALTIME_TOOLS);
           return Response.json({ value: 'short-lived-fixture' });
         },
       },
     }),
   ).get('/api/realtime/token');
   const response = await request(handler, {
+    method: 'POST',
     url: '/?tier=arbitrary-model&model=other',
   });
   assert.equal(response.status, 200);
   assert.deepEqual(response.json(), { value: 'short-lived-fixture' });
-  assert.equal(response.headers['x-gev-voice-model'], 'configured-model');
+  assert.equal(response.headers['x-vantage-voice-model'], 'configured-model');
   assert.equal(response.headers['cache-control'], 'no-store');
   assert.doesNotMatch(response.body, /server-fixture|voice\.example/);
 });
 
 test('OpenAI routes answer generically when the upstream or the request fails', async (t) => {
   env(t, 'OPENAI_API_KEY', 'fixture-upstream-secret');
-  env(t, 'GEV_RATELIMIT_OPENAI_PER_MIN', undefined);
+  env(t, 'VANTAGE_RATELIMIT_OPENAI_PER_MIN', undefined);
   const leak =
     'fixture-upstream-secret req_fixture_1234 org-fixture quota exhausted';
 
@@ -313,6 +358,7 @@ test('OpenAI routes answer generically when the upstream or the request fails', 
   );
   const rejectedToken = await request(
     install(openAiRealtimeProxy()).get('/api/realtime/token'),
+    { method: 'POST' },
   );
   assert.equal(rejectedToken.status, 429);
   assert.equal(
@@ -332,6 +378,7 @@ test('OpenAI routes answer generically when the upstream or the request fails', 
   });
   const token = await request(
     install(openAiRealtimeProxy()).get('/api/realtime/token'),
+    { method: 'POST' },
   );
   assert.equal(token.status, 502);
   assert.deepEqual(token.json(), { error: 'Failed to create Realtime token' });
@@ -340,11 +387,15 @@ test('OpenAI routes answer generically when the upstream or the request fails', 
 });
 
 test('the debug-log sink stays bounded, rate limited, and quiet about failures', async (t) => {
+  env(t, 'VANTAGE_REALTIME_DEBUG_LOG', '1');
   const sourceRoot = root(t);
   const handler = install(openAiRealtimeProxy({ sourceRoot })).get(
     '/api/realtime/debug-log',
   );
-  const file = path.join(sourceRoot, '.gev-logs/realtime-conversations.jsonl');
+  const file = path.join(
+    sourceRoot,
+    '.vantage-logs/realtime-conversations.jsonl',
+  );
   const write = (record) =>
     request(handler, { method: 'POST', body: JSON.stringify(record) });
 
@@ -381,6 +432,7 @@ test('the debug-log sink stays bounded, rate limited, and quiet about failures',
 });
 
 test('an oversized debug-log request receives the fixed error response', async (t) => {
+  env(t, 'VANTAGE_REALTIME_DEBUG_LOG', '1');
   const handler = install(openAiRealtimeProxy({ sourceRoot: root(t) })).get(
     '/api/realtime/debug-log',
   );
@@ -399,11 +451,15 @@ test('an oversized debug-log request receives the fixed error response', async (
 });
 
 test('the debug log rotates instead of growing without bound', async (t) => {
+  env(t, 'VANTAGE_REALTIME_DEBUG_LOG', 'true');
   const sourceRoot = root(t);
   const handler = install(openAiRealtimeProxy({ sourceRoot })).get(
     '/api/realtime/debug-log',
   );
-  const file = path.join(sourceRoot, '.gev-logs/realtime-conversations.jsonl');
+  const file = path.join(
+    sourceRoot,
+    '.vantage-logs/realtime-conversations.jsonl',
+  );
 
   // 8 MB bounds one request body; nothing bounded the file until now, so a
   // single page could grow it for as long as the dev server ran. Each record

@@ -1895,6 +1895,7 @@
       "src/layers/wind/gpuRendering.js",
       "src/layers/wind/rendering.js",
       "src/layers/wind/index.js",
+      "src/layers/weather/clock.js",
       "src/data/wind.js"
     ],
     "external": [
@@ -2313,7 +2314,8 @@
       "src/layers/wind/streamlines.js",
       "src/layers/wind/gpuRendering.js",
       "src/layers/wind/rendering.js",
-      "src/layers/wind/index.js"
+      "src/layers/wind/index.js",
+      "src/layers/weather/clock.js"
     ],
     "external": [
       "cesium",

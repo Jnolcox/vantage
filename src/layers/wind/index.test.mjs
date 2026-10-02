@@ -453,27 +453,8 @@ test('sample stays fixed across model, field and unit changes; dismissal and dis
 });
 
 test('observed history labels wind as a forecast without changing its data or parameters', async () => {
-  // A stand-in for the observed-weather clock: wind reads its mode only.
-  const listeners = new Set();
-  let mode = 'latest';
-  const clock = {
-    getState: () => ({ mode }),
-    subscribe(listener) {
-      listeners.add(listener);
-      return () => listeners.delete(listener);
-    },
-    async setTarget() {
-      mode = 'history';
-      for (const listener of [...listeners]) listener();
-    },
-    async latest() {
-      mode = 'latest';
-      for (const listener of [...listeners]) listener();
-    },
-    destroy() {
-      listeners.clear();
-    },
-  };
+  const { createWeatherClock } = await import('../weather/clock.js');
+  const clock = createWeatherClock();
   const layer = createWindLayer({
     feed: { getSnapshot: async () => snapshot('gfs') },
     clock,

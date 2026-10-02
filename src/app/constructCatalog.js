@@ -1,5 +1,6 @@
 import { createLayerCatalog } from './catalog.js';
 import { createWindLayer } from '../layers/wind/index.js';
+import { createWeatherClock } from '../layers/weather/clock.js';
 import { LAYER_STATE_REGISTRY } from '../data/layerState.js';
 import { createMilitaryRegistry } from '../layers/aircraft/classification.js';
 import { createApplicationFlights } from './layers/flights.js';
@@ -76,9 +77,11 @@ export function createApplicationCatalog({
       throw new TypeError(`Invalid catalog source: ${name}`);
   }
   const militaryRegistry = createMilitaryRegistry();
+  const weatherClock = createWeatherClock();
   const dispose = () => {
     signal.removeEventListener('abort', dispose);
     militaryRegistry.dispose();
+    weatherClock.destroy();
   };
   signal.addEventListener('abort', dispose, { once: true });
   try {
@@ -135,7 +138,7 @@ export function createApplicationCatalog({
           vessels,
           installations,
         }),
-        createWindLayer({ feed: sources.wind }),
+        createWindLayer({ feed: sources.wind, clock: weatherClock }),
         ...createInfrastructureLayers(localGeoJsonServices),
         createApplicationCables({ source: sources.cables }),
         createApplicationFirms({
@@ -149,7 +152,12 @@ export function createApplicationCatalog({
       ],
       metadata,
     );
-    return Object.freeze({ ...catalog, militaryRegistry, surface });
+    return Object.freeze({
+      ...catalog,
+      militaryRegistry,
+      surface,
+      weatherClock,
+    });
   } catch (error) {
     dispose();
     throw error;

@@ -2599,6 +2599,18 @@ optional globe relief uses terrain vertex normals for view-directed shading (or
 globe curvature without them), never replaces another owner's globe material,
 and is released with the layer.
 
+One transient observed-weather clock (`src/layers/weather/clock.js`) is shared
+by the weather layers of a catalog: the catalog exposes it as `weatherClock`
+and destroys it with its lifetime signal, and the WEATHER panel's timeline
+drives it. Earlier and Later step through the sorted union of the
+non-suspended products' advertised times; each product shows its newest frame
+at or before the requested UTC time within its own maximum gap, never a future
+frame or an interpolation. Playback advances two seconds after every product
+settles, wraps, and stops with fewer than two union times. Latest returns each
+product to its own newest frame. History is never written to share links, and
+the viewer clock is untouched. Wind does not follow history: its card says
+"Forecast · does not follow history" while the clock is in history mode.
+
 Directions is a keyless front end to the routing the voice agent already
 uses. Its row chips are the whole interface: DRIVE / WALK / BIKE pick the
 profile; SET A and SET B arm the next globe click (Escape or a second press

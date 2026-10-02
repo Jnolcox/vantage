@@ -105,7 +105,9 @@ export class LayerPanel {
     hasRowControls,
     subscribeRowControls,
     onHiddenRefresh = () => {},
+    weatherClock,
   }) {
+    this.weatherClock = weatherClock;
     this.getAll = getLayers;
     this.isEnabled = isEnabled;
     this.setEnabled = setEnabled;
@@ -125,6 +127,7 @@ export class LayerPanel {
     this._toggleContainer = container;
     this._weatherPanel?.destroy();
     this._weatherPanel = createWeatherPanel({
+      clock: this.weatherClock,
       container:
         container?.ownerDocument?.getElementById?.('weather-panel-body'),
       setLayerParams: this.setLayerParams,

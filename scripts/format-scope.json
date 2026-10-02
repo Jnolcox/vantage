@@ -822,6 +822,8 @@
   "src/layers/weather/shellSurface.js",
   "src/layers/weather/shellSurface.test.mjs",
   "src/layers/weather/shellFixture.mjs",
+  "src/layers/weather/clock.js",
+  "src/layers/weather/clock.test.mjs",
   "src/ui/weatherPanel.js",
   "src/ui/weatherPanel.test.mjs",
   "src/layers/wind/fields.js",

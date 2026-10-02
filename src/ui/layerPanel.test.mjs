@@ -174,3 +174,43 @@ test('readout rows contain only toggles and metadata; ordinary rows retain contr
     globalThis.document = previousDocument;
   }
 });
+
+test('the WEATHER card follows the observed-weather clock it is given and releases it', async () => {
+  const { LayerPanel } = await import('./layerPanel.js');
+  const { railFixture } = await import('./railTestFixture.mjs');
+  const f = railFixture();
+  const body = f.document.createElement('div');
+  f.document.getElementById = (id) =>
+    id === 'weather-panel-body' ? body : null;
+  const previousDocument = globalThis.document;
+  globalThis.document = f.document;
+  const listeners = new Set();
+  const weatherClock = {
+    getState: () => ({ mode: 'latest', target: null, timeline: [] }),
+    subscribe(listener) {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+  };
+  const panel = new LayerPanel({
+    weatherClock,
+    getLayers: () => [],
+    isEnabled: () => false,
+    setEnabled() {},
+    setLayerParams() {},
+    hasRowControls: () => false,
+    subscribeRowControls() {},
+    getRowControls: () => null,
+  });
+  try {
+    panel.mount(f.container);
+    assert.equal(listeners.size, 1);
+    panel.mount(f.container);
+    assert.equal(listeners.size, 1, 'a remount replaces the subscription');
+    panel.destroy();
+    assert.equal(listeners.size, 0);
+  } finally {
+    panel.destroy();
+    globalThis.document = previousDocument;
+  }
+});

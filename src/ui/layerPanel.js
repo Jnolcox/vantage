@@ -112,6 +112,7 @@ export class LayerPanel {
     this._generation = 0;
     this._removers = [];
     this._destroyed = false;
+    this._cancelRowControlsRefresh = null;
   }
   mount(container) {
     if (this._destroyed) return;
@@ -125,6 +126,8 @@ export class LayerPanel {
   }
   _releaseBindings() {
     this._generation++;
+    this._cancelRowControlsRefresh?.();
+    this._cancelRowControlsRefresh = null;
     for (const remove of this._removers.splice(0)) remove();
   }
   destroy() {
@@ -232,7 +235,7 @@ export class LayerPanel {
         // that can also fail) pushes a re-render through this; nothing else
         // would repaint the row before its next scheduled refresh.
         const unsubscribe = this.subscribeRowControls(layer.id, () =>
-          this._refreshTogglePanel(),
+          this._scheduleRowControlsRefresh(),
         );
         if (unsubscribe) this._removers.push(unsubscribe);
         const controls = document.createElement('div');
@@ -272,6 +275,34 @@ export class LayerPanel {
 
       this._toggleContainer.appendChild(row);
     }
+  }
+
+  /**
+   * Coalesce row-control notifications into one refresh per frame. A layer
+   * may notify several times in one tick (a settle plus a status change), and
+   * each refresh walks every row.
+   */
+  _scheduleRowControlsRefresh() {
+    if (this._destroyed || this._cancelRowControlsRefresh) return;
+    const refresh = () => {
+      this._cancelRowControlsRefresh = null;
+      if (!this._destroyed) this._refreshTogglePanel();
+    };
+    if (typeof requestAnimationFrame === 'function') {
+      const frame = requestAnimationFrame(refresh);
+      this._cancelRowControlsRefresh = () => cancelAnimationFrame(frame);
+    } else {
+      const timer = setTimeout(refresh, 0);
+      this._cancelRowControlsRefresh = () => clearTimeout(timer);
+    }
+  }
+
+  /** Synchronously flush a pending row-controls refresh, including in tests. */
+  _flushRowControlsRefresh() {
+    if (this._destroyed || !this._cancelRowControlsRefresh) return;
+    this._cancelRowControlsRefresh();
+    this._cancelRowControlsRefresh = null;
+    this._refreshTogglePanel();
   }
 
   /** Qualify a loaded count when it does not mean items currently on screen. */

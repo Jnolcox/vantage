@@ -3210,6 +3210,7 @@ test('an async layer pushes its own row refresh, and a busy chip refuses clicks'
     // The layer settles and pushes its own refresh — no panel poll involved.
     settled = true;
     module._listener();
+    mgr._layerPanel._flushRowControlsRefresh();
     assert.equal(chip.textContent, 'DENSE');
     assert.equal(chip.disabled, false);
     assert.equal(chip.attributes['aria-pressed'], 'true');
@@ -3351,3 +3352,64 @@ test('refreshLayerStats reaches presentation through the bare lifecycle', async 
   lifecycle.refreshLayerStats();
   assert.deepEqual(changes, ['status']);
 });
+
+for (const scheduler of ['animation frame', 'timeout']) {
+  test(`row notifications coalesce with ${scheduler} and stop after destroy`, async (t) => {
+    t.mock.timers.enable({ apis: ['setTimeout'] });
+    const frames = new Map();
+    let nextFrame = 0;
+    const originalRaf = globalThis.requestAnimationFrame;
+    const originalCancel = globalThis.cancelAnimationFrame;
+    globalThis.requestAnimationFrame = scheduler === 'animation frame'
+      ? (callback) => { frames.set(++nextFrame, callback); return nextFrame; }
+      : undefined;
+    globalThis.cancelAnimationFrame = (id) => frames.delete(id);
+    const originalDocument = globalThis.document;
+    globalThis.document = { createElement: makeControlElement };
+    const manager = new DataLayerManager({});
+    const layer = makeSlowLayer('wind', { updateInterval: -1 });
+    let notify;
+    layer.module.getRowControls = () => ({ chips: [] });
+    layer.module.setRowControlsListener = (listener) => { if (listener) notify = listener; };
+    manager.register(layer.module);
+    try {
+      manager.buildTogglePanel(makeControlElement());
+      const panel = manager._layerPanel;
+      let refreshes = 0;
+      const refresh = panel._refreshTogglePanel.bind(panel);
+      panel._refreshTogglePanel = () => { refreshes++; refresh(); };
+      for (let i = 0; i < 10; i++) notify();
+      assert.equal(refreshes, 0, 'notifications defer refresh');
+      if (scheduler === 'animation frame') assert.equal(frames.size, 1);
+      panel._flushRowControlsRefresh();
+      assert.equal(refreshes, 1);
+      panel._flushRowControlsRefresh();
+      t.mock.timers.tick(0);
+      assert.equal(frames.size, 0, 'flush cancels the pending frame');
+      assert.equal(refreshes, 1, 'flush does not leave duplicate work');
+      notify();
+      notify();
+      if (scheduler === 'animation frame') {
+        const [id, callback] = frames.entries().next().value;
+        frames.delete(id);
+        callback();
+      } else t.mock.timers.tick(0);
+      assert.equal(refreshes, 2, 'scheduled callback refreshes once');
+      notify();
+      panel.destroy();
+      assert.equal(frames.size, 0, 'destroy cancels pending work');
+      notify();
+      panel._flushRowControlsRefresh();
+      t.mock.timers.tick(0);
+      assert.equal(refreshes, 2, 'retained notifications after destroy are inert');
+    } finally {
+      await manager.destroyAll();
+      if (originalDocument === undefined) delete globalThis.document;
+      else globalThis.document = originalDocument;
+      if (originalRaf === undefined) delete globalThis.requestAnimationFrame;
+      else globalThis.requestAnimationFrame = originalRaf;
+      if (originalCancel === undefined) delete globalThis.cancelAnimationFrame;
+      else globalThis.cancelAnimationFrame = originalCancel;
+    }
+  });
+}

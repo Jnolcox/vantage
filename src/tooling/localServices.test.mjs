@@ -179,7 +179,7 @@ test('Realtime handler preserves tools and default instructions, isolates suppli
   ]) {
     const response = await request(
       install(openAiRealtimeProxy(options)).get('/api/realtime/token'),
-      { url: '/?tier=unknown' },
+      { method: 'POST', url: '/?tier=unknown' },
     );
     assert.equal(response.status, 200);
     assert.equal(response.headers['x-vantage-voice-tier'], 'standard');
@@ -242,10 +242,24 @@ test('the debug log is off by default: the sink answers 204 and writes nothing',
   }
 });
 
+test('the token mint answers only POST, so a cross-site image load cannot mint', async (t) => {
+  env(t, 'OPENAI_API_KEY', 'fixture-upstream-secret');
+  t.mock.method(globalThis, 'fetch', async () =>
+    assert.fail('a GET must not reach OpenAI'),
+  );
+  const response = await request(
+    install(openAiRealtimeProxy()).get('/api/realtime/token'),
+  );
+  assert.equal(response.status, 405);
+  assert.equal(response.headers.allow, 'POST');
+});
+
 test('the token mint tells the browser whether the debug log is enabled', async (t) => {
   env(t, 'OPENAI_API_KEY', undefined);
   const mint = () =>
-    request(install(openAiRealtimeProxy()).get('/api/realtime/token'));
+    request(install(openAiRealtimeProxy()).get('/api/realtime/token'), {
+      method: 'POST',
+    });
   env(t, 'VANTAGE_REALTIME_DEBUG_LOG', undefined);
   assert.equal((await mint()).headers['x-vantage-debug-log'], '0');
   process.env.VANTAGE_REALTIME_DEBUG_LOG = '1';
@@ -307,6 +321,7 @@ test('Realtime service configuration selects compatible endpoint/model without f
     }),
   ).get('/api/realtime/token');
   const response = await request(handler, {
+    method: 'POST',
     url: '/?tier=arbitrary-model&model=other',
   });
   assert.equal(response.status, 200);
@@ -343,6 +358,7 @@ test('OpenAI routes answer generically when the upstream or the request fails', 
   );
   const rejectedToken = await request(
     install(openAiRealtimeProxy()).get('/api/realtime/token'),
+    { method: 'POST' },
   );
   assert.equal(rejectedToken.status, 429);
   assert.equal(
@@ -362,6 +378,7 @@ test('OpenAI routes answer generically when the upstream or the request fails', 
   });
   const token = await request(
     install(openAiRealtimeProxy()).get('/api/realtime/token'),
+    { method: 'POST' },
   );
   assert.equal(token.status, 502);
   assert.deepEqual(token.json(), { error: 'Failed to create Realtime token' });

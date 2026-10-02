@@ -23,7 +23,10 @@ export function createRealtimeBackend({
       signal.throwIfAborted();
       const separator = tokenEndpoint.includes('?') ? '&' : '?';
       const url = `${tokenEndpoint}${separator}tier=${encodeURIComponent(resolveVoiceModel(tier).tier)}`;
+      // POST only: the mint spends OpenAI quota, and a GET could be fired by
+      // any page through an <img> tag.
       const response = await tokenTransport(url, {
+        method: 'POST',
         signal,
         cache: 'no-store',
         redirect: 'error',

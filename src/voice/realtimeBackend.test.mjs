@@ -22,6 +22,7 @@ test('separate configured token and SDP transports preserve model metadata and c
     callsEndpoint: 'https://voice.example/calls',
     tokenTransport: async (input, init) => {
       calls.push(input);
+      assert.equal(init.method, 'POST');
       assert.equal(init.redirect, 'error');
       assert.equal(init.headers, undefined);
       return tokenReply();

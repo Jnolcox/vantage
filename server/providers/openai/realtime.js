@@ -33,8 +33,10 @@ function createRealtimeTokenHandler({
       REALTIME_DEBUG_LOG_HEADER,
       isRealtimeDebugLogEnabled() ? '1' : '0',
     );
-    if (req.method !== 'GET' && req.method !== 'POST') {
+    // POST only: a GET mint could be triggered by any page's <img> tag.
+    if (req.method !== 'POST') {
       res.statusCode = 405;
+      res.setHeader('Allow', 'POST');
       res.setHeader('Content-Type', 'application/json');
       res.end(JSON.stringify({ error: 'Method not allowed' }));
       return;

@@ -47,6 +47,10 @@ const PANEL_GROUPS = [
     ids: ['rocket-launches', 'earthquakes', 'local-firms', 'fire-perimeters'],
   },
   {
+    label: 'Weather',
+    ids: ['wind'],
+  },
+  {
     label: 'Utilities',
     ids: ['directions', 'radio'],
   },

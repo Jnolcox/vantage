@@ -1,4 +1,5 @@
 import { createLayerCatalog } from './catalog.js';
+import { createWindLayer } from '../layers/wind/index.js';
 import { LAYER_STATE_REGISTRY } from '../data/layerState.js';
 import { createMilitaryRegistry } from '../layers/aircraft/classification.js';
 import { createApplicationFlights } from './layers/flights.js';
@@ -43,6 +44,7 @@ const SOURCE_METHODS = Object.freeze({
   launches: ['getLaunches', 'getActiveTle'],
   alpr: ['fetch'],
   firms: ['getSnapshot'],
+  wind: ['getSnapshot'],
   earthquakes: ['getSnapshot'],
   'fire-perimeters': ['getSnapshot'],
   cables: ['fetch'],
@@ -133,6 +135,7 @@ export function createApplicationCatalog({
           vessels,
           installations,
         }),
+        createWindLayer({ feed: sources.wind }),
         ...createInfrastructureLayers(localGeoJsonServices),
         createApplicationCables({ source: sources.cables }),
         createApplicationFirms({

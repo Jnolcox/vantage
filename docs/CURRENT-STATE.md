@@ -2565,6 +2565,7 @@ its criteria cannot be silently ignored.
 | Submarine Cables ◠ | TeleGeography public map (bundled) | `src/data/telegeographySubmarineCables.js` | — | static |
 | FIRMS Active Fires ▲ | NASA FIRMS live (VIIRS ×3 NRT + MODIS NRT, trailing 24h) | `src/data/firmsHeatmap.js` | `/api/firms` (`FIRMS_MAP_KEY`) | 10 min (proxy TTL 30 min) |
 | Fire Perimeters 🔥 | NIFC WFIGS current interagency perimeters (keyless, paged past the 2000-record cap in `OBJECTID` order); InciWeb catalog + incident page origin and update time checks for verified incident-page links | `src/layers/perimeters/` via `src/app/layers/perimeters.js` | `/api/fire-perimeters` + `/api/fire-perimeters/inciweb/*` | 5 min (server caches: catalog 1 h; incident pages 30 min) |
+| Wind 🌬 | NOAA GFS or ECMWF IFS 10 m forecast (keyless, resampled 0.25°→1°; GPU flow curves with a canvas fallback; optional speed, temperature or pressure field) | `src/layers/wind/` via `src/app/constructCatalog.js` | `/api/wind` | 1 h (forecast cycle) |
 
 Fire Perimeters uses capped, timed server reads that send the Vantage
 User-Agent, with stale-on-error caching and a per-client limit. Unchanged
@@ -2572,6 +2573,31 @@ snapshots retain geometry; link checks cancel on disable or selection change,
 and the row legend shows reported containment. The browser never contacts
 WFIGS or InciWeb directly; it only opens a verified InciWeb page in a new tab
 (`noopener,noreferrer`) when the incident card's link is clicked.
+
+Wind is in the Weather group, off by default. Its Layers row carries only the
+toggle and source line; model (GFS or ECMWF), field (None, Speed, Pressure,
+Temperature), units, Pause/Resume and **Read wind at map center** live in its
+card in the WEATHER right-rail panel, which also shows the forecast valid and
+issue times. A fresh boot shows motion only; a v2 share link without the wind
+field token keeps the speed shading it meant when written. The reading samples
+the forecast at the map centre (speed, meteorological direction, the selected
+field) and places a marker until cleared; unit changes reformat it without
+resampling. Animation moves through one fixed forecast and never advances
+forecast time.
+
+The renderer bakes at most 7,200 curves (1,200 below 700 px) with at most 33
+points each, once per installed field, then animates a GPU phase along them;
+30° batches are culled against the horizon and the view frustum, fade below
+60 km and disappear at 15 km, and animation stops when no batch is visible. The
+canvas fallback is bounded to 3,000 particles (1,000 below 600 px). Pause,
+reduced motion and hidden tabs leave no animation loop running, and nothing is
+created, fetched or scheduled until the layer is first enabled; disabling
+releases the field, imagery, relief material and listeners. The colour field
+drapes the globe's imagery or, on photorealistic 3D Tiles, a raised shell 5 km
+above the ellipsoid, and fades out below about 1,200 km camera height. The
+optional globe relief uses terrain vertex normals for view-directed shading (or
+globe curvature without them), never replaces another owner's globe material,
+and is released with the layer.
 
 Directions is a keyless front end to the routing the voice agent already
 uses. Its row chips are the whole interface: DRIVE / WALK / BIKE pick the

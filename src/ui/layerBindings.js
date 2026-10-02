@@ -9,6 +9,7 @@ import {
   routeWorldFocusRequest,
 } from '../worldFocus.js';
 import { registerNavigationAuthorityListener } from '../navigationPolicy.js';
+import { WEATHER_LAYER_IDS } from './weatherPanel.js';
 /** Own manager subscriptions and the camera-entry events that outlive controls. */
 export class LayerBindings {
   constructor({
@@ -33,6 +34,7 @@ export class LayerBindings {
     this._disposed = false;
     this._dataManager = null;
     this._directionsShellModule = null;
+    this._weatherShellModules = [];
     this._cctvRequestFocusHandler = null;
     this._removeCctvRequestFocusListener = null;
     this._worldRequestFocusHandler = null;
@@ -114,6 +116,19 @@ export class LayerBindings {
       warmFn: (cells) => this.services.warmGroundFloor(cells),
       showToast: (message) => this._showToast(message),
     });
+  }
+
+  /** Give weather layers the live draped-imagery host; release it on detach. */
+  _connectWeatherShellServices() {
+    for (const layer of this._weatherShellModules)
+      layer.attachShellServices?.(null);
+    this._weatherShellModules = [];
+    for (const id of WEATHER_LAYER_IDS) {
+      const layer = this._dataManager?.layers?.get(id)?.module;
+      if (typeof layer?.attachShellServices !== 'function') continue;
+      layer.attachShellServices({ imageryHost: this.services.imageryHost });
+      this._weatherShellModules.push(layer);
+    }
   }
 
   _persistAwarenessSelection(event, cleared = false) {
@@ -212,6 +227,7 @@ export class LayerBindings {
     this._cctvControls.connect();
     this._radioControls.connect();
     this._connectDirectionsCamera();
+    this._connectWeatherShellServices();
     if (!this._awarenessSelectedHandler) {
       this._awarenessSelectedHandler = (event) =>
         this._persistAwarenessSelection(event, false);
@@ -263,5 +279,6 @@ export class LayerBindings {
     this._directionsShellModule?.attachShellServices?.(null);
     this._directionsShellModule = null;
     this._dataManager = null;
+    this._connectWeatherShellServices();
   }
 }

@@ -47,6 +47,20 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   on its first appearance unless a stored or shared collapse choice says
   otherwise, and keeps its scroll position through refreshes (ported from
   upstream, Bilawal Sidhu).
+- Wind layer in a new Weather group of the Layers panel, off by default:
+  NOAA GFS or ECMWF IFS 10 m forecast wind as flow curves animated on the GPU
+  (a bounded canvas particle fallback where GPU geometry is unavailable),
+  optionally over a speed, 2 m temperature or mean sea-level pressure field
+  draped on the globe or raised over 3D Tiles. Its card in the WEATHER panel
+  picks the model, field, units and motion, shows the forecast valid and issue
+  times, and reads the forecast at the map centre. Curves are capped at 7,200
+  (1,200 on narrow screens) and the fallback at 3,000 particles (1,000 on
+  narrow screens); nothing loads or animates until the layer is enabled, and
+  pause, reduced motion and hidden tabs stop the animation loop. Model, field,
+  units and pause are kept in share links (token `k`), and the GFS and ECMWF
+  credits, including ECMWF's licence notice, are in Data attribution (ported
+  from upstream, Bilawal Sidhu, Gustavo Beneduzi, Daniel Slay, Rehaan
+  Delmotra).
 
 ### Changed
 

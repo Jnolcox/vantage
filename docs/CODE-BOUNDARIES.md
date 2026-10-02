@@ -349,6 +349,11 @@ explicit choices through body remounts without adding share state; the
 observed-history selection stays transient. Card opening, storm selection and
 layer enabling remain independent.
 
+Wind also retains its raw captured `summary.reading`. Its footer reads the map
+centre into a result after the action. The captured location stays fixed until
+another read; model changes resample that location, units reformat it, and ×
+clears both the reading and the map marker.
+
 Optional card/badge/slider class names provide feature styling. Shared card
 styles live in `src/ui/styles/weather.css`; the panel's readout container
 defines `--weather-card-border`. Setting/result labels use `.panel-title`;

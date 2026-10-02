@@ -575,3 +575,81 @@ test('a change of open card scrolls its header into view once; refreshes never m
   assert.deepEqual(intoView, [], 'ancestor scrollers are never moved');
   view.destroy();
 });
+test('settings, reading and footer actions pass the layer id, params and user origin', async () => {
+  const { windReadingResult } = await import('../layers/wind/presentation.js');
+  const { createWindLayer } = await import('../layers/wind/index.js');
+  const layer = createWindLayer({ feed: { getSnapshot: async () => null } });
+  const action = layer.getRowControls().summary.actions[0];
+  assert.equal(action.label, 'Read wind at map center');
+  assert.equal(action.hint, undefined);
+  const f = fixture();
+  const calls = [];
+  const view = createWeatherPanel({
+    ...f,
+    setLayerParams: (...args) => calls.push(args),
+  });
+  const reading = {
+    coordinates: '26.59°N · 123.34°W',
+    wind: '6.0 m/s from N',
+    model: 'ECMWF',
+    validTime: '2026-09-22 06:00 UTC',
+    scalarLabel: 'Wind speed',
+    scalarValue: '6.0 m/s',
+    explanation: 'Interpolated model forecast.',
+  };
+  const summary = {
+    ...wind.summary,
+    reading,
+    result: windReadingResult(reading),
+    settings: [
+      {
+        id: 'units',
+        label: 'UNITS',
+        chips: [{ id: 'units-mph', label: 'mph', params: { units: 'mph' } }],
+      },
+    ],
+    actions: [{ ...action, disabled: false }],
+  };
+  view.update([{ ...wind, summary }]);
+  f.find((n) => n.dataset.actionId === 'read-wind').click();
+  f.find((n) => n.dataset.chipId === 'units-mph').click();
+  f.find((n) => n.dataset.actionId === 'clear').click();
+  assert.deepEqual(calls, [
+    ['wind', { inspect: true }, { origin: 'user' }],
+    ['wind', { units: 'mph' }, { origin: 'user' }],
+    ['wind', { inspect: false }, { origin: 'user' }],
+  ]);
+  const result = f.find((n) => n.className === 'rail-card-result');
+  const header = result.children[0];
+  assert.equal(header.className, 'rail-card-result-header');
+  assert.equal(header.children[0].textContent, 'WIND AT 26.59°N 123.34°W');
+  assert.equal(header.children[1].textContent, '×');
+  assert.equal(header.children[1].getAttribute('aria-label'), 'Clear reading');
+  assert.deepEqual(
+    result.children[1].children[0].children.map((n) => [
+      n.dataset.lineId,
+      n.textContent,
+    ]),
+    [
+      ['wind', '6.0 m/s from N'],
+      ['meta', 'ECMWF · valid 09-22 06:00 UTC'],
+      ['scalar', 'Wind speed · 6.0 m/s'],
+      ['explanation', 'Interpolated model forecast.'],
+    ],
+  );
+  assert.equal(
+    f.find((n) => n.dataset.actionId === 'read-wind').textContent,
+    'Read wind at map center',
+  );
+  assert.equal(
+    f.find((n) => n.className === 'rail-card-action-hint').hidden,
+    true,
+  );
+  layer.destroy();
+  const body = card(f, 'wind').children[1];
+  assert.deepEqual(
+    body.children.map((n) => n.dataset.blockId),
+    ['details', 'settings', 'actions', 'reading'],
+  );
+  view.destroy();
+});

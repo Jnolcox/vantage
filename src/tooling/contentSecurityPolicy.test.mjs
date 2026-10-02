@@ -71,6 +71,9 @@ const LINKS_AND_ATTRIBUTION = [
   'opensky-network.org',
   'platform.openai.com',
   'policies.google.com',
+  // Wind credits: NOAA Open Data on AWS and ECMWF Open Data. Forecast files
+  // are fetched by the server through /api/wind.
+  'registry.opendata.aws',
   'ristmikud.tallinn.ee',
   'routing.openstreetmap.de',
   'tarktee.transpordiamet.ee',
@@ -83,6 +86,7 @@ const LINKS_AND_ATTRIBUTION = [
   'www.capmetro.org',
   'www.digitraffic.fi',
   'www.drivebc.ca',
+  'www.ecmwf.int',
   'www.esri.com',
   'www.gdeltproject.org',
   'www.hsl.fi',

@@ -624,7 +624,8 @@
       "src/ui/aircraftDisplay.js",
       "src/ui/layerBindings.js",
       "src/ui/displayBindings.js",
-      "src/ui/shellFacade.js"
+      "src/ui/shellFacade.js",
+      "src/layers/weather/imageryHost.js"
     ],
     "external": ["cesium"]
   },
@@ -1879,7 +1880,22 @@
       "src/scenes/sharing.js",
       "src/ui/sceneSharing.js",
       "src/sources/projectIdentity.js",
-      "src/sources/version.js"
+      "src/sources/version.js",
+      "src/layers/weather/imageryHost.js",
+      "src/sources/windBody.js",
+      "src/layers/wind/source.js",
+      "src/layers/wind/presentation.js",
+      "src/layers/wind/inspection.js",
+      "src/layers/wind/model.js",
+      "src/layers/wind/fields.js",
+      "src/layers/weather/imageryOrder.js",
+      "src/layers/wind/relief.js",
+      "src/layers/weather/shellSurface.js",
+      "src/layers/wind/streamlines.js",
+      "src/layers/wind/gpuRendering.js",
+      "src/layers/wind/rendering.js",
+      "src/layers/wind/index.js",
+      "src/data/wind.js"
     ],
     "external": [
       "@mapbox/vector-tile",
@@ -2285,7 +2301,19 @@
       "src/sources/featureSource.js",
       "src/sources/overpassRoads.js",
       "src/sources/projectIdentity.js",
-      "src/sources/version.js"
+      "src/sources/version.js",
+      "src/layers/wind/presentation.js",
+      "src/layers/wind/inspection.js",
+      "src/layers/wind/model.js",
+      "src/layers/wind/fields.js",
+      "src/layers/weather/imageryHost.js",
+      "src/layers/weather/imageryOrder.js",
+      "src/layers/wind/relief.js",
+      "src/layers/weather/shellSurface.js",
+      "src/layers/wind/streamlines.js",
+      "src/layers/wind/gpuRendering.js",
+      "src/layers/wind/rendering.js",
+      "src/layers/wind/index.js"
     ],
     "external": [
       "cesium",

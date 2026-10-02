@@ -158,7 +158,7 @@ test('weather-only requests share upstream work and retain fresh and stale respo
 
 test('Realtime handler preserves tools and default instructions, isolates supplied annotation guidance, and keeps the upstream key server-side', async (t) => {
   env(t, 'OPENAI_API_KEY', 'fixture-upstream-secret');
-  env(t, 'GEV_RATELIMIT_OPENAI_PER_MIN', undefined);
+  env(t, 'VANTAGE_RATELIMIT_OPENAI_PER_MIN', undefined);
   const sent = [];
   t.mock.method(globalThis, 'fetch', async (url, options) => {
     assert.equal(url, 'https://api.openai.com/v1/realtime/client_secrets');
@@ -196,7 +196,7 @@ test('Realtime handler preserves tools and default instructions, isolates suppli
 });
 
 test('debug logging resolves each supplied application directory independently', async (t) => {
-  env(t, 'GEV_REALTIME_DEBUG_LOG', '1');
+  env(t, 'VANTAGE_REALTIME_DEBUG_LOG', '1');
   const first = root(t),
     second = root(t);
   for (const [sourceRoot, marker] of [
@@ -226,10 +226,10 @@ test('debug logging resolves each supplied application directory independently',
 test('the debug log is off by default: the sink answers 204 and writes nothing', async (t) => {
   // `env` restores once per call in registration order, so it is called once
   // and the loop below varies the value directly.
-  env(t, 'GEV_REALTIME_DEBUG_LOG', undefined);
+  env(t, 'VANTAGE_REALTIME_DEBUG_LOG', undefined);
   for (const value of ['', '0', 'false', 'yes', undefined]) {
-    if (value === undefined) delete process.env.GEV_REALTIME_DEBUG_LOG;
-    else process.env.GEV_REALTIME_DEBUG_LOG = value;
+    if (value === undefined) delete process.env.VANTAGE_REALTIME_DEBUG_LOG;
+    else process.env.VANTAGE_REALTIME_DEBUG_LOG = value;
     const sourceRoot = root(t);
     const response = await request(
       install(openAiRealtimeProxy({ sourceRoot })).get(
@@ -246,9 +246,9 @@ test('the token mint tells the browser whether the debug log is enabled', async 
   env(t, 'OPENAI_API_KEY', undefined);
   const mint = () =>
     request(install(openAiRealtimeProxy()).get('/api/realtime/token'));
-  env(t, 'GEV_REALTIME_DEBUG_LOG', undefined);
+  env(t, 'VANTAGE_REALTIME_DEBUG_LOG', undefined);
   assert.equal((await mint()).headers['x-vantage-debug-log'], '0');
-  process.env.GEV_REALTIME_DEBUG_LOG = '1';
+  process.env.VANTAGE_REALTIME_DEBUG_LOG = '1';
   assert.equal((await mint()).headers['x-vantage-debug-log'], '1');
 });
 
@@ -318,7 +318,7 @@ test('Realtime service configuration selects compatible endpoint/model without f
 
 test('OpenAI routes answer generically when the upstream or the request fails', async (t) => {
   env(t, 'OPENAI_API_KEY', 'fixture-upstream-secret');
-  env(t, 'GEV_RATELIMIT_OPENAI_PER_MIN', undefined);
+  env(t, 'VANTAGE_RATELIMIT_OPENAI_PER_MIN', undefined);
   const leak =
     'fixture-upstream-secret req_fixture_1234 org-fixture quota exhausted';
 
@@ -370,7 +370,7 @@ test('OpenAI routes answer generically when the upstream or the request fails', 
 });
 
 test('the debug-log sink stays bounded, rate limited, and quiet about failures', async (t) => {
-  env(t, 'GEV_REALTIME_DEBUG_LOG', '1');
+  env(t, 'VANTAGE_REALTIME_DEBUG_LOG', '1');
   const sourceRoot = root(t);
   const handler = install(openAiRealtimeProxy({ sourceRoot })).get(
     '/api/realtime/debug-log',
@@ -412,7 +412,7 @@ test('the debug-log sink stays bounded, rate limited, and quiet about failures',
 });
 
 test('an oversized debug-log request receives the fixed error response', async (t) => {
-  env(t, 'GEV_REALTIME_DEBUG_LOG', '1');
+  env(t, 'VANTAGE_REALTIME_DEBUG_LOG', '1');
   const handler = install(openAiRealtimeProxy({ sourceRoot: root(t) })).get(
     '/api/realtime/debug-log',
   );
@@ -431,7 +431,7 @@ test('an oversized debug-log request receives the fixed error response', async (
 });
 
 test('the debug log rotates instead of growing without bound', async (t) => {
-  env(t, 'GEV_REALTIME_DEBUG_LOG', 'true');
+  env(t, 'VANTAGE_REALTIME_DEBUG_LOG', 'true');
   const sourceRoot = root(t);
   const handler = install(openAiRealtimeProxy({ sourceRoot })).get(
     '/api/realtime/debug-log',

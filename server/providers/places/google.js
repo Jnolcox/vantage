@@ -7,6 +7,7 @@ import {
   projectNearbyPlaces,
   projectTextSearchPlaces,
 } from '../../../src/data/placeProviderPayloads.js';
+import { readVantageEnv } from '../common/env.js';
 
 // Construct lazily after the standalone environment has loaded.
 // undefined = not built yet; null = unlimited; fn = active limiter
@@ -16,7 +17,7 @@ let _googleRateLimiter;
 function googleRateLimiter() {
   if (_googleRateLimiter === undefined)
     _googleRateLimiter = makeOptInRateLimiter(
-      process.env.GEV_RATELIMIT_GOOGLE_PER_MIN,
+      readVantageEnv('RATELIMIT_GOOGLE_PER_MIN'),
     );
   return _googleRateLimiter;
 }
@@ -80,7 +81,7 @@ export function googlePlacesContextProxy({
       }
       const { latitude, longitude } = coordinates;
 
-      // Opt-in per-IP throttle (GEV_RATELIMIT_GOOGLE_PER_MIN). No-op when unset.
+      // Opt-in per-IP throttle (VANTAGE_RATELIMIT_GOOGLE_PER_MIN). No-op when unset.
       // Inlined (not the shared helper) so the 429 body keeps this endpoint's
       // `places: []` contract that the client expects on every error response.
       const _grl = googleRateLimiter();
@@ -200,7 +201,7 @@ export function googlePlacesContextProxy({
       }
       const { latitude, longitude } = coordinates;
 
-      // Opt-in per-IP throttle (GEV_RATELIMIT_GOOGLE_PER_MIN). No-op when unset.
+      // Opt-in per-IP throttle (VANTAGE_RATELIMIT_GOOGLE_PER_MIN). No-op when unset.
       // Inlined (like nearby-places) so the 429 body keeps the `places: []`
       // contract the client expects on every error response.
       const _grl = googleRateLimiter();

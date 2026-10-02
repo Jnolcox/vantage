@@ -3,6 +3,7 @@ import path from 'node:path';
 import { readRequestBody } from '../common/request.js';
 import { promises as fsp } from 'node:fs';
 import { makeRateLimiter, clientKey } from '../common/rate-limit.js';
+import { readVantageEnv } from '../common/env.js';
 
 /** Cap on one request body. */
 const REALTIME_DEBUG_LOG_MAX_BYTES = 8 * 1024 * 1024;
@@ -35,12 +36,12 @@ const ENABLED_FLAG_VALUES = new Set(['1', 'true']);
 
 /**
  * The sink writes full conversation transcripts to disk, so it is opt-in:
- * GEV_REALTIME_DEBUG_LOG=1 (or `true`). Read per request rather than captured
+ * VANTAGE_REALTIME_DEBUG_LOG=1 (or `true`; the pre-rename GEV_ name still works). Read per request rather than captured
  * when the handler is built, so it always reflects the current environment.
  */
 function isRealtimeDebugLogEnabled(env = process.env) {
   return ENABLED_FLAG_VALUES.has(
-    String(env.GEV_REALTIME_DEBUG_LOG ?? '')
+    String(readVantageEnv('REALTIME_DEBUG_LOG', env) ?? '')
       .trim()
       .toLowerCase(),
   );

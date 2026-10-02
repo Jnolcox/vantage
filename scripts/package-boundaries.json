@@ -59,6 +59,7 @@
     "runtime": "node",
     "exports": ["./server/providers/places"],
     "modules": [
+      "server/providers/common/env.js",
       "server/providers/places.js",
       "server/providers/places/google.js",
       "server/providers/places/google-key.js",
@@ -265,6 +266,7 @@
     "runtime": "node",
     "exports": ["./server/providers/openai"],
     "modules": [
+      "server/providers/common/env.js",
       "server/providers/common/rate-limit.js",
       "server/providers/common/request.js",
       "server/providers/common/source-root.js",
@@ -288,6 +290,7 @@
     "runtime": "node",
     "exports": ["./server/standalone/key-setup"],
     "modules": [
+      "server/providers/common/env.js",
       "scripts/pinokio-environment.mjs",
       "server/providers/common/source-root.js",
       "server/standalone/key-setup.js",

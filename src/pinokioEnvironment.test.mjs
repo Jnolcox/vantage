@@ -41,10 +41,10 @@ test('the fresh template keeps provider credentials out of native Configure', ()
   assert.equal(configured.PINOKIO_SHARE_CLOUDFLARE, 'false');
   assert.equal(configured.PINOKIO_SHARE_LOCAL, 'false');
   assert.equal(configured.PINOKIO_SHARE_VAR, '__vantage_sharing_disabled__');
-  assert.equal(configured.GEV_RATELIMIT_OPENAI_PER_MIN, '30');
-  assert.equal(configured.GEV_RATELIMIT_GOOGLE_PER_MIN, '120');
-  assert.equal('GEV_REALTIME_DEBUG_LOG' in configured, false, 'the voice debug log stays off');
-  assert.match(source, /^# GEV_REALTIME_DEBUG_LOG=$/m);
+  assert.equal(configured.VANTAGE_RATELIMIT_OPENAI_PER_MIN, '30');
+  assert.equal(configured.VANTAGE_RATELIMIT_GOOGLE_PER_MIN, '120');
+  assert.equal('VANTAGE_REALTIME_DEBUG_LOG' in configured, false, 'the voice debug log stays off');
+  assert.match(source, /^# VANTAGE_REALTIME_DEBUG_LOG=$/m);
   assert.match(source, /Do not enter credentials in Pinokio 8\.0\.40's native Configure panel/);
   assert.match(source, /trusted local text editor/);
   assert.match(source, /Stop and Start the app/);
@@ -57,8 +57,8 @@ test('raw app-file values override Pinokio-global values, including blanks', () 
     writeFileSync(filepath, [
       'GOOGLE_MAPS_API_KEY=app-configured',
       'OPENAI_API_KEY=',
-      'GEV_RATELIMIT_OPENAI_PER_MIN=45',
-      'GEV_RATELIMIT_GOOGLE_PER_MIN=',
+      'VANTAGE_RATELIMIT_OPENAI_PER_MIN=45',
+      'VANTAGE_RATELIMIT_GOOGLE_PER_MIN=',
       'PINOKIO_SHARE_CLOUDFLARE=false',
       'PINOKIO_SHARE_LOCAL=false',
       'PINOKIO_SHARE_VAR=__vantage_sharing_disabled__',
@@ -68,8 +68,8 @@ test('raw app-file values override Pinokio-global values, including blanks', () 
       GOOGLE_MAPS_API_KEY: 'global-google',
       CESIUM_ION_TOKEN: 'global-ion',
       OPENAI_API_KEY: 'global-openai',
-      GEV_RATELIMIT_OPENAI_PER_MIN: '999',
-      GEV_RATELIMIT_GOOGLE_PER_MIN: '999',
+      VANTAGE_RATELIMIT_OPENAI_PER_MIN: '999',
+      VANTAGE_RATELIMIT_GOOGLE_PER_MIN: '999',
       PINOKIO_SHARE_CLOUDFLARE: 'true',
       PINOKIO_SHARE_LOCAL: 'true',
       PINOKIO_SHARE_PASSCODE: 'global-passcode',
@@ -80,12 +80,74 @@ test('raw app-file values override Pinokio-global values, including blanks', () 
     assert.equal(environment.GOOGLE_MAPS_API_KEY, 'app-configured');
     assert.equal(environment.CESIUM_ION_TOKEN, '');
     assert.equal(environment.OPENAI_API_KEY, '');
-    assert.equal(environment.GEV_RATELIMIT_OPENAI_PER_MIN, '45');
-    assert.equal(environment.GEV_RATELIMIT_GOOGLE_PER_MIN, '');
+    assert.equal(environment.VANTAGE_RATELIMIT_OPENAI_PER_MIN, '45');
+    assert.equal(environment.VANTAGE_RATELIMIT_GOOGLE_PER_MIN, '');
     assert.equal(environment.PINOKIO_SHARE_CLOUDFLARE, 'false');
     assert.equal(environment.PINOKIO_SHARE_LOCAL, 'false');
     assert.equal(environment.PINOKIO_SHARE_VAR, '__vantage_sharing_disabled__');
     assert.equal(environment.PINOKIO_SHARE_PASSCODE, '');
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('a file written before the rename still configures the app through its GEV_ lines', () => {
+  const root = mkdtempSync(path.join(tmpdir(), 'vantage-pinokio-env-rename-'));
+  try {
+    const filepath = path.join(root, 'ENVIRONMENT');
+    writeFileSync(filepath, [
+      'GEV_RATELIMIT_OPENAI_PER_MIN=12',
+      'GEV_RATELIMIT_GOOGLE_PER_MIN=',
+      'GEV_REALTIME_DEBUG_LOG=1',
+      '',
+    ].join('\n'));
+    const environment = {};
+
+    applyPinokioEnvironment({ environment, filepath });
+
+    assert.equal(environment.VANTAGE_RATELIMIT_OPENAI_PER_MIN, '12');
+    assert.equal(environment.VANTAGE_RATELIMIT_GOOGLE_PER_MIN, '', 'a deliberate blank is kept');
+    assert.equal(environment.VANTAGE_REALTIME_DEBUG_LOG, '1');
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('a Vantage line wins over its pre-rename GEV_ line', () => {
+  const root = mkdtempSync(path.join(tmpdir(), 'vantage-pinokio-env-both-'));
+  try {
+    const filepath = path.join(root, 'ENVIRONMENT');
+    writeFileSync(filepath, [
+      'GEV_RATELIMIT_OPENAI_PER_MIN=12',
+      'VANTAGE_RATELIMIT_OPENAI_PER_MIN=40',
+      '',
+    ].join('\n'));
+    const environment = {};
+
+    applyPinokioEnvironment({ environment, filepath });
+
+    assert.equal(environment.VANTAGE_RATELIMIT_OPENAI_PER_MIN, '40');
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('a Pinokio-global pre-rename value cannot override the app file', () => {
+  const root = mkdtempSync(path.join(tmpdir(), 'vantage-pinokio-env-global-legacy-'));
+  try {
+    const filepath = path.join(root, 'ENVIRONMENT');
+    writeFileSync(filepath, 'VANTAGE_RATELIMIT_OPENAI_PER_MIN=\n');
+    const environment = {
+      GEV_RATELIMIT_OPENAI_PER_MIN: '999',
+      GEV_REALTIME_DEBUG_LOG: '1',
+    };
+
+    applyPinokioEnvironment({ environment, filepath });
+
+    assert.equal(environment.VANTAGE_RATELIMIT_OPENAI_PER_MIN, '');
+    assert.equal(environment.VANTAGE_REALTIME_DEBUG_LOG, '');
+    assert.equal('GEV_RATELIMIT_OPENAI_PER_MIN' in environment, false, 'no legacy fallback is left behind');
+    assert.equal('GEV_REALTIME_DEBUG_LOG' in environment, false, 'the voice debug log stays off');
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
@@ -98,8 +160,8 @@ test('an existing Pinokio file gains the canonical non-secret sharing boundary',
     writeFileSync(filepath, 'OPENAI_API_KEY=app-value\nPINOKIO_SHARE_CLOUDFLARE=false\n');
     const environment = {
       GOOGLE_MAPS_API_KEY: 'global-google',
-      GEV_RATELIMIT_OPENAI_PER_MIN: '999',
-      GEV_RATELIMIT_GOOGLE_PER_MIN: '999',
+      VANTAGE_RATELIMIT_OPENAI_PER_MIN: '999',
+      VANTAGE_RATELIMIT_GOOGLE_PER_MIN: '999',
       PINOKIO_SHARE_LOCAL: 'true',
       PINOKIO_SHARE_VAR: 'url',
       PINOKIO_SHARE_PASSCODE: 'global-passcode',
@@ -109,8 +171,8 @@ test('an existing Pinokio file gains the canonical non-secret sharing boundary',
 
     assert.equal(environment.OPENAI_API_KEY, 'app-value');
     assert.equal(environment.GOOGLE_MAPS_API_KEY, '');
-    assert.equal(environment.GEV_RATELIMIT_OPENAI_PER_MIN, '30');
-    assert.equal(environment.GEV_RATELIMIT_GOOGLE_PER_MIN, '120');
+    assert.equal(environment.VANTAGE_RATELIMIT_OPENAI_PER_MIN, '30');
+    assert.equal(environment.VANTAGE_RATELIMIT_GOOGLE_PER_MIN, '120');
     assert.equal(environment.PINOKIO_SHARE_LOCAL, 'false');
     assert.equal(environment.PINOKIO_SHARE_VAR, '__vantage_sharing_disabled__');
     assert.equal(environment.PINOKIO_SHARE_PASSCODE, '');
@@ -118,8 +180,8 @@ test('an existing Pinokio file gains the canonical non-secret sharing boundary',
     assert.match(persisted, /^PINOKIO_SHARE_LOCAL=false$/m);
     assert.match(persisted, /^PINOKIO_SHARE_VAR=__vantage_sharing_disabled__$/m);
     assert.match(persisted, /^OPENAI_API_KEY=app-value$/m);
-    assert.doesNotMatch(persisted, /^GEV_RATELIMIT_OPENAI_PER_MIN=/m);
-    assert.doesNotMatch(persisted, /^GEV_RATELIMIT_GOOGLE_PER_MIN=/m);
+    assert.doesNotMatch(persisted, /^VANTAGE_RATELIMIT_OPENAI_PER_MIN=/m);
+    assert.doesNotMatch(persisted, /^VANTAGE_RATELIMIT_GOOGLE_PER_MIN=/m);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

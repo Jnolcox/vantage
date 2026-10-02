@@ -749,5 +749,6 @@
   "src/sources/projectIdentity.test.mjs",
   "scripts/fetch-fonts.mjs",
   "src/tooling/fetchFonts.test.mjs",
-  "src/storageMigration.test.mjs"
+  "src/storageMigration.test.mjs",
+  "src/vantageEnv.test.mjs"
 ]

@@ -13,6 +13,7 @@ import fs from 'node:fs';
 import { parseEnv as parseDotenvText } from 'node:util';
 import { randomUUID } from 'node:crypto';
 import { hardenCredentialFile } from './key-setup-hardening.mjs';
+import { readVantageEnv } from '../providers/common/env.js';
 
 /**
  * Which launcher started this process, captured at MODULE LOAD — before the
@@ -21,7 +22,7 @@ import { hardenCredentialFile } from './key-setup-hardening.mjs';
  * reflect the real launcher (scripts/pinokio-start.mjs sets it) and never a
  * value a project `.env` could inject.
  */
-const LAUNCHER_AT_BOOT = process.env.GEV_LAUNCHER;
+const LAUNCHER_AT_BOOT = readVantageEnv('LAUNCHER');
 
 /**
  * Provider values present before Vite loads the checkout's dotenv files.
@@ -47,7 +48,7 @@ const PROVIDER_ENV_AT_BOOT = (globalThis.__VANTAGE_PROVIDER_ENV_AT_BOOT ??=
  * Pinokio deliberately treats its app-scoped ENVIRONMENT as authoritative.
  */
 const DEV_FRESH_EXTERNAL_KEYS_AT_BOOT = new Set(
-  String(process.env.GEV_KEY_SETUP_EXTERNAL_KEYS ?? '')
+  String(readVantageEnv('KEY_SETUP_EXTERNAL_KEYS') ?? '')
     .split(',')
     .map((name) => name.trim())
     .filter((name) => knownKeySetupEnvVars().has(name)),
@@ -89,7 +90,7 @@ function keySetupEndpoint({ sourceRoot = defaultSourceRoot } = {}) {
   // touches a store some other workflow owns.
   // The launcher marker is read from the BOOT environment captured before
   // Vite's loadEnv merges dotenv files into process.env — otherwise a stray
-  // `GEV_LAUNCHER=pinokio` line in someone's .env would silently redirect a
+  // `VANTAGE_LAUNCHER=pinokio` line in someone's .env would silently redirect a
   // plain `npm run dev` to write the Pinokio store it never loaded.
   const pinokioManaged = () => LAUNCHER_AT_BOOT === 'pinokio';
   const storeName = () =>

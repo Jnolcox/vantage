@@ -2,7 +2,12 @@
 set -euo pipefail
 
 SOURCE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-ROOT_DIR="$(cd "${GEV_PROJECT_ROOT:-$SOURCE_ROOT}" && pwd)"
+# GEV_PROJECT_ROOT is the pre-rename name, still honoured as a fallback.
+if [[ -z "${VANTAGE_PROJECT_ROOT:-}" && -n "${GEV_PROJECT_ROOT:-}" ]]; then
+  echo "[vantage] GEV_PROJECT_ROOT is deprecated; rename it to VANTAGE_PROJECT_ROOT." >&2
+  VANTAGE_PROJECT_ROOT="${GEV_PROJECT_ROOT}"
+fi
+ROOT_DIR="$(cd "${VANTAGE_PROJECT_ROOT:-$SOURCE_ROOT}" && pwd)"
 cd "$ROOT_DIR"
 
 PORT="${PORT:-4173}"
@@ -294,8 +299,8 @@ case "${HOST}" in
     echo "!! This dev server brokers your configured API keys (OpenAI,"
     echo "!! OpenSky, AISStream, TomTom, FIRMS, LL2, Google) to ANYONE who can"
     echo "!! reach it on the network. Use only on networks you trust."
-    echo "!! Consider the opt-in per-IP throttles GEV_RATELIMIT_OPENAI_PER_MIN"
-    echo "!! and GEV_RATELIMIT_GOOGLE_PER_MIN (see .env.example) — and note"
+    echo "!! Consider the opt-in per-IP throttles VANTAGE_RATELIMIT_OPENAI_PER_MIN"
+    echo "!! and VANTAGE_RATELIMIT_GOOGLE_PER_MIN (see .env.example) — and note"
     echo "!! they are NOT billing caps; set provider-side budget alerts too."
     if [[ -n "${LAN_IP}" ]]; then
       echo "!! LAN URL: http://${LAN_IP}:${PORT}/"
@@ -420,7 +425,10 @@ put_env_if_set CESIUM_ION_TOKEN "${CESIUM_ION_TOKEN}"
 put_env_if_set TOMTOM_API_KEY "${TOMTOM_API_KEY}"
 put_env_if_set FIRMS_MAP_KEY "${FIRMS_MAP_KEY}"
 put_env_if_set LL2_API_TOKEN "${LL2_API_TOKEN}"
-put_env GEV_LAUNCHER "dev-fresh"
-put_env GEV_KEY_SETUP_EXTERNAL_KEYS "${KEY_SETUP_EXTERNAL_KEYS_CSV}"
+put_env VANTAGE_LAUNCHER "dev-fresh"
+put_env VANTAGE_KEY_SETUP_EXTERNAL_KEYS "${KEY_SETUP_EXTERNAL_KEYS_CSV}"
+# The explicit markers above replace their pre-rename names; never let a stale
+# GEV_ value inherited from the parent shell act as a fallback in the child.
+DEV_UNSET+=(-u GEV_LAUNCHER -u GEV_KEY_SETUP_EXTERNAL_KEYS)
 
 env ${DEV_UNSET[@]+"${DEV_UNSET[@]}"} "${DEV_ENV[@]}" "${DEV_COMMAND[@]}" --host "${HOST}" --port "${PORT}" --force

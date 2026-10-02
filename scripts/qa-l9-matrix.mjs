@@ -603,7 +603,7 @@ check({
         return crash(`the runtime selected for the allocation gate (${label}) reports ${version || 'no parseable version'}, not Node 24 — the gate would refuse or silently skip, so this check verified nothing`);
       }
       const r = await sh(bin, [resolve(REPO_ROOT, 'scripts/run-unit-tests.mjs')], {
-        timeoutMs: 600000, env: { GEV_REQUIRE_ALLOCATION_GATE: '1' },
+        timeoutMs: 600000, env: { VANTAGE_REQUIRE_ALLOCATION_GATE: '1' },
       });
       return r.code === 0
         ? pass(`allocation gate ran under ${label} (${version}) and passed`)
@@ -717,8 +717,8 @@ check({
     const t = readFileSync(resolve(REPO_ROOT, '.env.example'), 'utf8');
     const bits = {
       lan: /HOST=0\.0\.0\.0/.test(t),
-      google: /GEV_RATELIMIT_GOOGLE_PER_MIN/.test(t),
-      openai: /GEV_RATELIMIT_OPENAI_PER_MIN/.test(t),
+      google: /VANTAGE_RATELIMIT_GOOGLE_PER_MIN/.test(t),
+      openai: /VANTAGE_RATELIMIT_OPENAI_PER_MIN/.test(t),
       notBilling: /not.*billing cap|billing cap/i.test(t),
     };
     const bad = Object.entries(bits).filter(([, v]) => !v).map(([k]) => k);

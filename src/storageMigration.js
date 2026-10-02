@@ -9,7 +9,9 @@
  *   gev:<rest>           -> vantage:<rest>      (storage keys, DOM events)
  *   gev-<rest>           -> vantage-<rest>      (storage keys, CSS, ids)
  *   window.__godsEyeView -> window.__vantage    (debug/QA globals; __gevX -> __vantageX)
- *   GEV_<NAME>           -> VANTAGE_<NAME>      (environment variables)
+ *   GEV_<NAME>           -> VANTAGE_<NAME>      (environment variables; the old
+ *                                               names stay readable as deprecated
+ *                                               fallbacks, server/providers/common/env.js)
  *   X-GEV-<Name>         -> X-Vantage-<Name>    (HTTP response headers)
  *
  * Every storage key the app has ever written under the old names, enumerated

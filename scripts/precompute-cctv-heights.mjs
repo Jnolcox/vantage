@@ -315,7 +315,7 @@ function counts(cameras, entries) {
 async function main() {
   const started = Date.now();
   const options = parseArgs(process.argv.slice(2));
-  const base = (process.env.GEV_BASE || 'http://localhost:4173').replace(
+  const base = (process.env.VANTAGE_BASE || 'http://localhost:4173').replace(
     /\/+$/,
     '',
   );

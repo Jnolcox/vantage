@@ -282,7 +282,7 @@ async function main() {
         if (!isBenign404) consoleErrors.push(sourceUrl ? `${text} [${sourceUrl}]` : text);
       }
       // Surface a trace for debugging, but keep it quiet.
-      if (process.env.GEV_TEST_VERBOSE) console.log(`    [page:${type}] ${text}`);
+      if (process.env.VANTAGE_TEST_VERBOSE) console.log(`    [page:${type}] ${text}`);
     });
     page.on('pageerror', (err) => consoleErrors.push(`pageerror: ${err.message}`));
     page.on('response', (response) => {

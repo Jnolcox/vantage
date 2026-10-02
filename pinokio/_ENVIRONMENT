@@ -28,10 +28,10 @@ PINOKIO_SHARE_LOCAL=false
 PINOKIO_SHARE_VAR=__vantage_sharing_disabled__
 
 # App-level guards, not billing caps. Provider-side budgets remain authoritative.
-GEV_RATELIMIT_OPENAI_PER_MIN=30
-GEV_RATELIMIT_GOOGLE_PER_MIN=120
+VANTAGE_RATELIMIT_OPENAI_PER_MIN=30
+VANTAGE_RATELIMIT_GOOGLE_PER_MIN=120
 
 # Optional local voice debug log, off by default. When set to 1 it records
 # every Realtime voice event, including full conversation transcripts, to
 # .gev-logs/realtime-conversations.jsonl. Enable only while debugging voice.
-# GEV_REALTIME_DEBUG_LOG=
+# VANTAGE_REALTIME_DEBUG_LOG=

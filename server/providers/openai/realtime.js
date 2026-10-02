@@ -40,7 +40,7 @@ function createRealtimeTokenHandler({
       return;
     }
 
-    // Opt-in per-IP throttle (GEV_RATELIMIT_OPENAI_PER_MIN). No-op when unset.
+    // Opt-in per-IP throttle (VANTAGE_RATELIMIT_OPENAI_PER_MIN). No-op when unset.
     if (!enforceOptInRateLimit(openAiRateLimiter(), req, res)) return;
 
     const apiKey = resolveApiKey();

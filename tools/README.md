@@ -13,7 +13,9 @@ setup doctor. Without it, paths continue to resolve from this repository.
 ## Prerequisites
 
 - Node.js (via `mise`)
-- `sharp` and `puppeteer` (devDependencies — `npm install`)
+- `sharp` and `puppeteer` (devDependencies — `npm install`). A plain install
+  skips Puppeteer's Chrome download (see `.puppeteerrc.cjs`); fetch it once with
+  `npx puppeteer browsers install chrome` or `VANTAGE_QA_BROWSER=1 npm install`.
 - Google Maps API key in `.env` as `GOOGLE_MAPS_API_KEY`
 - APIs enabled on your Google Cloud project: **Map Tiles API**, **Street View Static API**
 

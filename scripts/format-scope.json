@@ -756,5 +756,6 @@
   "src/tooling/apiRequestGuard.test.mjs",
   "src/tooling/devServerDeny.test.mjs",
   "src/maps/cesiumNetworkDefaults.test.mjs",
-  "src/tooling/contentSecurityPolicy.test.mjs"
+  "src/tooling/contentSecurityPolicy.test.mjs",
+  "src/tooling/puppeteerConfig.test.mjs"
 ]

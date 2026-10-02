@@ -1,46 +1,113 @@
 # Changelog
 
-- Rename the product from God's Eye View to Vantage: page title, Pinokio
-  launcher, voice instructions, logs, docs and the `vantage` package name
-  (outbound User-Agents now read `vantage/<version> (+<repo URL>)`). The
-  repository URL is unchanged for now. Existing installs carry over:
-  - browser storage saved under `godsEyeView.*` / `gev:*` / `gev-*` keys is
-    moved to `vantage.*` / `vantage:*` / `vantage-*` once at startup
-    (`src/storageMigration.js`), keeping scenes, panel layout, layer state,
-    voice cost limits and first-run choices;
-  - `GEV_*` settings are now `VANTAGE_*`; the old names are still read, with
-    a one-time deprecation warning, when the new name is unset, including the
-    lines of an existing `pinokio/ENVIRONMENT`;
-  - `.gev-cache/` and `.gev-logs/` are renamed to `.vantage-cache/` and
-    `.vantage-logs/` when the dev server starts;
-  - scene bundles exported as `gev-scene-bundle` (`.gevbundle.json`) still
-    import. Debug globals are now `window.__vantage*`, DOM events
-    `vantage:*` and response headers `X-Vantage-*`.
+All notable changes to Vantage are documented in this file.
 
-- Remove the title bar wordmark, tagline and logo (with its pointer-gaze
-  animation and radio broadcast waves) from the scene chrome and loading
-  screen; `#title-bar` now only hosts the optional FPS readout.
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+For the authoritative description of current runtime behavior, see
+[`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
 
-- Serve the Inter, JetBrains Mono and Material Symbols fonts from
-  `public/fonts/` instead of Google Fonts, so loading the page no longer
-  contacts `fonts.googleapis.com` or `fonts.gstatic.com`. `npm run fonts:fetch`
-  regenerates the subset and its license texts from
-  `src/ui/materialSymbolsGlyphs.json`, downloading everything before it
-  replaces the committed files.
+## [Unreleased]
 
-- Make the Realtime voice debug log opt-in. The server writes
-  `.gev-logs/realtime-conversations.jsonl` only when
-  `GEV_REALTIME_DEBUG_LOG=1` (set in `.env`, or in `pinokio/ENVIRONMENT` under
-  Pinokio); otherwise `/api/realtime/debug-log` answers 204 and the token
-  response's `X-GEV-Debug-Log: 0` header tells the client not to post at all.
-  The header also arrives on failed token requests, so an enabled log records
-  why a voice session could not start.
+Vantage is a fork of [God's Eye View](https://github.com/bilawalsidhu/gods-eye-view).
+The product rename and the browser-storage migration make it a new public
+baseline, so its version numbering starts again at 1.0.0; upstream's own
+history is kept under [Pre-fork history](#pre-fork-history-gods-eye-view).
 
-- Build every explicitly set server-side User-Agent (and the Nominatim
-  Referer) from one shared identity in `src/sources/projectIdentity.js`,
-  pointing at the fork. The Live Traffic NSW image host still receives a
-  browser User-Agent, because it serves frames only to browsers; every other
-  upstream sees the project identity.
+### Added
+
+- Existing installs carry over to the new name. Browser storage saved under
+  `godsEyeView.*` / `gev:*` / `gev-*` keys is moved once at startup to
+  `vantage.*` / `vantage:*` / `vantage-*` (`src/storageMigration.js`), keeping
+  scenes, panel layout, layer state, voice cost limits and first-run choices.
+  `.gev-cache/` and `.gev-logs/` are renamed to `.vantage-cache/` and
+  `.vantage-logs/` when the dev server starts, and scene bundles exported as
+  `gev-scene-bundle` (`.gevbundle.json`) still import.
+- Click-to-load gates for YouTube, Facebook and X embeds in scene cards. No
+  provider resource (preconnect, hidden frame or SDK) is requested until the
+  viewer chooses LOAD (this page) or ALWAYS ALLOW (remembered per provider);
+  afterwards playback and warm-up work as before.
+- Voice discloses what it sends: the mic help tray says audio, map context and
+  a view screenshot go to OpenAI, and a VIEW toggle beside the model tier stops
+  screenshots (`vantage.voice.shareViewImage`, on by default).
+- DISPLAY > HUD has a Context choice: Live (the default, unchanged) or Local,
+  which keeps the on-device summary and makes no Google or OpenAI lookups
+  (`vantage.hud.liveContext`).
+- `vite build` warns, naming the keys but never their values, when the bundle
+  embeds `GOOGLE_MAPS_API_KEY` or `CESIUM_ION_TOKEN`.
+- A README Network & privacy inventory of every outbound destination
+  (automatic or user-triggered, browser or server, what each request carries
+  and how to switch it off), with the controls behind it in `SECURITY.md`.
+- `npm run fonts:fetch` regenerates the self-hosted font subsets and their
+  license texts from `src/ui/materialSymbolsGlyphs.json`.
+
+### Changed
+
+- Renamed the product from God's Eye View to Vantage: page title, Pinokio
+  launcher, voice instructions and tool descriptions, logs, docs and the
+  `vantage` package name. Debug globals are now `window.__vantage*`, DOM events
+  `vantage:*` and response headers `X-Vantage-*`.
+- Operator settings are read as `VANTAGE_*`. The pre-rename `GEV_*` names are
+  still honored, with a one-time deprecation warning, when the new name is
+  unset, including the lines of an existing `pinokio/ENVIRONMENT`.
+- The project lives at <https://github.com/Jnolcox/vantage>; package metadata,
+  CODEOWNERS, issue templates and docs point at the fork and its maintainer.
+- Every explicitly set server-side User-Agent (and the Nominatim Referer) comes
+  from `src/sources/projectIdentity.js` and reads
+  `vantage/<version> (+https://github.com/Jnolcox/vantage)`, with the version
+  taken from `package.json`. The Live Traffic NSW image host still receives a
+  browser User-Agent, because it serves frames only to browsers.
+- The Inter, JetBrains Mono and Material Symbols fonts are served from
+  `public/fonts/`, so loading the page no longer contacts Google Fonts.
+- The Realtime voice debug log, which records transcripts, is opt-in with
+  `VANTAGE_REALTIME_DEBUG_LOG=1`; otherwise `/api/realtime/debug-log` answers
+  204 and the client stops posting.
+- Radio plays are reported to Radio Browser's public click counter only with
+  `VANTAGE_RADIO_REPORT_CLICKS=1`. Playback never depended on it.
+- `npm install` no longer downloads Chrome for Testing for Puppeteer; set
+  `VANTAGE_QA_BROWSER=1` to install it for the `qa:*` scripts.
+
+### Removed
+
+- The title bar wordmark, tagline and logo (with its pointer-gaze animation and
+  radio broadcast waves) from the scene chrome and loading screen; `#title-bar`
+  now only hosts the optional FPS readout.
+- The upstream capture GIFs and promo images from the README. The GIFs are
+  copyright Bilawal Sidhu and not covered by the MIT License; each embed is
+  replaced by a placeholder describing the shot.
+- The upstream maintainers' community-PR skill.
+
+### Security
+
+- The server binds to `127.0.0.1` unless `VANTAGE_HOST` (or the legacy `HOST`)
+  names another address. A LAN bind keeps Vite's Host check on with an explicit
+  list (this machine's hostname plus `VANTAGE_ALLOWED_HOSTS`) and defaults the
+  OpenAI and Google per-IP throttles to 30 and 60 requests per minute.
+- Every `/api` route refuses foreign Host headers, foreign Origins and requests
+  the browser labels cross-site or same-site, closing DNS rebinding and
+  cross-site quota spending. CORS is off.
+- `/api/realtime/token` mints the OpenAI client secret over POST only and
+  answers 405 to anything else.
+- The dev server no longer serves `.vantage-logs/` (voice transcripts) or
+  `.vantage-cache/`, nor their pre-rename `.gev-*` names.
+- `/api/cctv/frame/<id>` frames Street View fallbacks at the registered
+  camera only; unknown ids get the synthetic frame instead of an open, billable
+  Street View proxy.
+- Cesium's built-in ion token is replaced at startup by the configured
+  `CESIUM_ION_TOKEN` or nothing (fail closed), and the Google 3D Tiles credit
+  logo is bundled, so no implicit request reaches Cesium ion.
+- A Content-Security-Policy (`build/content-security-policy.js`) lists every
+  third-party origin the browser may reach: a header from the dev and preview
+  servers, a meta tag in built HTML, `VANTAGE_CSP=report-only` for diagnosis.
+  Referrer-Policy is pinned to `strict-origin-when-cross-origin`.
+
+## Pre-fork history (God's Eye View)
+
+The entries below were written upstream in
+[bilawalsidhu/gods-eye-view](https://github.com/bilawalsidhu/gods-eye-view)
+before the fork and are kept verbatim as project history. Their headings are
+nested one level down, and their version numbers and "Unreleased" labels are
+upstream's own; they are not Vantage releases.
 
 - Enable responsive trackpad pinch zoom on the globe. Browser pixel-mode
   `Ctrl+wheel` pinch gestures now reach Cesium with bounded amplification,
@@ -198,19 +265,19 @@
 
 - Split application scene, controls, catalog, tools and HTML into reusable components; configure application request services and sources without changing global fetch. Preserve standalone markup and voice behavior. Explicit annotation navigation may resolve a distant named target.
 
-## Voice component boundaries
+### Voice component boundaries
 
 - Separate voice controls, Realtime connection requests and the action runner.
 - Allow compatible endpoints and server-selected models through construction options.
 - Cancel pending token/SDP requests on Stop or teardown and reject expired secrets.
 
-## Configurable geospatial services
+### Configurable geospatial services
 
 - Compose geocoding, place context and routes through independent providers.
 - Allow compatible endpoint configuration without changing voice tools or annotation behavior.
 - Isolate configured source caches and reject results after cancellation.
 
-## ALPR camera locations
+### ALPR camera locations
 
 - Port Manjunath's (@manjunath22466) cyan camera badges, coral selection brackets,
   gradient direction wedges and animated tactical labels into the reusable ALPR
@@ -230,32 +297,32 @@
 - Separate the request adapter, camera model, presentation, and instance lifecycle.
   Source cancellation also guards late response bodies and rejects invalid query bounds.
 
-## Release disabled infrastructure rendering
+### Release disabled infrastructure rendering
 
 - Remove built Data Center, Dam and Submarine Cable entities when their layers
   are disabled, avoiding retained visualizer work and entity memory.
 - Keep parsed datasets cached for re-enable; rebuild entities without refetching.
 
-## Camera layer components
+### Camera layer components
 
 - Separate camera source requests, placement, frames, projection, cards and calibration.
 - Own visibility listeners and pending initialization within each layer lifetime.
 - Preserve existing camera catalogs, URL families, geometry and playback behavior.
 
-## Traffic and bikeshare components
+### Traffic and bikeshare components
 
 - Separate traffic loading, animation, styling and lifecycle into factory-owned components.
 - Give each flow source its own bounded decode cache and cancellation checks.
 - Separate bikeshare registry, station requests, rendering, selection and proximity handling.
 
-## Installation and context components
+### Installation and context components
 
 - Separate mapped-site requests, records, placement, selection and viewport lifecycle.
 - Separate proximity queries, subject tracking, navigation/history, panel and direction rendering.
 - Retain source and ground-floor ownership in standalone composition; reject malformed
   installation snapshots and ignore failures from cancelled requests.
 
-## Satellite and mission layer components
+### Satellite and mission layer components
 
 - Separate catalog loading, orbit calculations, display, tracking and interaction
   into instance-owned satellite components.
@@ -263,20 +330,20 @@
   operations, retaining existing layer controls and satellite coordination.
 - Cancel late mission source work and reject malformed launch snapshots.
 
-## Fire layer components
+### Fire layer components
 
 - Split fire source loading, state, rendering, cards, selection and viewport work
   into reusable components with application-owned scene services.
 - Cancel late refreshes, retain good data after malformed responses, and preserve
   selection identity without repeating a user-selection notification on refresh.
 
-## Earthquake components
+### Earthquake components
 
 - Separate earthquake snapshot loading, record validation, and display ownership.
 - Cancel pending earthquake refreshes on disable or destruction, retaining the
   last good snapshot after malformed or failed refreshes.
 
-## September 8, 2026
+### September 8, 2026
 
 Earthquake refreshes validate the complete feed and construct replacement entities before clearing the previous snapshot. Malformed rows and duplicate rendered IDs retain the last good entities, overlays, count and timestamp and report a malformed response; unknown magnitude is excluded from M2.5+ rendering.
 
@@ -287,7 +354,7 @@ Launch payloads with missing records now say PAYLOAD DATA UNAVAILABLE. Missing n
 This changelog records public product changes. For the authoritative description
 of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
 
-## [Unreleased]
+### \[Unreleased\]
 
 - Add bounded Director feature actions with accessible controls, explicit camera/layer admission and cancellation; restore pack geometry on same-shot seek. Preserve existing scenes and content attribution.
 
@@ -306,7 +373,7 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 - Separate submarine cable sources and rendering components, and export bundled geography lookup modules.
 
-### Added
+#### Added
 
 - DISPLAY ▸ Draw: draw on the world by hand. Pick Area, Line or Pin, click the
   vertices, double-click or press Enter to finish, label and colour it; Backspace
@@ -316,7 +383,7 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   together. While you are drawing, the draw tool owns the pointer and no layer
   selects what you click through (#235 — thanks @cora-fresh-labs).
 
-### Fixed
+#### Fixed
 
 - Keep traffic-road bounds crossing the antimeridian monotonic and inside the
   longitude range accepted by the Overpass request path, preserving the small
@@ -383,7 +450,7 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   toggle. Camera departure cancels pending work, arrival checks the final view,
   and superseded requests cannot keep a newer view loading.
 
-### Added
+#### Added
 
 - Two map-orientation controls sit beside Share in the top-center globe
   actions. Tilt Map swings between a straight-down map and a 35-degree oblique
@@ -503,9 +570,9 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 - Extract shared surface keyboard handling for the welcome launcher and Provider
   Settings, preserving Tab/Escape behavior and releasing the listener on teardown.
 
-### Added
+#### Added
 
-### Security
+#### Security
 
 - The CCTV media route no longer forwards a client `Range` header to the upstream
   camera host as it arrived. A single `bytes=` range is canonicalized and
@@ -536,7 +603,7 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 - Cancel the active location lookup when its controls are disposed.
 
-### Fixed
+#### Fixed
 
 - `DATA_SOURCES.md` states what the project does with camera frame content: a
   successful upstream response is relayed as the provider served it, nothing in
@@ -615,7 +682,7 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   fetching, AIS records/tracks and shared request helpers; preserve existing
   routes, local setup, fallback behavior and rendering.
 
-### Added
+#### Added
 
 - **Directions layer** — keyless A→B directions without a geocoder or a
   microphone (thanks @spcpza). The row's chips arm a globe click for A and B
@@ -643,7 +710,7 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   voice routes since launch, previously uncredited), with the OpenStreetMap
   credit and the "fix the map" link the service's usage policy asks for.
 
-### Changed
+#### Changed
 
 - The interface asks Google Fonts for only the icon glyphs it draws, instead of
   the whole variable icon font, and no longer requests a second icon family that
@@ -658,7 +725,7 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 - Rename standalone browser startup to `src/standalone/` and add a Node-only
   `gods-eye-view/build/vite` export with checked package ownership.
 
-### Development
+#### Development
 
 - The CCTV launcher and preview-server tests resolve their temporary fixture
   root through `fs.realpath`, so they pass on macOS, where the system temp
@@ -692,7 +759,7 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   infrastructure modules and their consumer tests. Package boundary checks keep
   those exports separate from app startup and local Node services.
 
-### Fixed
+#### Fixed
 
 - Reduce terrain-height timeouts when Re:Earth slows down. Batches are
   sized against measured response latency on both browser and server to reduce
@@ -783,7 +850,7 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   and upstream error bodies; response statuses and cache fallback remain intact.
   Includes the security fixes contributed by Tom-Neverwinter in PR #171.
 
-### Fixed
+#### Fixed
 
 - Map Source keyboard opening retries focus until the selected tile is visible.
   Leaving the disclosure, pointer interaction, or closing the tray cancels the
@@ -825,7 +892,7 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   that had since recovered. A miss is now cached only when every source
   consulted actually returned a verdict.
 
-### Added
+#### Added
 
 - Keyless place search. The LOCATION search box and the `fly_to_location` voice
   tool now resolve place names through Photon (komoot, over OpenStreetMap) when
@@ -845,14 +912,14 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   to Puppeteer 25.10.0 and Sharp 0.35.4. Cesium remains on 1.138.0.
   Browser QA awaits the new asynchronous executable-path lookup.
 
-## [0.1.1] — 2026-09-01 — Installation and live-data fixes
+### \[0.1.1\] — 2026-09-01 — Installation and live-data fixes
 
-### Changed
+#### Changed
 
 - Tightened the README opening around keyless setup, source freshness, modeled
   experiences, and the accessibility of the provider stack.
 
-### Fixed
+#### Fixed
 
 - Pinokio now recognizes its nested successful-install marker, so a completed
   one-click install exposes Start instead of returning to Install.
@@ -868,16 +935,16 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   array under `set -u` was fatal there. Launches with exported keys are
   unchanged.
 
-### Security
+#### Security
 
 - GBFS proxy body-size cap now measures the response in bytes
   (`Buffer.byteLength`) instead of JavaScript string length, so the
   `GBFS_MAX_BODY_BYTES` limit holds for multi-byte payloads and cannot be
   overrun by non-ASCII upstream responses.
 
-## [0.1.0] — 2026-08-31 — One-click install, keyless boot, Provider Settings
+### \[0.1.0\] — 2026-08-31 — One-click install, keyless boot, Provider Settings
 
-### Added
+#### Added
 
 - **One-click install** via Pinokio. Keyless boot lands on a live Esri World
   Imagery satellite globe with keyless terrain; OSM takes over automatically if
@@ -893,7 +960,7 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 - `.gitattributes` normalizes line endings, so Windows clones pass the full
   test suite out of the box (#81 — thanks @ethanstoner).
 
-### Changed
+#### Changed
 
 - README rewritten keyless-first around the provider ladder: zero keys → free
   Cesium ion (eligible personal, non-commercial use) → billing-enabled Google
@@ -903,21 +970,21 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 - Aircraft-identity voice answers explicitly cover operator, type, and route,
   and say so plainly when enrichment is unavailable instead of guessing.
 
-### Security
+#### Security
 
 - Provider Settings answers only local, unproxied requests and disables itself
   entirely whenever the server is shared. Public datacenter and dam datasets
   omit contact-oriented fields (see the dataset READMEs).
 
-## Pre-release development history
+### Pre-release development history
 
 The dated entries and internal milestone numbers below predate the first
 tagged GitHub Release. They are retained as project history and do not
 represent previously published GitHub Releases.
 
-## [Unreleased] — 2026-08-24
+### \[Unreleased\] — 2026-08-24
 
-### Added
+#### Added
 
 - Added honest aircraft identity narration: callsign, operator, registration,
   type, and route come only from selected-contact context, and missing operator,
@@ -927,7 +994,7 @@ represent previously published GitHub Releases.
 - Added regression coverage for aircraft identity narration and optional-key
   loading feedback.
 
-### Changed
+#### Changed
 
 - First-run presentation now opens with Detection `DENSE` at 75%, `ELASTIC`
   allocation, Fade 7%, Outside 1%, scope feather 11%, and aircraft 3D models in
@@ -940,7 +1007,7 @@ represent previously published GitHub Releases.
 - Public documentation and the L9 release matrix no longer reference non-public
   planning material or repository history.
 
-### Fixed
+#### Fixed
 
 - A missing optional FIRMS key no longer turns the complete Environmental
   mission into `LOAD FAILED`. The FIRMS row still reports `KEY REQUIRED`, while
@@ -956,23 +1023,23 @@ represent previously published GitHub Releases.
   takes over from its billboard.
 - Cockpit altitude uses aviation MSL data rather than Cesium render height.
 
-### Security
+#### Security
 
 - Production transitive dependencies resolve to patched DOMPurify and
   protobufjs releases without changing the Cesium version or application APIs.
 - Production dependency audit reports no known advisories; remaining audit
   findings are confined to development and QA tooling.
 
-## [Unreleased] — 2026-08-23
+### \[Unreleased\] — 2026-08-23
 
-### Added
+#### Added
 
 - Added a first-run mission launcher for Contacts, Space Missions,
   Environmental, and manual exploration.
 - Added terrain-validity gating and bounded last-known placement for grounded
   aircraft models.
 
-### Changed
+#### Changed
 
 - Environmental consistently presents both earthquakes and NASA FIRMS fires,
   with honest optional-key degradation.
@@ -980,9 +1047,9 @@ represent previously published GitHub Releases.
   stable across headings, with minor hull overlap allowed and no conspicuous
   top, bottom, or lateral projection.
 
-## [Unreleased] — 2026-08-18 to 2026-08-22
+### \[Unreleased\] — 2026-08-18 to 2026-08-22
 
-### Added
+#### Added
 
 - Added the four-source Map Source tray, share-link v2 state, cockpit/context
   voice parity, MSL altitude readouts, and close-range tracked aircraft models.
@@ -991,7 +1058,7 @@ represent previously published GitHub Releases.
 - Added deterministic first-run, map-source, floor, overlay, tracking, and
   aircraft-model regression harnesses.
 
-### Changed
+#### Changed
 
 - Consolidated world labels, cards, tracked readouts, CCTV thumbnails, cable
   labels, mission labels, and detection presentation under shared allocation and
@@ -1000,7 +1067,7 @@ represent previously published GitHub Releases.
 - Improved cockpit layout, context restoration, keyless feed honesty, and
   aircraft 2D/3D handoffs.
 
-### Fixed
+#### Fixed
 
 - Fixed degenerate depth picks, map-source restore states, route-camera motion,
   bright-ground label readability, grounded display flooring, and cross-layer
@@ -1008,9 +1075,9 @@ represent previously published GitHub Releases.
 - Fixed stale overlay callbacks, parked-idle render leaks, cable-label sweep
   starvation, and several share-link state conflicts.
 
-## [Unreleased] — 2026-08-02 to 2026-08-16
+### \[Unreleased\] — 2026-08-02 to 2026-08-16
 
-### Added
+#### Added
 
 - Added Global Context modes, Cockpit briefing surfaces, Radio context,
   satellite mission replay, and real per-class aircraft models with adjacent
@@ -1018,7 +1085,7 @@ represent previously published GitHub Releases.
 - Added a shared screen-space overlay system with bounded allocation for labels,
   cards, callouts, detection brackets, and selected-object presentation.
 
-### Changed
+#### Changed
 
 - Unified right-side product controls and responsive cockpit/map layouts.
 - Migrated public-safe neighborhood geometry to DataSF and tightened safe local
@@ -1026,9 +1093,9 @@ represent previously published GitHub Releases.
 - Improved proxy resilience, annotation outline bounds, CCTV enable pacing,
   contact de-emphasis, and deterministic visual stacking.
 
-## [Unreleased] — July 2026
+### \[Unreleased\] — July 2026
 
-### Added
+#### Added
 
 - Added live NASA FIRMS fires, optional live TomTom traffic, Caltrans and TfL
   CCTV packs, CCTV viewsheds and direct-manipulation calibration, citywide CCTV
@@ -1038,15 +1105,15 @@ represent previously published GitHub Releases.
 - Added aircraft class silhouettes, path-derived display heading, ADSBDB
   enrichment, cached CelesTrak TLE lookup, and next-ISS-pass prediction.
 
-### Fixed
+#### Fixed
 
 - Fixed elevated-airport aircraft placement, vessel sea-surface placement,
   close-zoom FIRMS anchors, antimeridian region framing, annotation resolution,
   cross-layer tracking ownership, and CCTV projection lifecycle issues.
 
-## [Unreleased] — June 2026
+### \[Unreleased\] — June 2026
 
-### Added
+#### Added
 
 - Added OpenAI Realtime voice control, scene-aware entity context, viewport image
   grounding, the AI HUD summary, live AIS vessels, infrastructure layers, map
@@ -1056,21 +1123,21 @@ represent previously published GitHub Releases.
 - Added MIT source licensing, security guidance, contribution guidance, data
   source notices, and third-party asset boundaries.
 
-### Changed
+#### Changed
 
 - Removed the experimental AI video-edit style and retained seven deterministic
   visual styles.
 - Moved Realtime text-history trimming to the server-side retention policy while
   keeping only the latest viewport image in conversation context.
 
-## [0.7.0] — 2026-02-18
+### \[0.7.0\] — 2026-02-18
 
 - Added the Bikeshare Pulse layer and panoptic label improvements.
 - Improved tracked-item boxes, post-render alignment, and CCTV projection
   quality.
 - Removed the experimental shift-drag CCTV calibration interaction.
 
-## [0.6.0] — 2026-02-10
+### \[0.6.0\] — 2026-02-10
 
 - Added the initial multi-layer 3D globe experience, visual styles, live
   aircraft, satellites, earthquakes, CCTV, traffic, FIRMS, infrastructure, and
@@ -1078,6 +1145,6 @@ represent previously published GitHub Releases.
 - Added entity inspection, tracking, scenes, keyboard controls, and shareable
   views.
 
-## [0.1.0] — 2026-02-09
+### \[0.1.0\] — 2026-02-09
 
 - Initial project version.

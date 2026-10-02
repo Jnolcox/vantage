@@ -30,6 +30,10 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   Apple's `/bin/chmod -N` by absolute path; GNU `chmod` has no `-N`, so every
   save was refused with "could not restrict the credential file" (ported from
   upstream, Arthur Bogaart).
+- The client terrain-height cache is bounded at 20 000 entries with
+  least-recently-used eviction, so a long session no longer retains every
+  coordinate it ever resolved. Consumer reads promote their entry and a batch
+  still reports every point it resolved (ported from upstream, Pedro Lobato).
 
 ## [1.0.0] - 2026-10-02
 

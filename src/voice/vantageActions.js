@@ -311,7 +311,7 @@ const BASEMAP_CONTEXT_WAIT_MS = 1500;
 const viewTargetCache = new WeakMap();
 
 /** Create application actions over the supplied scene and services. */
-export function createGevActionRunner({
+export function createVantageActionRunner({
   viewer,
   styleManager,
   dataManager,
@@ -329,7 +329,7 @@ export function createGevActionRunner({
     annotationResolver.resolveRegionRingForQuery(name, undefined, placeSearch);
   installViewTargetPrewarm(viewer);
   initCameraVerbs(viewer, getViewTargetCartesian);
-  return async function runGevAction(name, rawArgs = {}, runOptions = {}) {
+  return async function runVantageAction(name, rawArgs = {}, runOptions = {}) {
     const args = rawArgs && typeof rawArgs === 'object' ? rawArgs : {};
     const current = () =>
       !runOptions.signal?.aborted &&
@@ -523,7 +523,7 @@ export function createGevActionRunner({
             }
           : {}),
       };
-      const layer = await runGevAction(
+      const layer = await runVantageAction(
         'set_layer_visibility',
         {
           layerId,
@@ -542,7 +542,7 @@ export function createGevActionRunner({
         };
       }
 
-      const location = await runGevAction(
+      const location = await runVantageAction(
         'fly_to_location',
         locationArgs,
         runOptions,
@@ -2494,8 +2494,8 @@ export async function getBasemapLabelContext(
 }
 
 function installViewTargetPrewarm(viewer) {
-  if (viewer.__gevViewTargetPrewarmInstalled) return;
-  viewer.__gevViewTargetPrewarmInstalled = true;
+  if (viewer.__vantageViewTargetPrewarmInstalled) return;
+  viewer.__vantageViewTargetPrewarmInstalled = true;
   let timer = null;
   let reportedPrewarmFailure = false;
   viewer.camera.moveEnd.addEventListener(() => {
@@ -2783,10 +2783,10 @@ function focusDataLayerRow(layerId) {
   );
   if (!row) return null;
   row.scrollIntoView({ block: 'center', behavior: 'smooth' });
-  row.classList.remove('gev-voice-focus');
+  row.classList.remove('vantage-voice-focus');
   void row.offsetWidth;
-  row.classList.add('gev-voice-focus');
-  window.setTimeout(() => row.classList.remove('gev-voice-focus'), 3000);
+  row.classList.add('vantage-voice-focus');
+  window.setTimeout(() => row.classList.remove('vantage-voice-focus'), 3000);
   const name = row.querySelector('.data-name')?.textContent?.trim() || layerId;
   return { id: layerId, name };
 }
@@ -3378,7 +3378,7 @@ async function getBasemapContext(
     );
     return {
       source: 'Google Photorealistic 3D Tiles / Cesium basemap',
-      hasGoogle3DTiles: Boolean(window.__godsEyeView?.tileset),
+      hasGoogle3DTiles: Boolean(window.__vantage?.tileset),
       viewScale,
       viewportSamples: samples,
       viewportPlaces,
@@ -3443,7 +3443,7 @@ async function getBasemapContext(
   const nearbyPlaces = resolvedNearbyPlaces || [];
   return {
     source: 'Google Photorealistic 3D Tiles / Cesium basemap',
-    hasGoogle3DTiles: Boolean(window.__godsEyeView?.tileset),
+    hasGoogle3DTiles: Boolean(window.__vantage?.tileset),
     viewScale,
     viewportSamples: samples,
     viewportPlaces,
@@ -3965,9 +3965,9 @@ function dominantValue(values) {
 
 function summarizeEntity(viewer, entity, { includeProperties = false } = {}) {
   const now = Cesium.JulianDate.now();
-  if (entity.__gevContextId) {
-    const store = window.__gevContextStore;
-    const record = store?.entities?.get(entity.__gevContextId);
+  if (entity.__vantageContextId) {
+    const store = window.__vantageContextStore;
+    const record = store?.entities?.get(entity.__vantageContextId);
     if (record) return summarizeContextRecord(record, { includeProperties });
   }
   const props = propertyObject(entity);

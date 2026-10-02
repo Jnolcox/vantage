@@ -1,6 +1,6 @@
 import { expandApplicationHtml } from '../build/application-html.js';
 import { readStylesheet } from './testSupport/readStylesheet.mjs';
-import { GEV_REALTIME_TOOLS } from '../server/providers/openai/tools.js';
+import { VANTAGE_REALTIME_TOOLS } from '../server/providers/openai/tools.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -661,7 +661,7 @@ test('the voice TOOL SCHEMA matches the pinned release — the mission mapping i
   // Canonical serialization pins every tool name, description, property and
   // ordering while allowing source formatting. Derived from the unchanged
   // release schema before formatting (the previous source-byte pin passed).
-  const block = JSON.stringify(GEV_REALTIME_TOOLS);
+  const block = JSON.stringify(VANTAGE_REALTIME_TOOLS);
   assert.equal(block.length, 26208, 'serialized tool schema length drifted');
   assert.equal(
     crypto.createHash('sha256').update(block).digest('hex'),
@@ -691,7 +691,7 @@ test('the voice TOOL SCHEMA matches the pinned release — the mission mapping i
 });
 
 test('every layer a mission drives is already in the shipped set_layer_visibility enum', () => {
-  const tool = GEV_REALTIME_TOOLS.find(tool => tool.name === 'set_layer_visibility');
+  const tool = VANTAGE_REALTIME_TOOLS.find(tool => tool.name === 'set_layer_visibility');
   const allowedLayers = tool.parameters.properties.layerId.enum;
   const missionLayerIds = Object.values(FIRST_RUN_MISSIONS).flatMap((mission) => mission.layerIds || []);
   assert.ok(missionLayerIds.length > 0);

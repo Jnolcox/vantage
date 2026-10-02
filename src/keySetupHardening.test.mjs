@@ -117,8 +117,8 @@ test('Windows hardening applies and then verifies the exact restricted DACL', ()
     '*S-1-5-32-544:F',
   ]);
   assert.equal(calls[1].args.filter((arg) => arg === '/grant:r').length, 1);
-  assert.equal(calls[2].options.env.GEV_ACL_FILE, filepath);
-  assert.equal(calls[2].options.env.GEV_ACL_USER_SID, USER_SID);
+  assert.equal(calls[2].options.env.VANTAGE_ACL_FILE, filepath);
+  assert.equal(calls[2].options.env.VANTAGE_ACL_USER_SID, USER_SID);
   assert.match(calls[2].args.at(-1), /AreAccessRulesProtected/);
   assert.match(calls[2].args.at(-1), /rules\.Count -ne 3/);
   assert.match(calls[2].args.at(-1), /seen\.ContainsKey/);
@@ -389,7 +389,7 @@ test('Windows hardening converts subprocess exceptions into a fail-closed result
 test('Windows production hardener applies its exact DACL with native tools', {
   skip: process.platform !== 'win32',
 }, () => {
-  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'gev-provider-acl-'));
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'vantage-provider-acl-'));
   const filepath = path.join(directory, 'ENVIRONMENT.tmp');
   try {
     fs.writeFileSync(filepath, '');

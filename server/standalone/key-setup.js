@@ -30,7 +30,7 @@ const LAUNCHER_AT_BOOT = process.env.GEV_LAUNCHER;
  * Recomputing the snapshot there would classify the panel's own keys as
  * external (read-only) until the whole process is relaunched.
  */
-const PROVIDER_ENV_AT_BOOT = (globalThis.__GEV_PROVIDER_ENV_AT_BOOT ??=
+const PROVIDER_ENV_AT_BOOT = (globalThis.__VANTAGE_PROVIDER_ENV_AT_BOOT ??=
   Object.freeze(
     Object.fromEntries(
       [...knownKeySetupEnvVars()].map((name) => [
@@ -118,7 +118,7 @@ function keySetupEndpoint({ sourceRoot = defaultSourceRoot } = {}) {
       const unreadable = new Error(
         'the existing configuration could not be read, so nothing was changed',
       );
-      unreadable.code = 'GEV_STORE_UNREADABLE';
+      unreadable.code = 'VANTAGE_STORE_UNREADABLE';
       throw unreadable;
     }
   };
@@ -211,7 +211,7 @@ function keySetupEndpoint({ sourceRoot = defaultSourceRoot } = {}) {
         const error = new Error(
           'could not restrict the credential file to your account; nothing was saved',
         );
-        error.code = 'GEV_HARDEN_FAILED';
+        error.code = 'VANTAGE_HARDEN_FAILED';
         throw error;
       }
       // writeSync may write fewer bytes than asked; loop until the whole
@@ -236,7 +236,7 @@ function keySetupEndpoint({ sourceRoot = defaultSourceRoot } = {}) {
     }
   };
   return {
-    name: 'gev-key-setup',
+    name: 'vantage-key-setup',
     // serve AND not preview: `vite preview` resolves with command 'serve' too,
     // so a bare apply:'serve' would still configure under preview. The endpoints
     // only install via configureServer (never configurePreviewServer), so they
@@ -300,8 +300,8 @@ function keySetupEndpoint({ sourceRoot = defaultSourceRoot } = {}) {
             // error. Everything else returns a fixed message (a raw filesystem
             // error can carry an absolute path; that stays in the server log).
             if (
-              error?.code === 'GEV_HARDEN_FAILED' ||
-              error?.code === 'GEV_STORE_UNREADABLE'
+              error?.code === 'VANTAGE_HARDEN_FAILED' ||
+              error?.code === 'VANTAGE_STORE_UNREADABLE'
             ) {
               return respond(res, 500, {
                 error: `The key was not saved: ${error.message}`,

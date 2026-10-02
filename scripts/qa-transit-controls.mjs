@@ -75,11 +75,9 @@ export async function selectStyle(page, name, params = {}, wait = pause) {
         .querySelector('.dock-pin-btn[data-pin-target="control-panel"]')
         ?.click();
     }
-    window.__godsEyeView.styleManager.setPanelCollapsed?.(
-      'control-panel',
-      false,
-      { explicit: true },
-    );
+    window.__vantage.styleManager.setPanelCollapsed?.('control-panel', false, {
+      explicit: true,
+    });
   });
   await wait(400);
   try {
@@ -89,27 +87,21 @@ export async function selectStyle(page, name, params = {}, wait = pause) {
     await page.click(`.style-btn[data-style="${name}"]`);
   } catch {
     how = 'styleManager.setStyle (button not clickable)';
-    await page.evaluate(
-      (n) => window.__godsEyeView.styleManager.setStyle(n),
-      name,
-    );
+    await page.evaluate((n) => window.__vantage.styleManager.setStyle(n), name);
   }
   // A click can be swallowed by a loading cover or a collapsed tray without
   // Puppeteer throwing. Verify the active style before querying generated rows.
   if (
     !(await page.evaluate(
-      (n) => document.documentElement.dataset.gevStyle === n,
+      (n) => document.documentElement.dataset.vantageStyle === n,
       name,
     ))
   ) {
     how = 'styleManager.setStyle (button did not activate style)';
-    await page.evaluate(
-      (n) => window.__godsEyeView.styleManager.setStyle(n),
-      name,
-    );
+    await page.evaluate((n) => window.__vantage.styleManager.setStyle(n), name);
   }
   await page.waitForFunction(
-    (n) => document.documentElement.dataset.gevStyle === n,
+    (n) => document.documentElement.dataset.vantageStyle === n,
     { timeout: 10000 },
     name,
   );

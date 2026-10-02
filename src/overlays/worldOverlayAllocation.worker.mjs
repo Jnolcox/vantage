@@ -641,9 +641,9 @@ function buildPhase3TrackedWorkload(count) {
   );
   const selected = vesselRegistration.entries.splice(selectedIndex, 1)[0];
   const trackedEntity = {
-    gevTrackedId: 'flights:allocation-probe',
-    gevDisplayPosition: selected.position,
-    gevLabelModel: {
+    vantageTrackedId: 'flights:allocation-probe',
+    vantageDisplayPosition: selected.position,
+    vantageLabelModel: {
       title: 'ALLOC01',
       details: ['FL350 · 451 kts', 'TEST AIR · A320'],
       accent: '#39d0ff',

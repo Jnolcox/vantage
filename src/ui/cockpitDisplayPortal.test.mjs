@@ -162,7 +162,9 @@ test('disposal restores groups and revokes mode listeners and queued focus work'
   try {
     const owner = f.create();
     window.dispatchEvent(
-      new CustomEvent('gev:cockpit-mode-changed', { detail: { active: true } }),
+      new CustomEvent('vantage:cockpit-mode-changed', {
+        detail: { active: true },
+      }),
     );
     assert.equal(f.group.parentNode, f.slot);
     const obsolete = [...f.frames.values()];
@@ -170,7 +172,9 @@ test('disposal restores groups and revokes mode listeners and queued focus work'
     owner.destroy();
     obsolete.forEach((callback) => callback());
     window.dispatchEvent(
-      new CustomEvent('gev:cockpit-mode-changed', { detail: { active: true } }),
+      new CustomEvent('vantage:cockpit-mode-changed', {
+        detail: { active: true },
+      }),
     );
     owner.setActive(true);
     assert.deepEqual(f.standard.children, [f.group, f.sibling]);

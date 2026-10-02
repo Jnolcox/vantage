@@ -1,7 +1,7 @@
 import { SceneDirector } from '../scenes/director.js';
 import { initAnnotations } from '../annotations/index.js';
 import { initDrawTool } from '../annotations/drawTool.js';
-import { initGevVoiceCommands } from '../voice/gevRealtime.js';
+import { initVantageVoiceCommands } from '../voice/vantageRealtime.js';
 import { installScopeMask, destroyScopeMask } from '../scopeMask.js';
 import {
   installRenderGovernor,
@@ -45,7 +45,8 @@ export function createApplicationTools({
     resolver: operations.annotationResolver,
   });
   defer(() => {
-    if (window.__gevAnnotations === annotations) delete window.__gevAnnotations;
+    if (window.__vantageAnnotations === annotations)
+      delete window.__vantageAnnotations;
     annotations.destroy();
   });
   // DISPLAY ▸ Draw: the same whiteboard, drawn by hand. It claims the pointer
@@ -100,7 +101,7 @@ export function createApplicationTools({
   // loop burning behind a hidden tab. (perf wave 2 fix)
   syncVisibilitySuspension();
 
-  window.__godsEyeView = {
+  window.__vantage = {
     viewer,
     styleManager,
     tileset,
@@ -114,11 +115,11 @@ export function createApplicationTools({
     surfaceServices: operations.surface,
     requestRender: governorRequestRender,
   };
-  const debug = window.__godsEyeView;
+  const debug = window.__vantage;
   defer(() => {
-    if (window.__godsEyeView === debug) delete window.__godsEyeView;
+    if (window.__vantage === debug) delete window.__vantage;
   });
-  const voiceCommands = initGevVoiceCommands({
+  const voiceCommands = initVantageVoiceCommands({
     ...voice,
     floorServices: operations.surface.groundFloor,
     annotationResolver: operations.annotationResolver,
@@ -133,8 +134,8 @@ export function createApplicationTools({
   });
   defer(() => {
     voiceCommands.stop({ removeUi: true });
-    if (window.__gevVoiceCommands === voiceCommands)
-      delete window.__gevVoiceCommands;
+    if (window.__vantageVoiceCommands === voiceCommands)
+      delete window.__vantageVoiceCommands;
   });
   debug.voiceCommands = voiceCommands;
   return { sceneDirector, annotations, voiceCommands };

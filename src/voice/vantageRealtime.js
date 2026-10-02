@@ -1,11 +1,11 @@
-import { createGevActionRunner } from './gevActions.js';
+import { createVantageActionRunner } from './vantageActions.js';
 import { createVoiceCommands } from './commands.js';
 export * from './realtimeController.js';
 
 /** Compose the standalone action runner with the voice controls. */
-export function initGevVoiceCommands(options) {
+export function initVantageVoiceCommands(options) {
   return createVoiceCommands({
     ...options,
-    runner: createGevActionRunner(options),
+    runner: createVantageActionRunner(options),
   });
 }

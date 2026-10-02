@@ -190,7 +190,7 @@
     "./ui/composition": "./src/ui/composition.js",
     "./ui/hud": "./src/hud.js",
     "./standalone/settings": "./src/keySetup.js",
-    "./voice/actions": "./src/voice/gevActions.js",
+    "./voice/actions": "./src/voice/vantageActions.js",
     "./annotations": "./src/annotations/index.js",
     "./context": "./src/data/contextStore.js",
     "./build/html": {

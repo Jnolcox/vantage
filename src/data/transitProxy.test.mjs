@@ -115,7 +115,7 @@ test('response headers mark cache state and never let a stale-error response be 
     transitResponseHeaders('STALE-ERROR')['Cache-Control'],
     'no-store',
   );
-  assert.equal(transitResponseHeaders('MISS')['X-GEV-Cache'], 'MISS');
+  assert.equal(transitResponseHeaders('MISS')['X-Vantage-Cache'], 'MISS');
 });
 
 /** A minimal FeedMessage with the given header fields and vehicle entities. */

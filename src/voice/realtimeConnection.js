@@ -129,11 +129,11 @@ export class RealtimeConnection {
       this.startVoiceVisualizer(localStream);
 
       document
-        .querySelectorAll('audio[data-gev-realtime-audio="true"]')
+        .querySelectorAll('audio[data-vantage-realtime-audio="true"]')
         .forEach((el) => el.remove());
       this.audioEl = document.createElement('audio');
       this.audioEl.autoplay = true;
-      this.audioEl.dataset.gevRealtimeAudio = 'true';
+      this.audioEl.dataset.vantageRealtimeAudio = 'true';
       this.audioEl.style.display = 'none';
       document.body.appendChild(this.audioEl);
 

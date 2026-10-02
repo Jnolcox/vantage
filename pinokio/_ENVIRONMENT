@@ -25,7 +25,7 @@
 # tunnel-login passcodes, so the launcher refuses to create a tunnel.
 PINOKIO_SHARE_CLOUDFLARE=false
 PINOKIO_SHARE_LOCAL=false
-PINOKIO_SHARE_VAR=__gev_sharing_disabled__
+PINOKIO_SHARE_VAR=__vantage_sharing_disabled__
 
 # App-level guards, not billing caps. Provider-side budgets remain authoritative.
 GEV_RATELIMIT_OPENAI_PER_MIN=30

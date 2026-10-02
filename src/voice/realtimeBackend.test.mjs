@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createRealtimeBackend } from './realtimeBackend.js';
-import { GevRealtimeController } from './realtimeController.js';
+import { VantageRealtimeController } from './realtimeController.js';
 import {
   DEBUG_LOG_URL,
   PENDING_DEBUG_LOG_LIMIT,
@@ -116,7 +116,7 @@ test('cancellation rejects late token and SDP bodies without promoting a stopped
 test('controller lifetime stops pending transport and releases resources through normal teardown', () => {
   const lifetime = new AbortController();
   let stopped = 0;
-  const controller = new GevRealtimeController({
+  const controller = new VantageRealtimeController({
     runner: async () => ({}),
     signal: lifetime.signal,
     debugSink: null,
@@ -145,7 +145,7 @@ test('the token mint reports whether the server records the debug log', async ()
     const backend = createRealtimeBackend({
       tokenTransport: async () => {
         const reply = tokenReply();
-        if (header) reply.headers.set('X-GEV-Debug-Log', header);
+        if (header) reply.headers.set('X-Vantage-Debug-Log', header);
         return reply;
       },
     });
@@ -162,7 +162,7 @@ test('a failed token mint still reports the server debug-log setting', async () 
       tokenTransport: async () =>
         Response.json(
           { error: 'OPENAI_API_KEY is not configured' },
-          { status: 503, headers: { 'X-GEV-Debug-Log': header } },
+          { status: 503, headers: { 'X-Vantage-Debug-Log': header } },
         ),
     });
     await assert.rejects(backend.requestToken(), (error) => {

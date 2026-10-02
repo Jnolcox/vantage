@@ -361,7 +361,7 @@ test('OSM attribution introduces displayed data for five seconds, then stays dis
     assert.equal(h.credits.size, 1);
     const [credit] = h.credits;
     assert.equal(credit.showOnScreen, true);
-    assert.match(credit.html, /class="gev-alpr-credit">ALPR:/);
+    assert.match(credit.html, /class="vantage-alpr-credit">ALPR:/);
     assert.match(
       credit.html,
       /href="https:\/\/www.openstreetmap.org\/copyright"/,
@@ -461,25 +461,25 @@ test('all manufacturers share one ALPR title and color; only supplied metadata a
     const entities = h.source.entities.values;
     assert.equal(alprCamerasLayer.name, 'ALPR Cameras');
     assert.deepEqual(
-      entities.map((entity) => entity.gevLabelModel.title),
+      entities.map((entity) => entity.vantageLabelModel.title),
       ['ALPR-0042', 'ALPR-0043', 'ALPR-0044'],
     );
     assert.equal(
       new Set(entities.map((entity) => entity.billboard.image.getValue())).size,
       1,
     );
-    assert.deepEqual(entities[0].gevLabelModel.details, [
+    assert.deepEqual(entities[0].vantageLabelModel.details, [
       'OSM MAPPED',
       'FLOCK SAFETY · CITY POLICE · FIXED',
       'PUBLIC MAP DATA',
     ]);
-    assert.deepEqual(entities[1].gevLabelModel.details, [
+    assert.deepEqual(entities[1].vantageLabelModel.details, [
       'OSM MAPPED',
       'MOTOROLA SOLUTIONS',
       'PUBLIC MAP DATA',
     ]);
     assert.deepEqual(
-      entities[2].gevLabelModel.details,
+      entities[2].vantageLabelModel.details,
       ['OSM MAPPED', 'PUBLIC MAP DATA'],
       'unknown metadata is not guessed, but the source is always named',
     );
@@ -808,7 +808,7 @@ test('selected readout samples the rendered ground, not zero elevation or the di
     h.click('alpr:42');
     const entity = h.source.entities.getById('alpr:42');
     const anchor = Cesium.Cartographic.fromCartesian(
-      entity.gevDisplayPosition(),
+      entity.vantageDisplayPosition(),
     );
     assert.ok(Math.abs(anchor.height - 187) < 0.001);
     assert.ok(
@@ -816,7 +816,7 @@ test('selected readout samples the rendered ground, not zero elevation or the di
     );
     for (let i = 0; i < 60; i++) {
       h.viewer.scene.postRender.raiseEvent();
-      entity.gevDisplayPosition();
+      entity.vantageDisplayPosition();
     }
     assert.equal(samples, 1, 'no per-frame raycasts');
     h.advance(1000);
@@ -916,7 +916,7 @@ test('two factories keep their requests, records and destruction independent', a
     assert.equal(b.source.entities.values[0].id, 'directory:99');
     assert.equal(second.source, 'Test camera directory');
     assert.ok(
-      b.source.entities.values[0].gevLabelModel.details.includes(
+      b.source.entities.values[0].vantageLabelModel.details.includes(
         'Source: Test directory',
       ),
     );
@@ -946,8 +946,8 @@ test('orbit cache hits and metadata refreshes preserve marker geometry and selec
     let selections = 0,
       clears = 0,
       collectionChanges = 0;
-    window.addEventListener('gev:entity-selected', () => selections++);
-    window.addEventListener('gev:entity-selection-cleared', () => clears++);
+    window.addEventListener('vantage:entity-selected', () => selections++);
+    window.addEventListener('vantage:entity-selection-cleared', () => clears++);
     h.source.entities.collectionChanged.addEventListener(
       (_collection, added, removed) => {
         collectionChanges += added.length + removed.length;

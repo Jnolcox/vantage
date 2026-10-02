@@ -20,7 +20,7 @@ module.exports = {
           LL2_API_TOKEN: '{{env.LL2_API_TOKEN || ""}}',
           PINOKIO_SHARE_CLOUDFLARE: '{{env.PINOKIO_SHARE_CLOUDFLARE || "false"}}',
           PINOKIO_SHARE_LOCAL: '{{env.PINOKIO_SHARE_LOCAL || "false"}}',
-          PINOKIO_SHARE_VAR: '{{env.PINOKIO_SHARE_VAR || "__gev_sharing_disabled__"}}',
+          PINOKIO_SHARE_VAR: '{{env.PINOKIO_SHARE_VAR || "__vantage_sharing_disabled__"}}',
           GEV_RATELIMIT_OPENAI_PER_MIN: '{{env.GEV_RATELIMIT_OPENAI_PER_MIN || ""}}',
           GEV_RATELIMIT_GOOGLE_PER_MIN: '{{env.GEV_RATELIMIT_GOOGLE_PER_MIN || ""}}',
           GEV_REALTIME_DEBUG_LOG: '{{env.GEV_REALTIME_DEBUG_LOG || ""}}',

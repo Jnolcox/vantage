@@ -170,8 +170,8 @@ export function createState({ services }) {
 
   /**
    * Active post-FX style (StyleManager preset name), synced from
-   * `document.documentElement.dataset.gevStyle` at init and the
-   * `gev:style-change` window event thereafter. Drives the preset-aware dot
+   * `document.documentElement.dataset.vantageStyle` at init and the
+   * `vantage:style-change` window event thereafter. Drives the preset-aware dot
    * styling (`trafficPresetStyle.js`): NVG/FLIR/noir re-encode congestion in
    * luminance + size (their shaders discard hue), retro/CRT gets saturated
    * hues + a size boost to survive pixelation. 'normal' → shipped palette.
@@ -184,7 +184,7 @@ export function createState({ services }) {
 
   layerState._presetDots = 'on';
 
-  /** @type {boolean} gev:style-change listener bound (bind once per page). */
+  /** @type {boolean} vantage:style-change listener bound (bind once per page). */
 
   layerState._styleListenerBound = false;
 

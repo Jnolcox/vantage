@@ -265,7 +265,7 @@ async function openPage(browser, base) {
     await page.goto(
       `${base}/#v=2&lat=30&lon=-95&alt=17000000&heading=0&pitch=-90&roll=0`,
     );
-    await page.waitForFunction(() => !!window.__godsEyeView?.viewer);
+    await page.waitForFunction(() => !!window.__vantage?.viewer);
     return page;
   } catch (error) {
     await page.close();
@@ -409,18 +409,18 @@ async function main() {
         sample: (batch) =>
           withDeadline(
             page.evaluate(async (cameras) => {
-              const gev = window.__godsEyeView;
-              const scene = gev.viewer.scene;
-              const Cartesian3 = gev.viewer.camera.position.constructor;
+              const vantage = window.__vantage;
+              const scene = vantage.viewer.scene;
+              const Cartesian3 = vantage.viewer.camera.position.constructor;
               const Cartographic =
-                gev.viewer.camera.positionCartographic.constructor;
+                vantage.viewer.camera.positionCartographic.constructor;
               const lat =
                 cameras.reduce((sum, camera) => sum + camera.pose.lat, 0) /
                 cameras.length;
               const lon =
                 cameras.reduce((sum, camera) => sum + camera.pose.lon, 0) /
                 cameras.length;
-              gev.viewer.camera.setView({
+              vantage.viewer.camera.setView({
                 destination: Cartesian3.fromDegrees(lon, lat, 3000),
                 orientation: { heading: 0, pitch: -Math.PI / 2, roll: 0 },
               });

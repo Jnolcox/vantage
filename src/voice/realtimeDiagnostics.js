@@ -14,7 +14,7 @@ export const PENDING_DEBUG_LOG_LIMIT = 50;
 
 export function createDebugSessionId() {
   const randomPart = Math.random().toString(36).slice(2, 10);
-  return `gev-${Date.now().toString(36)}-${randomPart}`;
+  return `vantage-${Date.now().toString(36)}-${randomPart}`;
 }
 
 export function postDebugLog(record) {

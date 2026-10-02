@@ -1,10 +1,10 @@
-import { GevRealtimeController } from './realtimeController.js';
+import { VantageRealtimeController } from './realtimeController.js';
 
 /** Adapt the existing WebRTC implementation to the common voice session. */
 export function createRealtimeSession({
   emit,
   runAction,
-  createController = (options) => new GevRealtimeController(options),
+  createController = (options) => new VantageRealtimeController(options),
   ...options
 }) {
   const controller = createController({

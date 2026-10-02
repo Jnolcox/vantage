@@ -67,10 +67,10 @@ settled and not applicable because no Google 3D tileset is active.
   just talk. It marks the map *as it talks*, without announcing that it's drawing. Click
   **STOP** when done. (Needs `OPENAI_API_KEY`; `dev-fresh.sh` injects it from Keychain.)
 - **Console (deterministic, no mic/live-data needed):** open DevTools (**Cmd-Opt-J**) and use:
-  - `window.__gevAnnotations.tour()` — self-running narrated SF tour (camera + marks in sequence)
-  - `window.__gevAnnotations.demo()` — lays the SF set down at once
-  - `window.__gevAnnotations.clear()` — erase all marks
-  - `window.__gevAnnotations.count()` — how many marks are live
+  - `window.__vantageAnnotations.tour()` — self-running narrated SF tour (camera + marks in sequence)
+  - `window.__vantageAnnotations.demo()` — lays the SF set down at once
+  - `window.__vantageAnnotations.clear()` — erase all marks
+  - `window.__vantageAnnotations.count()` — how many marks are live
 
 ---
 
@@ -162,14 +162,14 @@ cancellation, hardened Overpass + route proxies. Not much to see by hand (see §
 **2e · Clear / new-topic race (→ R4)**
 1. *"annotate downtown Austin"* and, right as it starts, *"actually, clear everything."*
 - ✅ Marks clear and **stay** cleared (the in-flight one doesn't pop back a second later).
-- Sanity in console: `window.__gevAnnotations.count()` → `0` after a clear.
+- Sanity in console: `window.__vantageAnnotations.count()` → `0` after a clear.
 
 ---
 
 ## 3. Annotation rendering & motion (Batch C) — deterministic, no mic
 
 **3a · Full experience (smoke test)**
-1. Console: `window.__gevAnnotations.tour()`. 📸 A couple of frames as it runs.
+1. Console: `window.__vantageAnnotations.tour()`. 📸 A couple of frames as it runs.
 - ✅ Camera flies to SF; Palace highlight → arrow → Presidio **draped** outline → ILM pin →
   Crissy Field **route** appear in sequence; marks stay glued as the camera moves.
 
@@ -184,7 +184,7 @@ cancellation, hardened Overpass + route proxies. Not much to see by hand (see §
 
 **3d · Large boundary, no freeze (→ R11)**
 1. Console:
-   `window.__gevAnnotations.annotate([{type:'area',target:'Travis County, Texas',label:'Travis County',color:'green',footprint:true}],{flyTo:true,persist:true})`
+   `window.__vantageAnnotations.annotate([{type:'area',target:'Travis County, Texas',label:'Travis County',color:'green',footprint:true}],{flyTo:true,persist:true})`
 - ✅ The complex county boundary simplifies and draws **without** freezing/janking the UI.
 
 ---

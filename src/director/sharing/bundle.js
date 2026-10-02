@@ -58,6 +58,14 @@ function checkMime(mimeType) {
   if (!MIME.has(mimeType)) fail('assets', 'unsupported media type');
 }
 
+const BUNDLE_FORMAT = 'vantage-scene-bundle';
+const BUNDLE_SUFFIX = '.vantagebundle.json';
+// Bundles exported before the rename to Vantage keep importing.
+const LEGACY_BUNDLE_FORMAT = 'gev-scene-bundle';
+const LEGACY_BUNDLE_SUFFIX = '.gevbundle.json';
+const BUNDLE_FORMATS = new Set([BUNDLE_FORMAT, LEGACY_BUNDLE_FORMAT]);
+const BUNDLE_SUFFIXES = [BUNDLE_SUFFIX, LEGACY_BUNDLE_SUFFIX];
+
 /** Read inert scene JSON or a bounded asset bundle, verifying bytes before admission. */
 export async function parseSceneShare(text, { signal } = {}) {
   checkAbort(signal);
@@ -73,7 +81,7 @@ export async function parseSceneShare(text, { signal } = {}) {
   } catch {
     fail('$', 'invalid JSON');
   }
-  if (input?.format !== 'gev-scene-bundle')
+  if (!BUNDLE_FORMATS.has(input?.format))
     return { project: parseSceneDocument(text), assets: new Map() };
   fields(input, '$', ['format', 'version', 'project', 'assets']);
   if (input.version !== 1) fail('version', 'unsupported bundle version');
@@ -114,7 +122,7 @@ export async function parseSceneShare(text, { signal } = {}) {
 
 /** File reads have a known budget before text decoding; large bundles use a distinct suffix. */
 export async function readSceneShare(file, options) {
-  const limit = file.name?.endsWith('.gevbundle.json')
+  const limit = BUNDLE_SUFFIXES.some((suffix) => file.name?.endsWith(suffix))
     ? SHARE_LIMITS.bytes
     : 5 * 1024 * 1024;
   if (file.size > limit)
@@ -184,7 +192,7 @@ export async function createSceneBundle(
     pack.sha256 = entry.sha256;
   }
   const text = JSON.stringify({
-    format: 'gev-scene-bundle',
+    format: BUNDLE_FORMAT,
     version: 1,
     project: copy,
     assets: assets.map(({ byteLength, ...entry }) => entry),

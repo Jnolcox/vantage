@@ -86,7 +86,7 @@ standalone share-restoration result keep their existing separate contracts.
 `src/main.js` reads the existing browser configuration and starts
 `src/standalone/application.js`. That module selects the four implementations
 in its directory. Scene setup, controls, layer registration, tools and loading
-chrome have separate owners. The existing `window.__godsEyeView` debugging shape
+chrome have separate owners. The existing `window.__vantage` debugging shape
 is preserved while the app is running.
 
 The standalone controls and layer modules still contain page-scoped state.

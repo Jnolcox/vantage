@@ -396,7 +396,7 @@ body:has(.data-toggle-row[data-layer-id='alpr-cameras'] .data-toggle-btn.active)
    frame, so the on-screen credit content is owned by Cesium's update loop, not
    CSS overrides — we deliberately don't fight it here.) */
 
-#gev-voice-control {
+#vantage-voice-control {
   position: fixed;
   right: 36px;
   bottom: 36px;
@@ -422,7 +422,7 @@ body:has(.data-toggle-row[data-layer-id='alpr-cameras'] .data-toggle-btn.active)
   pointer-events: auto;
 }
 
-#gev-voice-button {
+#vantage-voice-button {
   width: 72px;
   height: 34px;
   flex: 0 0 auto;
@@ -436,24 +436,24 @@ body:has(.data-toggle-row[data-layer-id='alpr-cameras'] .data-toggle-btn.active)
   cursor: pointer;
 }
 
-#gev-voice-button:hover {
+#vantage-voice-button:hover {
   color: #ffffff;
   border-color: var(--accent);
   box-shadow: 0 0 12px rgba(0, 212, 255, 0.22);
 }
 
-.gev-voice-readout {
+.vantage-voice-readout {
   min-width: 0;
   line-height: 1.2;
   text-align: right;
 }
 
-#gev-voice-status {
+#vantage-voice-status {
   font-size: 10px;
   color: var(--accent);
 }
 
-#gev-voice-detail {
+#vantage-voice-detail {
   max-width: 132px;
   margin-top: 2px;
   overflow: hidden;
@@ -463,23 +463,23 @@ body:has(.data-toggle-row[data-layer-id='alpr-cameras'] .data-toggle-btn.active)
   white-space: nowrap;
 }
 
-#gev-voice-control[data-status='listening'] {
+#vantage-voice-control[data-status='listening'] {
   border-color: rgba(92, 255, 198, 0.45);
 }
 
-#gev-voice-control[data-status='listening'] #gev-voice-status {
+#vantage-voice-control[data-status='listening'] #vantage-voice-status {
   color: #5cffc6;
 }
 
-#gev-voice-control[data-status='executing'] {
+#vantage-voice-control[data-status='executing'] {
   border-color: rgba(255, 220, 120, 0.55);
 }
 
-#gev-voice-control[data-status='executing'] #gev-voice-status {
+#vantage-voice-control[data-status='executing'] #vantage-voice-status {
   color: #ffdc78;
 }
 
-#gev-voice-control[data-status='error'] {
+#vantage-voice-control[data-status='error'] {
   align-items: flex-start;
   width: min(440px, calc(100vw - 72px));
   border-color: rgba(255, 92, 110, 0.6);
@@ -487,16 +487,16 @@ body:has(.data-toggle-row[data-layer-id='alpr-cameras'] .data-toggle-btn.active)
   border-radius: var(--panel-radius);
 }
 
-#gev-voice-control[data-status='error'] #gev-voice-status {
+#vantage-voice-control[data-status='error'] #vantage-voice-status {
   color: #ff5c6e;
 }
 
-#gev-voice-control[data-status='error'] .gev-voice-readout {
+#vantage-voice-control[data-status='error'] .vantage-voice-readout {
   flex: 1;
   text-align: left;
 }
 
-#gev-voice-control[data-status='error'] #gev-voice-detail {
+#vantage-voice-control[data-status='error'] #vantage-voice-detail {
   max-width: none;
   overflow: visible;
   color: #ffb4bd;

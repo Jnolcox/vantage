@@ -678,9 +678,9 @@ export class StyleManager extends ShellFacade {
       statusElement: this._mapStackStatus,
       controller: this.mapStackController,
       subscribe: (onChange) => {
-        window.addEventListener('gev:map-stack-changed', onChange);
+        window.addEventListener('vantage:map-stack-changed', onChange);
         return () =>
-          window.removeEventListener('gev:map-stack-changed', onChange);
+          window.removeEventListener('vantage:map-stack-changed', onChange);
       },
       claimSelection: () => this.shareLinkManager?.claimRestoreLane?.('map'),
       onStateChanged: () => this._syncShareState(),

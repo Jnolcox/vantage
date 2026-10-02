@@ -43,7 +43,7 @@ const literal = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
  */
 async function fixture(t) {
   const scratch = await realpath(
-    await mkdtemp(path.join(tmpdir(), 'gev-update-')),
+    await mkdtemp(path.join(tmpdir(), 'vantage-update-')),
   );
   t.after(() => rm(scratch, { recursive: true, force: true }));
   const origin = path.join(scratch, 'origin');

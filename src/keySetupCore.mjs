@@ -113,6 +113,16 @@ const LOCAL_HOSTNAMES = new Set(['localhost', '127.0.0.1', '::1', '[::1]']);
 /** Socket addresses that count as this machine. */
 const LOOPBACK_ADDRESSES = new Set(['127.0.0.1', '::1', '::ffff:127.0.0.1']);
 
+/**
+ * PINOKIO_SHARE_VAR values that mean "sharing off". The second is the sentinel
+ * written before the rename to Vantage; the launcher rewrites it on start, but
+ * a stale environment must not lock the operator out of Provider Settings.
+ */
+const PINOKIO_SHARING_DISABLED_SENTINELS = new Set([
+  '__vantage_sharing_disabled__',
+  '__gev_sharing_disabled__',
+]);
+
 /** Parse an exact local request authority from a Host header. */
 function localAuthority(hostHeader, protocol) {
   const raw = String(hostHeader || '')
@@ -254,7 +264,7 @@ export function admitKeySetupRequest({
     ['PINOKIO_SHARE_CLOUDFLARE', 'PINOKIO_SHARE_LOCAL'].some((name) =>
       /^(1|true)$/i.test(String(env[name] || '').trim()),
     ) ||
-    (shareVar !== '' && shareVar !== '__gev_sharing_disabled__');
+    (shareVar !== '' && !PINOKIO_SHARING_DISABLED_SENTINELS.has(shareVar));
   if (sharingEnabled) {
     return {
       ok: false,

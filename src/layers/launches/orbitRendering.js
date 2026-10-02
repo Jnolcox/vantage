@@ -21,7 +21,7 @@ export function createOrbitRendering({
     if (layerState._missionOrbitPatternRegistered) return;
     new Cesium.Material({
       fabric: {
-        type: 'GevMissionOrbitTactical',
+        type: 'VantageMissionOrbitTactical',
         uniforms: {
           color: Cesium.Color.CYAN,
           groupCount: MISSION_ORBIT_PATTERN_GROUPS,
@@ -56,7 +56,7 @@ export function createOrbitRendering({
 
   function createMissionOrbitPatternMaterial(color) {
     ensureMissionOrbitPatternRegistered();
-    return Cesium.Material.fromType('GevMissionOrbitTactical', {
+    return Cesium.Material.fromType('VantageMissionOrbitTactical', {
       color,
       groupCount: MISSION_ORBIT_PATTERN_GROUPS,
       dashCount: MISSION_ORBIT_DASHES_PER_GROUP,
@@ -153,7 +153,7 @@ export function createOrbitRendering({
     },
   });
   MissionOrbitPatternMaterialProperty.prototype.getType = function getType() {
-    return 'GevMissionOrbitTactical';
+    return 'VantageMissionOrbitTactical';
   };
   MissionOrbitPatternMaterialProperty.prototype.getValue = function getValue(
     time,

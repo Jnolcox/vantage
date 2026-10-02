@@ -63,21 +63,21 @@ try {
 
   await page.goto(appUrl, { waitUntil: 'domcontentloaded', timeout: 30_000 });
   await page.waitForFunction(() => (
-    window.__godsEyeView?.voiceCommands
-    && document.getElementById('gev-voice-button')
+    window.__vantage?.voiceCommands
+    && document.getElementById('vantage-voice-button')
     && document.getElementById('loading-screen')?.classList.contains('hidden')
   ), { timeout: 30_000 });
 
   const readState = () => page.evaluate(() => {
-    const voice = window.__godsEyeView?.voiceCommands;
-    const radio = window.__godsEyeView?.dataManager?.layers?.get('radio')?.module;
+    const voice = window.__vantage?.voiceCommands;
+    const radio = window.__vantage?.dataManager?.layers?.get('radio')?.module;
     const radioState = radio?.getUIState?.() || null;
-    const camera = window.__godsEyeView?.viewer?.camera;
+    const camera = window.__vantage?.viewer?.camera;
     const cartographic = camera?.positionCartographic;
     return {
       at: Date.now(),
       voiceStatus: voice?.status || null,
-      voiceDetail: document.getElementById('gev-voice-detail')?.textContent?.trim() || null,
+      voiceDetail: document.getElementById('vantage-voice-detail')?.textContent?.trim() || null,
       cameraHeightM: cartographic?.height ?? null,
       radioEnabled: radioState?.enabled ?? null,
       radioAudioState: radioState?.audioState ?? null,
@@ -101,11 +101,11 @@ try {
     await new Promise(resolve => setTimeout(resolve, 10_000));
     await page.keyboard.up('Space');
     microphoneReleased = await page.evaluate(() => {
-      const status = window.__godsEyeView.voiceCommands.status;
+      const status = window.__vantage.voiceCommands.status;
       return status === 'idle' || Boolean(document.querySelector('[data-microphone="muted"]'));
     });
   } else {
-    await page.click('#gev-voice-button');
+    await page.click('#vantage-voice-button');
   }
 
   const timeline = [initial];

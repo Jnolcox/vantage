@@ -512,7 +512,7 @@ for (const [label, altitude, range] of [
       position: new Cesium.CallbackPositionProperty(() => target, false),
       trackingReferenceFrame: Cesium.TrackingReferenceFrame.ENU,
     });
-    entity.gevDisplayPosition = () => target;
+    entity.vantageDisplayPosition = () => target;
     viewer.trackedEntity = entity;
     const follow = new Cesium.EntityView(entity, viewer.scene);
     follow.update(viewer.clock.currentTime);

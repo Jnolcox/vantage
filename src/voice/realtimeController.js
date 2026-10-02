@@ -53,7 +53,7 @@ const STATUS = {
 };
 
 /** Compose voice state owners and coordinate ordered session startup/teardown. */
-export class GevRealtimeController extends RealtimeFacade {
+export class VantageRealtimeController extends RealtimeFacade {
   constructor({
     runner,
     ui,

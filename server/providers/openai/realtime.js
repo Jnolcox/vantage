@@ -12,7 +12,7 @@ import {
   OPENAI_REALTIME_CONTEXT_RETENTION_DEFAULT,
 } from './constants.js';
 import { realtimeInstructions } from './instructions.js';
-import { GEV_REALTIME_TOOLS } from './tools.js';
+import { VANTAGE_REALTIME_TOOLS } from './tools.js';
 import {
   isRealtimeDebugLogEnabled,
   REALTIME_DEBUG_LOG_HEADER,
@@ -123,7 +123,7 @@ function createRealtimeTokenHandler({
           output: { voice },
         },
         instructions: realtimeInstructions(annotationGuidance),
-        tools: GEV_REALTIME_TOOLS,
+        tools: VANTAGE_REALTIME_TOOLS,
         tool_choice: 'auto',
       },
     };
@@ -136,7 +136,7 @@ function createRealtimeTokenHandler({
         headers: {
           Authorization: `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
-          'OpenAI-Safety-Identifier': 'gev-local-dev',
+          'OpenAI-Safety-Identifier': 'vantage-local-dev',
         },
         body: JSON.stringify(sessionConfig),
       });
@@ -146,10 +146,10 @@ function createRealtimeTokenHandler({
       // success body is passed through untouched (the client parses it
       // verbatim), so these headers are the authoritative echo — including the
       // case where a bogus ?tier= was silently downgraded to standard.
-      res.setHeader('X-GEV-Voice-Tier', tier);
-      res.setHeader('X-GEV-Voice-Model', model);
+      res.setHeader('X-Vantage-Voice-Tier', tier);
+      res.setHeader('X-Vantage-Voice-Model', model);
       if (requestedTier && !isKnownVoiceTier(requestedTier)) {
-        res.setHeader('X-GEV-Voice-Tier-Fallback', '1');
+        res.setHeader('X-Vantage-Voice-Tier-Fallback', '1');
       }
       if (!response.ok) {
         console.warn(`[realtime-token] upstream HTTP ${response.status}`);

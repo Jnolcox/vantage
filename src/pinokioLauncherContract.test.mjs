@@ -61,7 +61,7 @@ test('Pinokio start has one fail-closed launcher process', () => {
   );
   assert.equal(
     script.run[0].params.env.PINOKIO_SHARE_VAR,
-    '{{env.PINOKIO_SHARE_VAR || "__gev_sharing_disabled__"}}',
+    '{{env.PINOKIO_SHARE_VAR || "__vantage_sharing_disabled__"}}',
   );
 });
 
@@ -84,7 +84,7 @@ test('Pinokio install records success explicitly instead of trusting node_module
 });
 
 test('Pinokio menu resolves the nested install marker and exposes each lifecycle state', async (t) => {
-  const fixture = await mkdtemp(path.join(os.tmpdir(), 'gev-pinokio-menu-'));
+  const fixture = await mkdtemp(path.join(os.tmpdir(), 'vantage-pinokio-menu-'));
   t.after(() => rm(fixture, { recursive: true, force: true }));
   const launcherDir = path.join(fixture, 'app', 'pinokio');
   const launcherPath = path.join(launcherDir, 'pinokio.js');
@@ -157,7 +157,7 @@ test('Pinokio menu resolves the nested install marker and exposes each lifecycle
 });
 
 test('Pinokio install recognizes direct execution through a linked app directory', async (t) => {
-  const fixture = await mkdtemp(path.join(os.tmpdir(), 'gev-pinokio-entry-'));
+  const fixture = await mkdtemp(path.join(os.tmpdir(), 'vantage-pinokio-entry-'));
   t.after(() => rm(fixture, { recursive: true, force: true }));
   const target = path.join(fixture, 'candidate');
   const linked = path.join(fixture, 'installed-app');
@@ -176,8 +176,8 @@ test('Pinokio install recognizes direct execution through a linked app directory
 });
 
 test('Pinokio direct execution fallback remains exact and Update-safe', () => {
-  const missing = path.join(os.tmpdir(), 'gev-missing-pinokio-install.mjs');
-  const differentMissing = path.join(os.tmpdir(), 'gev-other-missing-pinokio-install.mjs');
+  const missing = path.join(os.tmpdir(), 'vantage-missing-pinokio-install.mjs');
+  const differentMissing = path.join(os.tmpdir(), 'vantage-other-missing-pinokio-install.mjs');
   const updatePath = path.resolve('scripts/pinokio-update.mjs');
   const installPath = path.resolve('scripts/pinokio-install.mjs');
 
@@ -210,7 +210,7 @@ test('Pinokio start runner emits an ANSI-independent ready URL', async () => {
 });
 
 test('Pinokio start enters the canonical app root before loading Vite', async (t) => {
-  const fixture = await mkdtemp(path.join(os.tmpdir(), 'gev-pinokio-root-'));
+  const fixture = await mkdtemp(path.join(os.tmpdir(), 'vantage-pinokio-root-'));
   const originalCwd = process.cwd();
   t.after(async () => {
     process.chdir(originalCwd);
@@ -239,6 +239,6 @@ test('Pinokio keeps the supported local.url readiness key while disabling its sh
   assert.match(menuSource, /local\?\.url/);
   assert.equal(
     script.run[0].params.env.PINOKIO_SHARE_VAR,
-    '{{env.PINOKIO_SHARE_VAR || "__gev_sharing_disabled__"}}',
+    '{{env.PINOKIO_SHARE_VAR || "__vantage_sharing_disabled__"}}',
   );
 });

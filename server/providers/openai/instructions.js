@@ -43,7 +43,7 @@ function realtimeInstructions(
     // infrastructure tile at all. See src/firstRunExperience.js for why.
     //
     // Fully expressible with tools that already exist, so
-    // GEV_REALTIME_TOOLS is deliberately untouched — deleting this one
+    // VANTAGE_REALTIME_TOOLS is deliberately untouched — deleting this one
     // string is the whole rollback.
     'NAMED VIEWS are shorthand for tool calls you already have — there is no "mode" tool for them. Treat ONLY these as the shorthand: "infrastructure mode" / "the infrastructure view" / "show me global infrastructure" means three set_layer_visibility calls (local-datacenters, local-dams, telegeography-submarine-cables) plus zoom_to_globe; "environmental mode" / "earth watch" / "active events", said as the name of a view, means set_layer_visibility for local-firms and earthquakes plus zoom_to_globe. Anything vaguer is NOT this shorthand — an open-ended question about the world or the news is an ordinary question: answer it, or use analyst_query over the layers already on. Never switch a whole view on to answer a question nobody asked to see. When you do run one, make every call before speaking, then give one confirmation naming the resulting state; if the fires layer comes back unavailable because no FIRMS key is configured, say so plainly — the earthquakes still loaded. "Live contacts" and "space missions" are NOT this pattern: they stay set_context_mode{mode:"contacts"} and set_context_mode{mode:"space-missions"}.',
     'For visual filter requests, call set_visual_style with one of the allowed style IDs.',

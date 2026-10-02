@@ -1,7 +1,7 @@
 import { DEFAULT_VOICE_TIER, resolveVoiceModel } from './voiceCost.js';
 
 /** Token-mint response header carrying the server's opt-in debug-log setting. */
-const DEBUG_LOG_ENABLED_HEADER = 'X-GEV-Debug-Log';
+const DEBUG_LOG_ENABLED_HEADER = 'X-Vantage-Debug-Log';
 
 /** Realtime-compatible token and SDP requests, independent of microphone/UI ownership. */
 export function createRealtimeBackend({
@@ -61,10 +61,10 @@ export function createRealtimeBackend({
       return {
         token,
         model:
-          response.headers?.get?.('X-GEV-Voice-Model') ||
+          response.headers?.get?.('X-Vantage-Voice-Model') ||
           data?.session?.model ||
           null,
-        tier: response.headers?.get?.('X-GEV-Voice-Tier') || null,
+        tier: response.headers?.get?.('X-Vantage-Voice-Tier') || null,
         debugLogEnabled,
         expiresAt,
       };

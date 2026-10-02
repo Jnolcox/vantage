@@ -189,7 +189,7 @@ export class VisualSettings {
       releaseRender: services.releaseContinuousRender,
     });
     this.activeStyle = 'normal';
-    document.documentElement.dataset.gevStyle = this.activeStyle;
+    document.documentElement.dataset.vantageStyle = this.activeStyle;
     this._detectionUserOverridden = false;
     this._cockpitVisionMode = 'optical';
     this._cockpitVisionRestore = null;
@@ -374,7 +374,7 @@ export class VisualSettings {
     // EFFECTIVE style — a cockpit vision override sets no map style, so the
     // map's own style event never fires for it.
     window.dispatchEvent(
-      new CustomEvent('gev:vision-change', {
+      new CustomEvent('vantage:vision-change', {
         detail: {
           style: effective,
           cockpit: Boolean(cockpitMode && cockpitMode !== 'optical'),
@@ -1444,7 +1444,7 @@ export class VisualSettings {
 
     const previousStyle = this.activeStyle;
     this.activeStyle = styleName;
-    document.documentElement.dataset.gevStyle = styleName;
+    document.documentElement.dataset.vantageStyle = styleName;
 
     // The celestial optics treatment belongs to the unfiltered globe only.
     // Leaving Normal turns it off; returning merely re-enables the control.
@@ -1494,7 +1494,7 @@ export class VisualSettings {
     setDetectionStyle(styleName);
     this._syncIrBoost();
     window.dispatchEvent(
-      new CustomEvent('gev:style-change', {
+      new CustomEvent('vantage:style-change', {
         detail: { style: styleName },
       }),
     );

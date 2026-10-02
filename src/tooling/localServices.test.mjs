@@ -20,7 +20,7 @@ import {
 import { openAiRealtimeProxy } from 'gods-eye-view/server/providers/openai';
 import { keySetupEndpoint } from 'gods-eye-view/server/standalone/key-setup';
 import { realtimeInstructions } from '../../server/providers/openai/instructions.js';
-import { GEV_REALTIME_TOOLS } from '../../server/providers/openai/tools.js';
+import { VANTAGE_REALTIME_TOOLS } from '../../server/providers/openai/tools.js';
 
 function install(plugin, preview = false) {
   const routes = new Map();
@@ -83,7 +83,7 @@ function env(t, name, value) {
   });
 }
 function root(t) {
-  const dir = mkdtempSync(path.join(tmpdir(), 'gev-services-'));
+  const dir = mkdtempSync(path.join(tmpdir(), 'vantage-services-'));
   t.after(() => rmSync(dir, { recursive: true, force: true }));
   return dir;
 }
@@ -182,14 +182,14 @@ test('Realtime handler preserves tools and default instructions, isolates suppli
       { url: '/?tier=unknown' },
     );
     assert.equal(response.status, 200);
-    assert.equal(response.headers['x-gev-voice-tier'], 'standard');
-    assert.equal(response.headers['x-gev-voice-tier-fallback'], '1');
+    assert.equal(response.headers['x-vantage-voice-tier'], 'standard');
+    assert.equal(response.headers['x-vantage-voice-tier-fallback'], '1');
     assert.equal(response.body.includes('fixture-upstream-secret'), false);
     assert.equal(
       sent.at(-1).session.instructions,
       realtimeInstructions(guidance),
     );
-    assert.deepEqual(sent.at(-1).session.tools, GEV_REALTIME_TOOLS);
+    assert.deepEqual(sent.at(-1).session.tools, VANTAGE_REALTIME_TOOLS);
   }
   assert.notEqual(sent[0].session.instructions, sent[1].session.instructions);
   assert.equal(sent[0].session.instructions, sent[2].session.instructions);
@@ -247,9 +247,9 @@ test('the token mint tells the browser whether the debug log is enabled', async 
   const mint = () =>
     request(install(openAiRealtimeProxy()).get('/api/realtime/token'));
   env(t, 'GEV_REALTIME_DEBUG_LOG', undefined);
-  assert.equal((await mint()).headers['x-gev-debug-log'], '0');
+  assert.equal((await mint()).headers['x-vantage-debug-log'], '0');
   process.env.GEV_REALTIME_DEBUG_LOG = '1';
-  assert.equal((await mint()).headers['x-gev-debug-log'], '1');
+  assert.equal((await mint()).headers['x-vantage-debug-log'], '1');
 });
 
 test('key setup writes only the supplied application root, retains request guards and stays absent from preview', async (t) => {
@@ -300,7 +300,7 @@ test('Realtime service configuration selects compatible endpoint/model without f
           assert.equal(options.headers.Authorization, 'Bearer server-fixture');
           const payload = JSON.parse(options.body);
           assert.equal(payload.session.model, 'configured-model');
-          assert.deepEqual(payload.session.tools, GEV_REALTIME_TOOLS);
+          assert.deepEqual(payload.session.tools, VANTAGE_REALTIME_TOOLS);
           return Response.json({ value: 'short-lived-fixture' });
         },
       },
@@ -311,7 +311,7 @@ test('Realtime service configuration selects compatible endpoint/model without f
   });
   assert.equal(response.status, 200);
   assert.deepEqual(response.json(), { value: 'short-lived-fixture' });
-  assert.equal(response.headers['x-gev-voice-model'], 'configured-model');
+  assert.equal(response.headers['x-vantage-voice-model'], 'configured-model');
   assert.equal(response.headers['cache-control'], 'no-store');
   assert.doesNotMatch(response.body, /server-fixture|voice\.example/);
 });

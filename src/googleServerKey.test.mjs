@@ -49,7 +49,7 @@ test('keyless stays keyless', () => {
 });
 
 test('the Street View tool resolves per-variable overrides before preferring the server key', () => {
-  const root = mkdtempSync(path.join(tmpdir(), 'gev-streetview-key-'));
+  const root = mkdtempSync(path.join(tmpdir(), 'vantage-streetview-key-'));
   const envPath = path.join(root, '.env');
   try {
     writeFileSync(envPath, 'GOOGLE_MAPS_API_KEY=file-browser\nGOOGLE_MAPS_SERVER_API_KEY="file-server" # separate key\n');

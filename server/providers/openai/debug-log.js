@@ -29,7 +29,7 @@ const REALTIME_DEBUG_LOG_MAX_PER_MIN = 120;
  * start of every voice session, so it learns the setting without a round-trip
  * of its own and stops beaconing records the server would drop.
  */
-const REALTIME_DEBUG_LOG_HEADER = 'X-GEV-Debug-Log';
+const REALTIME_DEBUG_LOG_HEADER = 'X-Vantage-Debug-Log';
 
 const ENABLED_FLAG_VALUES = new Set(['1', 'true']);
 

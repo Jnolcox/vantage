@@ -7,7 +7,7 @@ links, assets and contributor credit are preserved.
 ## Review imports before applying
 
 IMPORT accepts scene JSON (including older supported versions) or a
-`.gevbundle.json` asset bundle. A preview lists scenes, shots, data-pack attribution,
+`.vantagebundle.json` asset bundle. A preview lists scenes, shots, data-pack attribution,
 configured or unavailable sources, missing layer IDs and bundled bytes. Preview
 makes no asset requests and does not change the current project. Configured
 sources do not guarantee that a file exists: ordinary assets are checked on LOAD.
@@ -62,12 +62,15 @@ A bundle is uncompressed JSON with these fields:
 
 ```json
 {
-  "format": "gev-scene-bundle",
+  "format": "vantage-scene-bundle",
   "version": 1,
   "project": { "version": 6, "scenes": [] },
   "assets": []
 }
 ```
+
+Bundles exported before the rename to Vantage (`"format": "gev-scene-bundle"`,
+saved as `.gevbundle.json`) still import with the same checks and size budget.
 
 Each asset contains `path`, `mimeType`, `base64` and lowercase hexadecimal `sha256`.
 Export copies the document and rewrites pack references to the reserved

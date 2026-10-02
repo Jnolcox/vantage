@@ -6,7 +6,7 @@ import path from 'node:path';
 import { readDotenvValue } from '../scripts/read-dotenv-value.mjs';
 
 test('dotenv reader preserves values without executing shell metacharacters', async () => {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'gev-dotenv-'));
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'vantage-dotenv-'));
   const marker = path.join(root, 'must-not-exist');
   try {
     await fs.writeFile(path.join(root, '.env'), [
@@ -27,7 +27,7 @@ test('dotenv reader preserves values without executing shell metacharacters', as
 });
 
 test('an inherited export never masks the value written in the file', async () => {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'gev-dotenv-'));
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'vantage-dotenv-'));
   const had = Object.prototype.hasOwnProperty.call(process.env, 'GEV_INHERIT_PROBE');
   const previous = process.env.GEV_INHERIT_PROBE;
   try {

@@ -115,7 +115,7 @@ test('a 304 revalidation is a success, not a redirect with a missing Location', 
 
   const first = await call('/vehicles/mbta');
   assert.equal(first.status, 200);
-  assert.equal(first.headers.get('X-GEV-Cache'), 'MISS');
+  assert.equal(first.headers.get('X-Vantage-Cache'), 'MISS');
   assert.equal(JSON.parse(first.body).count, 1);
 
   // Past the freshness window the proxy asks again, conditionally.
@@ -125,14 +125,14 @@ test('a 304 revalidation is a success, not a redirect with a missing Location', 
   assert.equal(second.status, 200, 'an unchanged feed is not a failure');
   // MISS, not STALE-ERROR: the refresh SUCCEEDED. Treating 304 as a redirect
   // made this a failure that happened to be masked by the serve-stale path.
-  assert.equal(second.headers.get('X-GEV-Cache'), 'MISS');
+  assert.equal(second.headers.get('X-Vantage-Cache'), 'MISS');
   assert.equal(JSON.parse(second.body).count, 1);
 
   // And the third one too: a 304 must not have started a backoff ladder.
   t.mock.timers.setTime(Date.now() + TRANSIT_PROXY_TTL_MS + 1_000);
   const third = await call('/vehicles/mbta');
   assert.equal(third.status, 200);
-  assert.equal(third.headers.get('X-GEV-Cache'), 'MISS');
+  assert.equal(third.headers.get('X-Vantage-Cache'), 'MISS');
   assert.equal(calls.length, 3, 'every poll past the TTL reached the operator');
   assert.equal(third.headers.get('Retry-After'), null);
   assert.equal(
@@ -172,7 +172,7 @@ test('a differential feed condemns the snapshot that preceded it', async (t) => 
     200,
     `served ${after.status} with ${after.body}`,
   );
-  assert.equal(after.headers.get('X-GEV-Cache'), 'NONE');
+  assert.equal(after.headers.get('X-Vantage-Cache'), 'NONE');
   assert.equal(after.headers.get('X-Transit-Backoff'), 'cooldown');
 });
 
@@ -304,7 +304,7 @@ test('a 304 reports that the operator answered, not that the body is new', async
   // Served from the fresh cache, the contact time is the last real contact —
   // not the moment this request happened to arrive.
   const third = await call('/vehicles/mbta');
-  assert.equal(third.headers.get('X-GEV-Cache'), 'HIT');
+  assert.equal(third.headers.get('X-Vantage-Cache'), 'HIT');
   assert.equal(Number(third.headers.get('X-Transit-Contact')), revalidatedAt);
 });
 
@@ -323,7 +323,7 @@ test('a feed served from cache during an outage does not claim fresh contact', a
 
   t.mock.timers.setTime(Date.now() + TRANSIT_PROXY_TTL_MS + 1_000);
   const during = await call('/vehicles/mbta');
-  assert.equal(during.headers.get('X-GEV-Cache'), 'STALE-ERROR');
+  assert.equal(during.headers.get('X-Vantage-Cache'), 'STALE-ERROR');
   assert.equal(
     Number(during.headers.get('X-Transit-Contact')),
     contactedAt,

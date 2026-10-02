@@ -16,8 +16,8 @@ test('Cockpit reduces only the bracket presentation multiplier', () => {
 
 test('detection owns and releases the Cockpit lifecycle listener', async () => {
   const source = await readFile(new URL('./detection.js', import.meta.url), 'utf8');
-  assert.match(source, /addEventListener\('gev:cockpit-mode-changed', _cockpitModeListener\)/);
-  assert.match(source, /removeEventListener\(\s*'gev:cockpit-mode-changed',\s*_cockpitModeListener,?\s*\)/);
+  assert.match(source, /addEventListener\(\s*'vantage:cockpit-mode-changed',\s*_cockpitModeListener,?\s*\)/);
+  assert.match(source, /removeEventListener\(\s*'vantage:cockpit-mode-changed',\s*_cockpitModeListener,?\s*\)/);
   assert.match(
     source,
     /fade \* entry\.alpha \* bracketPresentationOpacity/,

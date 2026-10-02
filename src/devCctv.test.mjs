@@ -14,7 +14,7 @@ const bashTest = process.platform === 'win32' ? test.skip : test;
 async function launch(overrides = {}, dotenv = '', omitCctv = false) {
   // Physical path: the launched process reports its cwd resolved, and macOS
   // reaches the temp directory through a symlink.
-  const root = await makeFixtureRoot('gev-cctv-launch-');
+  const root = await makeFixtureRoot('vantage-cctv-launch-');
   try {
     await fs.mkdir(path.join(root, 'scripts'));
     await fs.mkdir(path.join(root, 'bin'));

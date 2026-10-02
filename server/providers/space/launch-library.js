@@ -61,7 +61,7 @@ export function rocketLaunchesProxy() {
     res.writeHead(status, {
       'Content-Type': 'application/json',
       'Cache-Control': status === 200 ? 'public, max-age=900' : 'no-store',
-      'X-GEV-Cache': cacheState,
+      'X-Vantage-Cache': cacheState,
     });
     res.end(body);
   }

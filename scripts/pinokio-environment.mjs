@@ -30,10 +30,10 @@ const PINOKIO_DEFAULTS = Object.freeze({
   GEV_RATELIMIT_GOOGLE_PER_MIN: '120',
   PINOKIO_SHARE_CLOUDFLARE: 'false',
   PINOKIO_SHARE_LOCAL: 'false',
-  PINOKIO_SHARE_VAR: '__gev_sharing_disabled__',
+  PINOKIO_SHARE_VAR: '__vantage_sharing_disabled__',
 });
 
-const PINOKIO_SHARE_SENTINEL = '__gev_sharing_disabled__';
+const PINOKIO_SHARE_SENTINEL = '__vantage_sharing_disabled__';
 const PINOKIO_SHARING_FIELDS = Object.freeze([
   'PINOKIO_SHARE_CLOUDFLARE',
   'PINOKIO_SHARE_LOCAL',

@@ -22,7 +22,7 @@ test('tool project paths default to the installation and accept an explicit dire
 });
 
 test('doctor inspects the selected project dependencies and dotenv without disclosing values', async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), 'gev-doctor-project-'));
+  const root = await mkdtemp(path.join(os.tmpdir(), 'vantage-doctor-project-'));
   try {
     await writeFile(
       path.join(root, 'package.json'),
@@ -63,7 +63,7 @@ bashTest(
   async () => {
     // Physical path: the launched process reports its cwd resolved, and macOS
     // reaches the temp directory through a symlink.
-    const root = await makeFixtureRoot('gev other project-');
+    const root = await makeFixtureRoot('vantage other project-');
     try {
       const bin = path.join(root, 'bin');
       await mkdir(bin);

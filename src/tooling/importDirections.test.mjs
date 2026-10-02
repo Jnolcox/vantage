@@ -14,7 +14,7 @@ import { analyzeModule } from '../../scripts/module-analysis.mjs';
 import { checkImportDirections } from '../../scripts/check-import-directions.mjs';
 
 function fixture(t, exports = {}) {
-  const root = mkdtempSync(path.join(os.tmpdir(), 'gev-directions-'));
+  const root = mkdtempSync(path.join(os.tmpdir(), 'vantage-directions-'));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   execFileSync('git', ['init', '--quiet'], { cwd: root });
   const write = (name, source = '') => {

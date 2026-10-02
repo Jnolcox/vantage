@@ -12,7 +12,7 @@ export const VIEWPORT_MAX_PIXELS = 1200 * 900;
 export const VIEWPORT_MAX_ENCODED_BYTES = 200 * 1024;
 
 export async function captureViewportImage() {
-  const viewer = window.__godsEyeView?.viewer;
+  const viewer = window.__vantage?.viewer;
   const source =
     viewer?.scene?.canvas ||
     document.querySelector('#cesiumContainer .cesium-widget canvas');

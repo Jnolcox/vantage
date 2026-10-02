@@ -25,12 +25,12 @@ try {
   );
   await page.waitForFunction(
     () =>
-      window.__godsEyeView?.sceneDirector &&
+      window.__vantage?.sceneDirector &&
       document.getElementById('loading-screen')?.classList.contains('hidden'),
     { timeout: 60000 },
   );
   const result = await page.evaluate(async () => {
-    const { sceneDirector: d, styleManager: style } = window.__godsEyeView;
+    const { sceneDirector: d, styleManager: style } = window.__vantage;
     const file = {
       version: 4,
       scenes: [
@@ -138,7 +138,7 @@ try {
   await new Promise((r) => setTimeout(r, 6000));
   await page.screenshot({ path: path.join(output, 'austin.png') });
   await page.evaluate(() => {
-    const d = window.__godsEyeView.sceneDirector;
+    const d = window.__vantage.sceneDirector;
     const pose = d.styleManager.getCameraState();
     d._setCameraView({ ...pose, heading: pose.heading + 25, pitch: -60 });
     d.viewer.scene.requestRender();
@@ -146,7 +146,7 @@ try {
   await new Promise((r) => setTimeout(r, 3000));
   await page.screenshot({ path: path.join(output, 'angle.png') });
   const inputStarted = await page.evaluate(async () => {
-    const d = window.__godsEyeView.sceneDirector;
+    const d = window.__vantage.sceneDirector;
     const scene = d._project.scenes[0];
     window.__qaCameraRun = d.startScene(scene.id, {
       single: true,
@@ -168,12 +168,12 @@ try {
     inputStarted &&
     (await page.evaluate(async () => {
       await window.__qaCameraRun;
-      const d = window.__godsEyeView.sceneDirector;
+      const d = window.__vantage.sceneDirector;
       return !d.running && d.getPlaybackTimingState().activeTimers === 0;
     }));
   check('manual canvas input revokes the move and releases clocks', input);
   const hold = await page.evaluate(async () => {
-    const { sceneDirector: d, styleManager: style } = window.__godsEyeView;
+    const { sceneDirector: d, styleManager: style } = window.__vantage;
     const scene = d._project.scenes[0];
     const shot = scene.shots[0];
     shot.durationSec = 0.2;

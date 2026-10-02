@@ -29,7 +29,7 @@ export function createLaunchPad({
     removeLaunchPadZonePrimitive();
     const material = new Cesium.Material({
       fabric: {
-        type: 'GevLaunchPadZone',
+        type: 'VantageLaunchPadZone',
         uniforms: {
           color: Cesium.Color.fromCssColorString('#22e6e6'),
           fillAlpha: 0.105,

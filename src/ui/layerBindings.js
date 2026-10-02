@@ -218,11 +218,11 @@ export class LayerBindings {
       this._awarenessClearedHandler = (event) =>
         this._persistAwarenessSelection(event, true);
       window.addEventListener(
-        'gev:awareness-subject-selected',
+        'vantage:awareness-subject-selected',
         this._awarenessSelectedHandler,
       );
       window.addEventListener(
-        'gev:awareness-subject-cleared',
+        'vantage:awareness-subject-cleared',
         this._awarenessClearedHandler,
       );
     }
@@ -233,14 +233,14 @@ export class LayerBindings {
     this._disposed = true;
     if (this._awarenessSelectedHandler) {
       window.removeEventListener(
-        'gev:awareness-subject-selected',
+        'vantage:awareness-subject-selected',
         this._awarenessSelectedHandler,
       );
       this._awarenessSelectedHandler = null;
     }
     if (this._awarenessClearedHandler) {
       window.removeEventListener(
-        'gev:awareness-subject-cleared',
+        'vantage:awareness-subject-cleared',
         this._awarenessClearedHandler,
       );
       this._awarenessClearedHandler = null;

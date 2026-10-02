@@ -8,8 +8,9 @@ The version lives in one place: `"version"` in `package.json`.
 `src/sources/version.js` is generated from it by `scripts/sync-version.mjs`
 (the npm `version` lifecycle script runs it), and the outbound User-Agent
 `vantage/<version> (+https://github.com/Jnolcox/vantage)` reads that module.
-A unit test fails when the generated module drifts from `package.json`. Never
-edit the version by hand in any other file.
+Unit tests fail when the generated module drifts from `package.json` or when
+`CHANGELOG.md` has no dated section and link reference for the current
+version. Never edit the version by hand in any other file.
 
 ## What counts as major, minor and patch
 

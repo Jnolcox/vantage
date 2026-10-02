@@ -10,10 +10,13 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
 
 ## [Unreleased]
 
-Vantage is a fork of [God's Eye View](https://github.com/bilawalsidhu/gods-eye-view).
-The product rename and the browser-storage migration make it a new public
-baseline, so its version numbering starts again at 1.0.0; upstream's own
-history is kept under [Pre-fork history](#pre-fork-history-gods-eye-view).
+## [1.0.0] - 2026-10-02
+
+First release of Vantage, a fork of
+[God's Eye View](https://github.com/bilawalsidhu/gods-eye-view). The product
+rename and the browser-storage migration make it a new public baseline, so its
+version numbering starts again at 1.0.0; upstream's own history is kept under
+[Pre-fork history](https://github.com/Jnolcox/vantage/blob/main/CHANGELOG.md#pre-fork-history-gods-eye-view).
 
 ### Added
 
@@ -1154,3 +1157,6 @@ represent previously published GitHub Releases.
 ### \[0.1.0\] — 2026-02-09
 
 - Initial project version.
+
+[Unreleased]: https://github.com/Jnolcox/vantage/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/Jnolcox/vantage/compare/0dbde1e36c0177b7664b47702d77ba50f11ddadc...v1.0.0

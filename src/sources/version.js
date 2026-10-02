@@ -2,4 +2,4 @@
 // `npm version` regenerates it, and a unit test fails when it drifts.
 
 /** Semantic version of this application, as published in package.json. */
-export const PACKAGE_VERSION = '0.1.1';
+export const PACKAGE_VERSION = '1.0.0';

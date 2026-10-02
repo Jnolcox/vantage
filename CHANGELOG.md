@@ -10,6 +10,17 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
 
 ## [Unreleased]
 
+### Fixed
+
+- CCTV media streams whose upstream falls silent after answering are released.
+  The 15-second media deadline covered only the wait for response headers, so a
+  camera that replied and then stopped sending held both the proxy connection
+  and its upstream socket open; a chunked or length-less body had no bound. A
+  30-second idle deadline now bounds the gap between upstream chunks. It is
+  rescheduled while the response is still waiting to drain, so a viewer on a
+  slow link is not mistaken for a dead camera; live feeds are unaffected
+  (ported from upstream, Ethan Stoner).
+
 ## [1.0.0] - 2026-10-02
 
 First release of Vantage, a fork of

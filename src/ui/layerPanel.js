@@ -215,7 +215,8 @@ export class LayerPanel {
         }
       });
 
-      right.appendChild(count);
+      const readout = Boolean(this._rowControlsFor(layer.id)?.readout);
+      if (!readout) right.appendChild(count);
       right.appendChild(toggle);
       topRow.appendChild(left);
       topRow.appendChild(right);
@@ -238,39 +239,41 @@ export class LayerPanel {
           this._scheduleRowControlsRefresh(),
         );
         if (unsubscribe) this._removers.push(unsubscribe);
-        const controls = document.createElement('div');
-        controls.className = 'data-toggle-controls';
-        this._bind(controls, 'click', (event) => {
-          const button = event.target?.closest?.('.data-toggle-chip');
-          if (!button || button.disabled) return;
-          // Re-read the live descriptor rather than trusting the rendered
-          // chip, so a stale row can never apply an inverted toggle.
-          const chip = this._rowControlsFor(layer.id)?.chips?.find(
-            (entry) => entry.id === button.dataset.chipId,
-          );
-          if (!chip || chip.disabled || !this.isEnabled(layer.id)) return;
-          if (typeof chip.onClick === 'function') chip.onClick();
-          else if (chip.params)
-            this.setLayerParams(layer.id, chip.params, { origin: 'user' });
-        });
-        row.appendChild(controls);
-        // An ordered list below the chips, for a layer whose row carries a
-        // sequence (turn-by-turn directions). Its own delegated listener, its
-        // own container — the chip row stays a chip row.
-        const list = document.createElement('ol');
-        list.className = 'data-row-list';
-        list.hidden = true;
-        this._bind(list, 'click', (event) => {
-          const button = event.target?.closest?.('.data-row-list-item');
-          if (!button || button.disabled) return;
-          const item = this._rowControlsFor(layer.id)?.list?.items?.find(
-            (entry) => entry.id === button.dataset.listItemId,
-          );
-          if (item?.params)
-            this.setLayerParams(layer.id, item.params, { origin: 'user' });
-        });
-        row.appendChild(list);
-        this._syncRowControls(controls, layer, list);
+        if (!readout) {
+          const controls = document.createElement('div');
+          controls.className = 'data-toggle-controls';
+          this._bind(controls, 'click', (event) => {
+            const button = event.target?.closest?.('.data-toggle-chip');
+            if (!button || button.disabled) return;
+            // Re-read the live descriptor rather than trusting the rendered
+            // chip, so a stale row can never apply an inverted toggle.
+            const chip = this._rowControlsFor(layer.id)?.chips?.find(
+              (entry) => entry.id === button.dataset.chipId,
+            );
+            if (!chip || chip.disabled || !this.isEnabled(layer.id)) return;
+            if (typeof chip.onClick === 'function') chip.onClick();
+            else if (chip.params)
+              this.setLayerParams(layer.id, chip.params, { origin: 'user' });
+          });
+          row.appendChild(controls);
+          // An ordered list below the chips, for a layer whose row carries a
+          // sequence (turn-by-turn directions). Its own delegated listener, its
+          // own container — the chip row stays a chip row.
+          const list = document.createElement('ol');
+          list.className = 'data-row-list';
+          list.hidden = true;
+          this._bind(list, 'click', (event) => {
+            const button = event.target?.closest?.('.data-row-list-item');
+            if (!button || button.disabled) return;
+            const item = this._rowControlsFor(layer.id)?.list?.items?.find(
+              (entry) => entry.id === button.dataset.listItemId,
+            );
+            if (item?.params)
+              this.setLayerParams(layer.id, item.params, { origin: 'user' });
+          });
+          row.appendChild(list);
+          this._syncRowControls(controls, layer, list);
+        }
       }
 
       this._toggleContainer.appendChild(row);
@@ -320,8 +323,8 @@ export class LayerPanel {
    * Chip BUTTONS are reconciled in place, keyed by chip id, rather than
    * rebuilt: this runs on every panel refresh — including the one the chip's
    * own click triggers — and replacing the node would drop keyboard focus
-   * mid-interaction. Legend entries hold no focus and no listeners, so they
-   * are replaced freely.
+   * mid-interaction. Legend entries are rebuilt only when their content changes;
+   * the info node is retained across refreshes.
    * @param {HTMLElement|null} container The row's `.data-toggle-controls` node.
    * @param {object} layer Registered layer entry.
    * @param {HTMLElement|null} [listContainer] The row's `.data-row-list` node.
@@ -329,31 +332,65 @@ export class LayerPanel {
   _syncRowControls(container, layer, listContainer = null) {
     if (!container) return;
     const controls = layer.enabled ? this._rowControlsFor(layer.id) : null;
+    if (controls?.readout) {
+      container.remove();
+      listContainer?.remove();
+      return;
+    }
     const chips = controls?.chips || [];
     const legend = controls?.legend || [];
+    const infoText = controls?.info;
     this._syncRowList(listContainer, controls?.list || null);
-    container.hidden = chips.length === 0 && legend.length === 0;
+    container.hidden = chips.length === 0 && legend.length === 0 && !infoText;
 
-    for (const node of [...container.children]) {
-      if (
-        String(node.className).split(/\s+/).includes('data-toggle-legend-item')
-      )
-        node.remove();
+    const info = container._rowControlsInfo || null;
+    const firstLegend = container.querySelector('.data-toggle-legend-item');
+
+    syncChipGroup(container, chips, { before: firstLegend || info });
+
+    const legendSignature = JSON.stringify(
+      legend.map(({ label, color, count, blurb }) => [
+        label,
+        color,
+        count,
+        blurb,
+      ]),
+    );
+    if (container._legendSignature !== legendSignature) {
+      for (const node of [...container.children]) {
+        if (node.className === 'data-toggle-legend-item') node.remove();
+      }
+      for (const item of legend) {
+        const entry = document.createElement('span');
+        entry.className = 'data-toggle-legend-item';
+        if (item.blurb) entry.title = item.blurb;
+        const swatch = document.createElement('span');
+        swatch.className = 'data-toggle-legend-swatch';
+        swatch.style.background = item.color;
+        const text = document.createElement('span');
+        text.textContent =
+          item.count == null
+            ? String(item.label)
+            : `${item.label} ${this._formatCount(item.count)}`;
+        entry.append(swatch, text);
+        container.insertBefore(entry, info);
+      }
+      container._legendSignature = legendSignature;
     }
-
-    syncChipGroup(container, chips);
-
-    for (const item of legend) {
-      const entry = document.createElement('span');
-      entry.className = 'data-toggle-legend-item';
-      if (item.blurb) entry.title = item.blurb;
-      const swatch = document.createElement('span');
-      swatch.className = 'data-toggle-legend-swatch';
-      swatch.style.background = item.color;
-      const text = document.createElement('span');
-      text.textContent = `${item.label} ${this._formatCount(item.count)}`;
-      entry.append(swatch, text);
-      container.appendChild(entry);
+    if (infoText || info) {
+      const node = info || document.createElement('div');
+      if (!info) {
+        container.appendChild(node);
+        container._rowControlsInfo = node;
+      }
+      const className = 'data-toggle-controls-info';
+      if (node.className !== className) node.className = className;
+      const text = infoText ? String(infoText) : '';
+      const title = controls?.infoTitle || '';
+      if (node.textContent !== text) node.textContent = text;
+      if (node.title !== title) node.title = title;
+      const hidden = !text;
+      if (node.hidden !== hidden) node.hidden = hidden;
     }
   }
 

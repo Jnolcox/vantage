@@ -3413,3 +3413,76 @@ for (const scheduler of ['animation frame', 'timeout']) {
     }
   });
 }
+
+test('row info and legends reconcile in place while chips retain focus and order', async () => {
+  const originalDocument = globalThis.document;
+  globalThis.document = { createElement: makeControlElement, activeElement: null };
+  const manager = new DataLayerManager({});
+  const layer = makeSlowLayer('wind', { updateInterval: -1 });
+  let controls = {
+    chips: [{ id: 'one', label: 'One' }],
+    legend: [{ label: 'Low', color: '#0000ff', count: 1, blurb: 'Low values' }],
+    info: 'Forecast',
+    infoTitle: 'Source time',
+  };
+  layer.module.getRowControls = () => controls;
+  manager.register(layer.module);
+  try {
+    const container = makeControlElement();
+    manager.buildTogglePanel(container);
+    await manager.setEnabled('wind', true);
+    const row = container.querySelector('.data-toggle-controls');
+    const chip = row.children[0];
+    let legend = row.children[1];
+    const info = row.children[2];
+    chip.focus();
+    let writes = 0;
+    for (const key of ['textContent', 'title']) {
+      let value = info[key];
+      Object.defineProperty(info, key, {
+        get: () => value,
+        set: (next) => { writes++; value = next; },
+      });
+    }
+    controls = structuredClone(controls);
+    manager._refreshTogglePanel();
+    assert.equal(row.children[1], legend);
+    assert.equal(row.children[2], info);
+    assert.equal(writes, 0);
+    for (const change of [{ label: 'High' }, { color: '#ff0000' }, { count: 2 }, { blurb: 'High values' }]) {
+      Object.assign(controls.legend[0], change);
+      manager._refreshTogglePanel();
+      assert.notEqual(row.children[1], legend);
+      legend = row.children[1];
+      assert.equal(row.children[2], info);
+      assert.equal(globalThis.document.activeElement, chip);
+    }
+    controls.info = '<img onerror=alert(1)>';
+    controls.infoTitle = '';
+    controls.chips.push({ id: 'two', label: 'Two' });
+    manager._refreshTogglePanel();
+    assert.deepEqual(row.children.map(node => node.className), [
+      'data-toggle-chip chip-idle', 'data-toggle-chip chip-idle',
+      'data-toggle-legend-item', 'data-toggle-controls-info',
+    ]);
+    assert.equal(row.children[2], legend);
+    assert.equal(row.children[3], info);
+    assert.equal(info.textContent, controls.info);
+    assert.equal(info.title, '');
+    assert.equal(info.children.length, 0, 'info remains plain text');
+    controls = { chips: [], legend: [] };
+    manager._refreshTogglePanel();
+    assert.equal(row.hidden, true);
+    assert.equal(info.hidden, true);
+    assert.deepEqual(row.children, [info]);
+    controls = { info: 'Restored', legend: [{ label: 'New', color: '#ffffff' }] };
+    manager._refreshTogglePanel();
+    assert.equal(row.children.at(-1), info);
+    assert.equal(info.hidden, false);
+    assert.equal(info.textContent, 'Restored');
+  } finally {
+    await manager.destroyAll();
+    if (originalDocument === undefined) delete globalThis.document;
+    else globalThis.document = originalDocument;
+  }
+});

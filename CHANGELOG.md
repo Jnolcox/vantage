@@ -39,6 +39,10 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   change) now repaint at most once per animation frame instead of once per
   notification, and a pending repaint is cancelled when the panel is torn
   down (ported from upstream, Bilawal Sidhu).
+- Layer-row color legends are rebuilt only when an entry changes, and rows
+  can carry a plain-text info line and a readout-only mode (toggle and
+  metadata, controls shown elsewhere) for the right-rail panels to come
+  (ported from upstream, Bilawal Sidhu).
 - Share-link layer tokens are durable allocations instead of ad hoc picks.
   Existing one-character mappings, including the ones upstream published for
   layers not yet ported, are pinned permanently in

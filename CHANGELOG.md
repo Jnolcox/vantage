@@ -40,6 +40,15 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   The HUD now reads `HDG n° (ESTIMATED)` and the coverage wireframe draws
   dashed; manual calibrations and curated poses are never marked estimated
   (ported from upstream, bassem chagra).
+- Street Traffic says which upstream declined a road load. The layer row now
+  reads `Overpass rate-limited`, `Overpass timed out`, or
+  `Overpass refused the road query (HTTP 406)` instead of a general
+  "Road data temporarily unavailable", so a reader is not sent to check a
+  TomTom key when the public OpenStreetMap mirrors are the side that failed.
+  The proxy's own 502 (every mirror unreachable) and 503 (local limiter busy)
+  read `Overpass mirrors unreachable` and `Overpass temporarily unavailable`.
+  Failures the layer cannot classify keep the general line (ported from
+  upstream, daikaginza).
 
 ## [1.0.0] - 2026-10-02
 

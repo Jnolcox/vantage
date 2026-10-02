@@ -757,5 +757,6 @@
   "src/tooling/devServerDeny.test.mjs",
   "src/maps/cesiumNetworkDefaults.test.mjs",
   "src/tooling/contentSecurityPolicy.test.mjs",
-  "src/tooling/puppeteerConfig.test.mjs"
+  "src/tooling/puppeteerConfig.test.mjs",
+  "src/voice/viewImageSharing.test.mjs"
 ]

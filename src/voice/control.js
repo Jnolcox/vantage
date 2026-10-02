@@ -16,6 +16,7 @@ export function createVoiceControl({ reset = false } = {}) {
         <div id="vantage-voice-status">OFF</div>
         <div class="vantage-voice-cost">
           <button id="vantage-voice-tier" class="vantage-voice-tier-btn" type="button" aria-pressed="false" title="Voice model tier — applies next session">STD</button>
+          <button id="vantage-voice-view-image" class="vantage-voice-tier-btn" type="button" aria-pressed="true" hidden>VIEW</button>
           <span id="vantage-voice-cost-value" class="vantage-voice-cost-value" data-level="ok" title="Estimated session cost">~$0.00</span>
         </div>
       </div>
@@ -32,6 +33,7 @@ export function createVoiceControl({ reset = false } = {}) {
       <div id="vantage-voice-help" class="vantage-voice-help-tray" role="tooltip">
         <span class="vantage-voice-help-kicker">VOICE CONTROL</span>
         <span class="vantage-voice-help-detail">Hold Space to speak · tap Space to activate focused controls</span>
+        <span class="vantage-voice-help-privacy">Voice sends your audio, map context and, with VIEW on, a screenshot of the current view to OpenAI.</span>
       </div>
       <div class="vantage-voice-error-tray" role="alert" aria-live="assertive">
         <div class="vantage-voice-error-header">
@@ -67,6 +69,7 @@ export function createVoiceControl({ reset = false } = {}) {
     helpDetail: root.querySelector('.vantage-voice-help-detail'),
     errorDetail: root.querySelector('#vantage-voice-error-detail'),
     tierButton: root.querySelector('#vantage-voice-tier'),
+    viewImageButton: root.querySelector('#vantage-voice-view-image'),
     costValue: root.querySelector('#vantage-voice-cost-value'),
   };
 }

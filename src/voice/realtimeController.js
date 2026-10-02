@@ -1,6 +1,7 @@
 import { RealtimeConnection } from './realtimeConnection.js';
 import { RealtimeTurns } from './realtimeTurns.js';
-import { RealtimeViewport } from './realtimeViewport.js';
+import { RealtimeViewport, captureViewportImage } from './realtimeViewport.js';
+import { readStoredViewImageSharing } from './realtimePreferences.js';
 import { RealtimeDiagnostics } from './realtimeDiagnostics.js';
 import { RealtimeRadio } from './realtimeRadio.js';
 import { RealtimeFacade } from './realtimeFacade.js';
@@ -79,6 +80,9 @@ export class VantageRealtimeController extends RealtimeFacade {
     this.dataManager = dataManager;
     this._viewport = new RealtimeViewport({
       readChannel: () => this.dc,
+      // The viewer can stop screenshots from reaching OpenAI (VIEW toggle).
+      capture: () =>
+        readStoredViewImageSharing() ? captureViewportImage() : null,
 
       operations: {
         sendRealtimeEvent: (...args) => this.sendRealtimeEvent(...args),

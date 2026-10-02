@@ -650,6 +650,14 @@
   white-space: nowrap;
 }
 
+#vantage-voice-control .vantage-voice-help-privacy {
+  max-width: 20rem;
+  color: rgba(223, 245, 250, 0.68);
+  font-family: var(--font-sans);
+  font-size: 0.6rem;
+  line-height: 1.35;
+}
+
 #vantage-voice-control:not([data-status='error']):hover
   .vantage-voice-help-tray,
 #vantage-voice-control:not([data-status='error'])

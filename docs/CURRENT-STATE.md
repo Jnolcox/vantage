@@ -1601,9 +1601,6 @@ This is the current runtime/source-of-truth snapshot for the project.
 >   intent from its pre-entry snapshot. Its OFF control therefore leaves Space
 >   Missions off and restores Satellites to their exact pre-entry visibility
 >   and parameter state.
->   The title and loading logos use a blue 10 px outer-eye stroke with a
->   translucent slate fill, while the globe-and-cage gaze travels up to 34 SVG
->   units toward the pointer for clearer feedback at the compact title size.
 > - **Context, Cockpit, and Radio interaction contract:** explicit Contacts,
 >   Space Missions, and successful Cockpit actions reveal the Context panel, while
 >   restoration and replay preserve its prior collapsed state. Contacts uses the
@@ -3911,11 +3908,11 @@ release the current request or keep its loading indicator active.
 
 ### Optional frame-rate readout
 
-Backtick (`) toggles an FPS readout beneath the title logo. It counts actual
-Cesium post-render events over one-second windows and does not request extra
-frames. Typing fields, modified keys and key repeats do not toggle it. The
-readout starts hidden each session and releases its timer and frame listener
-when hidden or when the application is disposed.
+Backtick (`) toggles an FPS readout in the top-left corner (`#title-bar`). It
+counts actual Cesium post-render events over one-second windows and does not
+request extra frames. Typing fields, modified keys and key repeats do not
+toggle it. The readout starts hidden each session and releases its timer and
+frame listener when hidden or when the application is disposed.
 
 
 ## Radio components

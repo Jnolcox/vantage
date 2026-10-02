@@ -1,5 +1,9 @@
 # Changelog
 
+- Remove the title bar wordmark, tagline and logo (with its pointer-gaze
+  animation and radio broadcast waves) from the scene chrome and loading
+  screen; `#title-bar` now only hosts the optional FPS readout.
+
 - Serve the Inter, JetBrains Mono and Material Symbols fonts from
   `public/fonts/` instead of Google Fonts, so loading the page no longer
   contacts `fonts.googleapis.com` or `fonts.gstatic.com`. `npm run fonts:fetch`

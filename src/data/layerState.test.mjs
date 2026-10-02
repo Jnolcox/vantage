@@ -163,8 +163,8 @@ function encode(state) {
 
 test('production registry is exact, canonical, and rejects incomplete contracts', async () => {
   assert.equal(validateLayerStateRegistry(), true);
-  assert.equal(REGISTERED_LAYER_IDS.length, 21);
-  assert.equal(new Set(REGISTERED_LAYER_IDS).size, 21);
+  assert.equal(REGISTERED_LAYER_IDS.length, 22);
+  assert.equal(new Set(REGISTERED_LAYER_IDS).size, 22);
   assert.ok(REGISTERED_LAYER_IDS.includes('transit'));
   assert.deepEqual(REGISTERED_LAYER_IDS, [...REGISTERED_LAYER_IDS].sort());
   assert.deepEqual(LEGACY_LAYER_STATE_TOKENS, {
@@ -1810,4 +1810,17 @@ test('the owner layer going away revokes the pending watch at any origin', async
     );
     f.coordinator.destroy();
   }
+});
+
+test('fire perimeters takes reserved share-link token 2', () => {
+  const decoded = decodeLayerStateParams(new URLSearchParams('v=2&l=2.e'));
+  assert.deepEqual(decoded.enabledLayerIds, ['earthquakes', 'fire-perimeters']);
+  assert.equal(
+    LAYER_STATE_REGISTRY.find(({ id }) => id === 'fire-perimeters').token,
+    '2',
+  );
+  assert.deepEqual(
+    decodeLayerStateParams(new URLSearchParams(encode(decoded))),
+    decoded,
+  );
 });

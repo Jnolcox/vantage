@@ -2564,6 +2564,14 @@ its criteria cannot be silently ignored.
 | Dams ▰ | OpenInfraMap/OSM extract (bundled) | `src/data/localLayers.js` | — | static |
 | Submarine Cables ◠ | TeleGeography public map (bundled) | `src/data/telegeographySubmarineCables.js` | — | static |
 | FIRMS Active Fires ▲ | NASA FIRMS live (VIIRS ×3 NRT + MODIS NRT, trailing 24h) | `src/data/firmsHeatmap.js` | `/api/firms` (`FIRMS_MAP_KEY`) | 10 min (proxy TTL 30 min) |
+| Fire Perimeters 🔥 | NIFC WFIGS current interagency perimeters (keyless, paged past the 2000-record cap in `OBJECTID` order); InciWeb catalog + incident page origin and update time checks for verified incident-page links | `src/layers/perimeters/` via `src/app/layers/perimeters.js` | `/api/fire-perimeters` + `/api/fire-perimeters/inciweb/*` | 5 min (server caches: catalog 1 h; incident pages 30 min) |
+
+Fire Perimeters uses capped, timed server reads that send the Vantage
+User-Agent, with stale-on-error caching and a per-client limit. Unchanged
+snapshots retain geometry; link checks cancel on disable or selection change,
+and the row legend shows reported containment. The browser never contacts
+WFIGS or InciWeb directly; it only opens a verified InciWeb page in a new tab
+(`noopener,noreferrer`) when the incident card's link is clicked.
 
 Directions is a keyless front end to the routing the voice agent already
 uses. Its row chips are the whole interface: DRIVE / WALK / BIKE pick the

@@ -514,7 +514,9 @@ noted): OpenSky (`opensky-network.org`, `auth.opensky-network.org`) and
 selected aircraft hex for tracks); `api.adsbdb.com` (selected hex or
 callsign); `stream.aisstream.io` (bounding box from your settings);
 `celestrak.org`; `ll.thespacedevs.com`; `firms.modaps.eosdis.nasa.gov`;
-`earthquake.usgs.gov` (fetched by the browser); `api.tomtom.com` (tile
+`services3.arcgis.com` (NIFC WFIGS fire perimeters, every 5 minutes) and
+`inciweb.wildfire.gov` (its incident catalog, at most hourly) for Fire
+Perimeters; `earthquake.usgs.gov` (fetched by the browser); `api.tomtom.com` (tile
 coordinates in view); Overpass mirrors `overpass-api.de`,
 `lz4.overpass-api.de`, `overpass.kumi.systems`, `overpass.private.coffee`
 (bounding-box queries of the view); registered GTFS-realtime and GBFS feeds
@@ -530,6 +532,7 @@ Calgary); the Radio Browser directory (`*.api.radio-browser.info`).
 | `maps.googleapis.com` (Geocoding), then `photon.komoot.io`, then `nominatim.openstreetmap.org` (server) | Browser, server | Search box or a voice search | Query text and a bias from the current view |
 | `places.googleapis.com` | Server | Place and nearby searches, with a Google key | Query, latitude/longitude, radius |
 | `routing.openstreetmap.de` | Server | Directions | Route coordinates |
+| `inciweb.wildfire.gov` | Server, then browser | Selecting a fire perimeter checks the matched InciWeb incident page; clicking its **InciWeb** link opens that page in a new tab | Server: the InciWeb incident number. Browser: your IP address, no referrer (`noopener,noreferrer`) |
 | `maps.googleapis.com` (Street View Static) | Server | CCTV fallback frame for a registered camera with no live image | That camera's registered location |
 | `api.openai.com` | Server, then browser | Starting voice | Server mints a short-lived secret; the browser then streams microphone audio, map context and tool results, and — with **VIEW** on — screenshots of local-scale views |
 | The station's stream host | Browser | Pressing play on Radio | Your IP address and origin; `radio-browser` hears about the play only with `VANTAGE_RADIO_REPORT_CLICKS=1` |

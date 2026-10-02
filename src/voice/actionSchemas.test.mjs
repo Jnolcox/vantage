@@ -19,9 +19,27 @@ test('the complete Realtime tool payload retains its pre-extraction contract and
   const digest = createHash('sha256')
     .update(JSON.stringify(stable(VANTAGE_REALTIME_TOOLS)))
     .digest('hex');
+  // Re-derived for the additive `fire-perimeters` layer enum values.
   assert.equal(
     digest,
-    '2c39d662b61936f0a566e8834b49da77716c55918745b09fe14aa8ed211f8335',
+    'ec100989edd2b33a84010bd79c9d6ea262c6cc4071ab75be19db56e2db536594',
+  );
+});
+
+test('removing the fire-perimeters enum values restores every prior action argument byte for byte', () => {
+  const legacy = structuredClone(VANTAGE_ACTION_SCHEMAS);
+  for (const tool of legacy) {
+    for (const property of Object.values(tool.parameters.properties)) {
+      const values = property.enum ?? property.items?.enum;
+      if (!values) continue;
+      const kept = values.filter((key) => key !== 'fire-perimeters');
+      if (property.enum) property.enum = kept;
+      else property.items.enum = kept;
+    }
+  }
+  assert.equal(
+    createHash('sha256').update(JSON.stringify(legacy)).digest('hex'),
+    '820fff21658f6907e1010b2b79c5431a77f4e34afd2277d62d8de46c368b6f8c',
   );
 });
 

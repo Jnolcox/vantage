@@ -52,6 +52,7 @@ const LINKS_AND_ATTRIBUTION = [
   'cwwp2.dot.ca.gov',
   'data.austintexas.gov',
   'data.calgary.ca',
+  'data-nifc.opendata.arcgis.com',
   'data.texas.gov',
   'deflock.org',
   'developer.entur.org',
@@ -60,6 +61,9 @@ const LINKS_AND_ATTRIBUTION = [
   'developers.openai.com',
   'earthdata.nasa.gov',
   'github.com',
+  // Fire Perimeters incident links; the catalog and incident-page checks go
+  // through /api/fire-perimeters/inciweb.
+  'inciweb.wildfire.gov',
   'ion.cesium.com',
   'its.txdot.gov',
   'open-meteo.com',

@@ -17,6 +17,21 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   30-minute proxy cache and the trailing-24-hour clamp; MODIS confidence is
   kept as its raw 0-100 value (ported from upstream, Bilawal Sidhu, Gustavo
   Beneduzi, James Cooke).
+- Fire Perimeters layer in the Events group, off by default: current NIFC
+  WFIGS interagency wildfire perimeters as ground-clamped polygons with a
+  containment-colored fire line and a containment legend on the row,
+  refreshed every 5 minutes. Clicking a perimeter shows an incident card
+  (acreage, containment, cause, behavior, personnel, county, cost, complex)
+  and, when InciWeb has a page for the incident whose state and dates match,
+  a link that opens it in a new tab without a referrer. The layer is
+  reachable from voice (`set_layer_visibility`, `analyst_query`), share links
+  (token `2`) and the analyst query engine. WFIGS and InciWeb are reached
+  only through the same-origin `/api/fire-perimeters` proxy, which sends the
+  Vantage User-Agent, caps and times out every read, pages past the
+  2,000-feature limit in a stable `OBJECTID` order, caches (perimeters
+  5 minutes, InciWeb catalog 1 hour, incident pages 30 minutes, stale on
+  error) and limits each client to 60 requests a minute (ported from
+  upstream, Bilawal Sidhu, Gustavo Beneduzi, James Cooke).
 
 ### Changed
 

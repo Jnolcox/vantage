@@ -812,5 +812,12 @@
   "src/data/windGfs.test.mjs",
   "src/data/windGrid.test.mjs",
   "src/data/windIfs.test.mjs",
-  "src/data/windProxy.test.mjs"
+  "src/data/windProxy.test.mjs",
+  "src/layers/weather/imageryHost.js",
+  "src/layers/weather/imageryHost.test.mjs",
+  "src/layers/weather/imageryOrder.js",
+  "src/layers/weather/imageryOrder.test.mjs",
+  "src/layers/weather/shellSurface.js",
+  "src/layers/weather/shellSurface.test.mjs",
+  "src/layers/weather/shellFixture.mjs"
 ]

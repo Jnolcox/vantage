@@ -44,6 +44,11 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
 
 ### Changed
 
+- Google Photorealistic 3D Tiles (direct and through ion) keep drawing their
+  own texture while draped imagery loads, and the map controller reports the
+  shown tileset so a layer can drape onto it when the globe is hidden; this is
+  the groundwork for weather imagery on 3D Tiles (ported from upstream,
+  Bilawal Sidhu).
 - Layer rows that push their own refresh (a settling catalog, a status
   change) now repaint at most once per animation frame instead of once per
   notification, and a pending repaint is cancelled when the panel is torn

@@ -352,8 +352,12 @@ export function cctvProxy({ sourceRoot = process.cwd() } = {}) {
         const source = sourceById.get(cameraId);
         const label = url.searchParams.get('label') || source?.name || cameraId;
         const city = url.searchParams.get('city') || source?.city || '';
-        const lat = Number(url.searchParams.get('lat') || source?.lat);
-        const lon = Number(url.searchParams.get('lon') || source?.lon);
+        // The Street View fallback is billed to the server's Google key, so
+        // its location comes only from the registered camera: client lat/lon
+        // would turn this route into an open Street View proxy. View angles
+        // still follow the client, as before.
+        const lat = Number(source?.lat);
+        const lon = Number(source?.lon);
         const heading = Number(
           url.searchParams.get('heading') || source?.headingDeg,
         );

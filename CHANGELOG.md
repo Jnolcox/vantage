@@ -66,6 +66,10 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   now pin the glow to its panel box, so the stacks still scroll for genuinely
   tall content and the Context radio popover is not clipped (ported from
   upstream, Bilawal Sidhu).
+- Transit and Directions rows repaint as soon as their data lands again:
+  `refreshLayerStats()` now lives on the layer lifecycle, not only on the
+  compatibility facade. `scripts/qa-radio.mjs` uses it instead of a private
+  panel method (ported from upstream, Bilawal Sidhu).
 
 ## [1.0.0] - 2026-10-02
 

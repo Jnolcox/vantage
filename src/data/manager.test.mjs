@@ -3336,3 +3336,12 @@ test('row action chips use live disabled state and descriptive counts without wr
     else globalThis.document = originalDocument;
   }
 });
+
+test('refreshLayerStats reaches presentation through the bare lifecycle', async () => {
+  const { LayerLifecycle } = await import('./lifecycle.js');
+  const lifecycle = new LayerLifecycle({});
+  const changes = [];
+  lifecycle.subscribeActivity((change) => changes.push(change.type));
+  lifecycle.refreshLayerStats();
+  assert.deepEqual(changes, ['status']);
+});

@@ -25,6 +25,7 @@ import {
 } from './data/geoid.js';
 import { getBasemapLabelContext } from './voice/vantageActions.js';
 import { isHudSummaryUnconfigured } from './hudSummaryResponse.js';
+import { createHudLiveContextSetting } from './hudLiveContext.js';
 
 /** Color palettes keyed by shader mode; applied as CSS custom properties. */
 const HUD_COLORS = {
@@ -94,9 +95,11 @@ export class IntelHUD {
       summaryPolicy = {},
       basemapContext = {},
       summaryService = applicationServices.summary,
+      liveContext = createHudLiveContextSetting(),
     } = {},
   ) {
     this.summaryService = summaryService;
+    this.liveContext = liveContext;
     this.summaryPolicy = summaryPolicy;
     this.basemapContext = basemapContext;
     this.placeSearch = placeSearch;
@@ -164,8 +167,24 @@ export class IntelHUD {
     this._passNum = 100 + Math.floor(Math.random() * 200);
 
     this._buildDOM();
+    this._bindLiveContextSelect();
     this.viewer.camera.moveEnd.addEventListener(this._onCameraMoveEnd);
     this._startTimers();
+  }
+
+  /** Let the viewer keep the summary local instead of asking Google and OpenAI. */
+  _bindLiveContextSelect() {
+    const select = globalThis.document?.getElementById?.('hud-context-select');
+    if (!select) return;
+    select.value = this.liveContext.mode;
+    this._onLiveContextChange = () => {
+      this.liveContext.setMode(select.value);
+      this._summaryRequest?.abort();
+      this._markSummaryDirty();
+      void this._updateSummary(false, true);
+    };
+    select.addEventListener('change', this._onLiveContextChange);
+    this._liveContextSelect = select;
   }
 
   /**
@@ -687,6 +706,12 @@ export class IntelHUD {
       return;
     }
     if (!force && !this._summaryDirty) return;
+    // Local mode: no place lookups and no AI summary, only on-device data.
+    if (!this.liveContext.isLive()) {
+      this._summaryDirty = false;
+      this._setSummaryText(fallbackText, animate);
+      return;
+    }
     if (this.summaryPolicy.canRequest?.() === false) return;
 
     const revision = this._summaryRevision;
@@ -920,5 +945,9 @@ export class IntelHUD {
     this.viewer.camera.moveEnd.removeEventListener(this._onCameraMoveEnd);
     this._dataManagerUnsubscribe?.();
     this._summaryRequest?.abort();
+    this._liveContextSelect?.removeEventListener(
+      'change',
+      this._onLiveContextChange,
+    );
   }
 }

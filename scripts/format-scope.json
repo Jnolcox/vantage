@@ -758,5 +758,6 @@
   "src/maps/cesiumNetworkDefaults.test.mjs",
   "src/tooling/contentSecurityPolicy.test.mjs",
   "src/tooling/puppeteerConfig.test.mjs",
-  "src/voice/viewImageSharing.test.mjs"
+  "src/voice/viewImageSharing.test.mjs",
+  "src/hudLiveContext.test.mjs"
 ]

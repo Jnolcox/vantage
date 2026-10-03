@@ -657,15 +657,19 @@ test('the DISPLAY rail starts collapsed on a first run, and a stored choice wins
 // ── Voice: instruction-only, tool schema unchanged ─────────────────────
 
 test('the voice TOOL SCHEMA matches the pinned release — the mission mapping is instructions only', () => {
-  // ALPR deliberately adds its ID to the two layer menus and visibility aliases.
+  // ALPR, Fire Perimeters, Wind, the observed-weather layers and Cyclone
+  // advisories deliberately add their IDs to the layer menus and visibility
+  // aliases; the observed layers and cyclones are also named in the layerId
+  // common-name mapping. The separate satellite-pass tool and the analyst
+  // satellite/infrastructure layers deliberately extend the schema.
   // Canonical serialization pins every tool name, description, property and
   // ordering while allowing source formatting. Derived from the unchanged
   // release schema before formatting (the previous source-byte pin passed).
   const block = JSON.stringify(VANTAGE_REALTIME_TOOLS);
-  assert.equal(block.length, 26199, 'serialized tool schema length drifted');
+  assert.equal(block.length, 27752, 'serialized tool schema length drifted');
   assert.equal(
     crypto.createHash('sha256').update(block).digest('hex'),
-    'b3c3544b8594bedbd4a197f9ac4cd75199ead7a35290c8c9a2a7cbd08408c055',
+    'a68ff1b677a398566259feca66e4d6be2562660d6112712a621c491766034d4b',
     'the first-run missions must ride EXISTING tools: no schema edit, no cache bust',
   );
   const instructions = fs.readFileSync(new URL('../server/providers/openai/instructions.js', import.meta.url), 'utf8');

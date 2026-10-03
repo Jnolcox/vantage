@@ -1,3 +1,8 @@
+import {
+  layerSnapshot,
+  layerSnapshots,
+  feedProvenanceEnvelope,
+} from '../data/layerSnapshot.js';
 import { readLayerLifecycleSummary } from './layerSummary.js';
 export { readLayerLifecycleSummary } from './layerSummary.js';
 import { defaultGeospatial } from '../search/defaults.js';
@@ -212,6 +217,9 @@ const LAYER_ALIASES = new Map([
   ['submarine cables', 'telegeography-submarine-cables'],
   ['cables', 'telegeography-submarine-cables'],
   ['telegeography', 'telegeography-submarine-cables'],
+  ['fire perimeters', 'fire-perimeters'],
+  ['perimeters', 'fire-perimeters'],
+  ['wildfire perimeters', 'fire-perimeters'],
   ['firms', 'local-firms'],
   ['fires', 'local-firms'],
   ['active fires', 'local-firms'],
@@ -221,6 +229,27 @@ const LAYER_ALIASES = new Map([
   ['license plate readers', 'alpr-cameras'],
   ['license plate cameras', 'alpr-cameras'],
   ['plate readers', 'alpr-cameras'],
+  ['wind', 'wind'],
+  ['winds', 'wind'],
+  ['wind layer', 'wind'],
+  ['wind forecast', 'wind'],
+  ['radar', 'weather-radar'],
+  ['rain radar', 'weather-radar'],
+  ['weather radar', 'weather-radar'],
+  ['precipitation', 'weather-radar'],
+  ['clouds', 'weather-satellite'],
+  ['satellite clouds', 'weather-satellite'],
+  ['cloud cover', 'weather-satellite'],
+  ['infrared clouds', 'weather-satellite'],
+  ['lightning', 'weather-lightning'],
+  ['lightning density', 'weather-lightning'],
+  ['lightning strikes', 'weather-lightning'],
+  ['cyclones', 'weather-cyclones'],
+  ['cyclone advisories', 'weather-cyclones'],
+  ['tropical cyclones', 'weather-cyclones'],
+  ['hurricanes', 'weather-cyclones'],
+  ['hurricane tracks', 'weather-cyclones'],
+  ['tropical storms', 'weather-cyclones'],
 ]);
 
 const CITY_ALIASES = new Map([
@@ -962,6 +991,10 @@ export function createVantageActionRunner({
           longitude: Number(result.longitude.toFixed(2)),
         },
       };
+    }
+
+    if (name === 'next_satellite_pass') {
+      return nextSatellitePass(viewer, dataManager, args);
     }
 
     if (name === 'next_iss_pass') {
@@ -2655,6 +2688,64 @@ function nextIssPass(viewer, dataManager, args) {
     durationMin: Math.max(1, Math.round((pass.setMs - pass.riseMs) / 60000)),
     peakElevationDeg: Math.round(pass.maxElevDeg),
     riseDirection: compassDir(pass.riseAzDeg),
+    visible: typeof pass.visible === 'boolean' ? pass.visible : null,
+    visibilityNote:
+      'Geometric illumination estimate only; weather, brightness and orbital-element age affect actual visibility.',
+    setIso: new Date(pass.setMs).toISOString(),
+    peakIso: new Date(pass.maxElevMs).toISOString(),
+  };
+}
+
+function nextSatellitePass(viewer, dataManager, args) {
+  const layer = dataManager?.layers?.get('satellites')?.module;
+  const identity = layer?.resolveSatelliteForPass?.(args.target) || {
+    status: 'not-found',
+  };
+  if (identity.status !== 'ok')
+    return {
+      ok: false,
+      action: 'next_satellite_pass',
+      ...identity,
+      error:
+        identity.status === 'ambiguous'
+          ? 'Several loaded satellites match. Choose a NORAD ID from candidates.'
+          : 'No loaded satellite matches. Enable satellites and use an exact name or NORAD ID.',
+    };
+  // Reuse the legacy location fallback and result formatting, substituting only
+  // this explicitly resolved catalog identity and the optional visibility filter.
+  const adapter = {
+    layers: new Map([
+      [
+        'satellites',
+        {
+          module: {
+            getNextIssPass: (options) =>
+              layer.getNextSatellitePass(identity.noradId, {
+                ...options,
+                requireVisible: args.visibleOnly === true,
+              }),
+          },
+        },
+      ],
+    ]),
+  };
+  const result = nextIssPass(viewer, adapter, args);
+  if (result.error) {
+    result.error = result.error.replace(
+      /ISS/g,
+      identity.name || String(identity.noradId),
+    );
+    if (args.visibleOnly === true)
+      result.error +=
+        ' Search required estimated illumination under a dark sky.';
+  }
+  return {
+    ...result,
+    action: 'next_satellite_pass',
+    noradId: identity.noradId,
+    name: identity.name,
+    visibleOnly: args.visibleOnly === true,
+    horizonHours: 24,
   };
 }
 
@@ -2989,6 +3080,8 @@ function getCurrentViewState(
   const cartographic = Cesium.Cartographic.fromCartesian(
     viewer.camera.positionWC,
   );
+  const layers = dataManager.getAll();
+  const snapshots = layerSnapshots(layers);
   return {
     ok: true,
     action: 'get_current_view_state',
@@ -3019,13 +3112,19 @@ function getCurrentViewState(
         : null,
     scenePlayback: sceneDirector?.getPlaybackStatus?.() || null,
     tracked: collectTrackedEntities(dataManager),
-    layers: dataManager.getAll().map((layer) => ({
+    layers: layers.map((layer, index) => ({
       id: layer.id,
       name: layer.name,
       enabled: layer.enabled,
       count: layer.stats?.count || 0,
       error: layer.stats?.error || null,
+      feedState: snapshots[index].feedState,
+      source: snapshots[index].source,
+      lastUpdate: snapshots[index].lastUpdate,
     })),
+    feedProvenance: feedProvenanceEnvelope(
+      snapshots.filter((snapshot) => snapshot.enabled),
+    ),
   };
 }
 
@@ -4127,6 +4226,13 @@ function activeContactsWindow(dataManager) {
   }
 }
 
+/** Analyst layers whose records are a bounded slice of a larger loaded set. */
+const BOUNDED_ANALYST_LAYERS = new Set([
+  'satellites',
+  'local-datacenters',
+  'local-dams',
+]);
+
 function analystProviders(
   viewer,
   dataManager,
@@ -4151,6 +4257,28 @@ function analystProviders(
       return Number.isFinite(requestedLimit)
         ? mod.getAnalystRecords(requestedLimit) || []
         : mod.getAnalystRecords() || [];
+    },
+    getLayerSnapshot(layerKey) {
+      const row = dataManager.getAll?.().find((layer) => layer.id === layerKey);
+      if (row) return layerSnapshot(row);
+      const module = dataManager.layers?.get(layerKey)?.module;
+      return layerSnapshot({
+        id: layerKey,
+        enabled: dataManager.isEnabled?.(layerKey),
+        stats: module?.getStats?.() || {},
+      });
+    },
+    getRecordCoverage(layerKey, rows) {
+      if (!BOUNDED_ANALYST_LAYERS.has(layerKey)) return null;
+      const module = dataManager.layers.get(layerKey)?.module;
+      const loaded = module?.getStats?.().count;
+      return {
+        basis: 'bounded-loaded-records',
+        recordsExamined: rows.length,
+        loadedCount: Number.isFinite(loaded) ? loaded : null,
+        sourceTruncated: Number.isFinite(loaded) ? loaded > rows.length : null,
+        note: 'Counts and ranks apply only to these examined loaded records, not all satellites or infrastructure; distance is ground great-circle distance.',
+      };
     },
     resolveRegionRing,
     /**
@@ -4207,6 +4335,7 @@ async function runAnalystQuery(
     return {
       ok: false,
       action: 'analyst_query',
+      ...(result.code ? { code: result.code } : {}),
       error: result.error,
       coverage: result.coverage,
     };
@@ -4243,6 +4372,12 @@ async function runAnalystQuery(
       'distanceKm',
       'confidence',
       'place',
+      'noradId',
+      'satelliteClass',
+      'group',
+      'river',
+      'output',
+      'capacity',
     ]) {
       if (r[k] !== null && r[k] !== undefined) compact[k] = r[k];
     }
@@ -4282,7 +4417,18 @@ async function runAnalystQuery(
     args,
     result,
   );
-  if (entityWindow) return entityWindow;
+  if (entityWindow) {
+    const provenance = feedProvenanceEnvelope(
+      layerSnapshots(dataManager.getAll?.() || []).filter(
+        (layer) => layer.enabled && ['flights', 'military'].includes(layer.id),
+      ),
+    );
+    return {
+      ...entityWindow,
+      feedProvenance: provenance,
+      feedState: provenance.overall,
+    };
+  }
 
   const contactsWindow = activeContactsWindow(dataManager);
   const aircraftQueried = (result.coverage?.layersQueried || []).some(
@@ -4321,6 +4467,8 @@ async function runAnalystQuery(
     items,
     summary: result.summary,
     coverage: result.coverage,
+    feedProvenance: result.coverage?.feedProvenance || null,
+    feedState: result.coverage?.feedProvenance?.overall || null,
     // The panel's own numbers, carried so the answer can match what the
     // operator is looking at regardless of how the model reads the note.
     // Flattened alongside the object so the count and its subject cannot be

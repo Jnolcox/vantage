@@ -24,8 +24,19 @@ import {
   geoidHeight,
 } from './data/geoid.js';
 import { getBasemapLabelContext } from './voice/vantageActions.js';
-import { isHudSummaryUnconfigured } from './hudSummaryResponse.js';
+import {
+  hudSummaryMatchesProvenance,
+  hudSummaryLayerContext,
+  hudTelemetryProvenanceTag,
+  isHudSummaryUnconfigured,
+} from './hudSummaryResponse.js';
 import { createHudLiveContextSetting } from './hudLiveContext.js';
+
+/** Data-manager changes that may move a feed state without changing the view. */
+const FEED_REFRESH_CHANGES = new Set([
+  'refresh-transition',
+  'refresh-cancelled',
+]);
 
 /** Color palettes keyed by shader mode; applied as CSS custom properties. */
 const HUD_COLORS = {
@@ -668,7 +679,11 @@ export class IntelHUD {
     // NEAR the nearest catalogued POI at metro range; otherwise the lat/lon sector.
     const localityTag = composeLocalityTag(nearest, m.latDeg, m.lonDeg);
 
-    return `${modeLabel} ${band} ${localityTag} | ${region} | ALT ${altTag} | WINDOW ${winTag} | SUN ${m.sunEl.toFixed(0)}° | ONA ${m.ona.toFixed(0)}° | ${localTag}`;
+    const provenance = hudTelemetryProvenanceTag(
+      this._dataManager?.getAll?.() || [],
+    );
+    const line = `${modeLabel} ${band} ${localityTag} | ${region} | ALT ${altTag} | WINDOW ${winTag} | SUN ${m.sunEl.toFixed(0)}° | ONA ${m.ona.toFixed(0)}° | ${localTag}`;
+    return provenance ? `${line} | ${provenance}` : line;
   }
 
   /**
@@ -759,7 +774,12 @@ export class IntelHUD {
       if (!response.ok || !data?.summary) {
         throw new Error(data?.error || `HTTP ${response.status}`);
       }
-      this._setSummaryText(data.summary, animate);
+      this._setSummaryText(
+        hudSummaryMatchesProvenance(data.summary, context.feedProvenance)
+          ? data.summary
+          : fallbackText,
+        animate,
+      );
     } catch (error) {
       if (error?.name !== 'AbortError') {
         console.warn('[HUD] AI summary unavailable:', error);
@@ -790,16 +810,13 @@ export class IntelHUD {
       this.placeSearch,
       this.basemapContext,
     );
-    const enabledLayers =
-      this._dataManager
-        ?.getAll?.()
-        ?.filter((layer) => layer.enabled)
-        .map((layer) => layer.name) || [];
+    // Built only on the Live path (`_updateSummary` returns first in Local
+    // mode), so feed states reach OpenAI only when the viewer chose Live.
     return {
       placeLabels: labels.placeLabels,
       streetLabels: labels.streetLabels,
       nearbyPlaceLabels: labels.nearbyPlaceLabels,
-      enabledLayerLabels: enabledLayers,
+      ...hudSummaryLayerContext(this._dataManager?.getAll?.() || []),
     };
   }
 
@@ -930,6 +947,12 @@ export class IntelHUD {
     if (typeof this._dataManager?.subscribe === 'function') {
       this._dataManagerUnsubscribe = this._dataManager.subscribe((change) => {
         if (change?.type === 'visibility') this._markSummaryDirty();
+        // A refresh can change a feed state, so the next tick rebuilds the
+        // context, but it does not make an in-flight summary wrong: bumping
+        // the revision here would discard that paid response while its
+        // signature stays committed, leaving the summary unshown.
+        else if (FEED_REFRESH_CHANGES.has(change?.type))
+          this._summaryDirty = true;
       });
     }
     this._markSummaryDirty();

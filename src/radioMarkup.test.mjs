@@ -25,15 +25,17 @@ const css = readStylesheet(new URL('../style.css', import.meta.url));
 
 function realtimeTools() { return VANTAGE_REALTIME_TOOLS; }
 
-test('Realtime schema exposes the authoritative 28-tool inventory', () => {
+test('Realtime schema exposes the authoritative 29-tool inventory', () => {
   const tools = realtimeTools();
-  assert.equal(tools.length, 28);
+  assert.equal(tools.length, 29);
   const names = tools.map((tool) => tool.name);
-  assert.equal(new Set(names).size, 28, 'tool names are unique');
+  assert.equal(new Set(names).size, 29, 'tool names are unique');
   assert.ok(names.includes('set_context_mode'));
   assert.ok(names.includes('control_cockpit'));
   assert.ok(names.includes('select_nearest_aircraft'));
   assert.ok(names.includes('control_radio'));
+  assert.ok(names.includes('next_satellite_pass'));
+  assert.ok(names.includes('next_iss_pass'));
   // Every tool closes its parameter object: an open schema lets the model
   // invent arguments the runner silently drops.
   for (const tool of tools) {
@@ -178,17 +180,23 @@ test('no unchanged Realtime tool definition drifts silently', () => {
     'fly_to_location',
     'select_nearest_aircraft',
     'set_map_stack',
+    'next_iss_pass',
+    'next_satellite_pass',
+    'analyst_query',
   ]);
   const unchanged = realtimeTools()
     .filter((tool) => !TOUCHED.has(tool.name))
     .sort((a, b) => a.name.localeCompare(b.name));
-  assert.equal(unchanged.length, 21);
+  assert.equal(unchanged.length, 19);
   const digest = createHash('sha256')
     .update(JSON.stringify(unchanged))
     .digest('hex')
     .slice(0, 16);
-  // ALPR intentionally extends the two layer enums; retain the complete pin.
-  assert.equal(digest, 'c19553500476059a', 'an unchanged Realtime tool definition drifted');
+  // ALPR, Fire Perimeters, Wind, the observed-weather layers and Cyclone
+  // advisories intentionally extend the layer enums; the ISS wording correction,
+  // the new satellite-pass tool and the analyst satellite/infrastructure layers
+  // are excluded above. Retain the complete pin.
+  assert.equal(digest, 'e6966726204f247a', 'an unchanged Realtime tool definition drifted');
 });
 
 test('Radio volume and mission speed share the Sharpen slider visual language', () => {

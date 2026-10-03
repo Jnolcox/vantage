@@ -26,6 +26,12 @@ How to read this:
 | **The Space Devs — Launch Library 2 v2.3**                            | Recent launch, payload, stage, and recovery metadata for Space Missions (30d)                                                       | [The Space Devs terms of use](https://github.com/TheSpaceDevs/Tutorials/blob/main/faqs/faq_TSD.md#terms-of-use): data may be used and shared in any form; avoid forwarding it without added value; attribution is encouraged (not mandatory). [Official API limits](https://ll.thespacedevs.com/docs/): 15 unauthenticated calls/hour; optional token | "Launch Library 2 — The Space Devs" (courtesy attribution)                                                                                  |
 | **Esri World Imagery** (ArcGIS Online tile service)                   | The keyless satellite basemap — the default landing when no Google/ion credential is configured, and the "Esri Satellite" map stack | [Esri Master Agreement](https://www.esri.com/en-us/legal/terms/full-master-agreement): the public World Imagery service is usable in public-facing apps with attribution; no key is required for this classic endpoint, but Esri governs and can change access — an app at scale should review current ArcGIS Location Platform terms                 | "Powered by Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community" (provider carries the service's own credit line) |
 | **USGS**                                                              | Earthquakes                                                                                                                         | U.S. public domain                                                                                                                                                                                                                                                                                                                                    | "Data courtesy of the U.S. Geological Survey"                                                                                               |
+| **NIFC WFIGS** (Wildland Fire Interagency Geospatial Services, ArcGIS feature service) | Fire Perimeters layer: current interagency wildfire incident perimeters, containment, and incident facts | U.S. public domain (interagency wildland-fire data published through the [NIFC Open Data portal](https://data-nifc.opendata.arcgis.com/)); fetched keyless by the server through `/api/fire-perimeters` (5-minute cache), paged past the 2,000-feature limit in `OBJECTID` order | "Wildfire perimeters: National Interagency Fire Center (WFIGS)" |
+| **InciWeb** (inciweb.wildfire.gov)                                    | Per-incident "InciWeb ↗" card links to official incident pages (narratives, evacuation/closure notices) | U.S. government public incident information. Links are matched best-effort by incident name and state, with incident page origin and update times checked on selection. Same-origin `/api/fire-perimeters/inciweb` routes cache the catalog for 1 hour and incident-page times for 30 minutes; linked pages remain InciWeb content | "Incident information: InciWeb (inciweb.wildfire.gov)" |
+| **NOAA GFS** (Global Forecast System, NOAA Open Data on AWS)          | Wind layer: global 10 m wind, optional 2 m temperature and mean sea-level pressure | U.S. public domain (NOAA); fetched keyless by the server through `/api/wind` from the `noaa-gfs-bdp-pds` S3 bucket | "NOAA Global Forecast System (GFS)" (courtesy; not an endorsement) |
+| **ECMWF IFS** (ECMWF Open Data)                                         | Wind layer, ECMWF model: global 10 m wind, optional 2 m temperature and mean sea-level pressure | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) plus the [ECMWF Terms of Use](https://apps.ecmwf.int/datasets/licences/general/); fetched keyless by the server through `/api/wind` from `data.ecmwf.int` | "Based on data and products of the European Centre for Medium-Range Weather Forecasts (ECMWF)", with the CC BY 4.0 link, the modification notice and the ECMWF liability disclaimer |
+| **NOAA nowCOAST** (observed-weather WMS)                               | Rain radar (MRMS base reflectivity, CONUS), Satellite clouds (GOES-19/18 Band 14 regional and the NESDIS global longwave infrared mosaic) and Lightning density (15-minute density derived from Vaisala NLDN/GLD360) | U.S. public domain (NOAA); the lightning layer is NOAA's public Level-5 derived product, [distributable as such](https://ocean.weather.gov/lightning/lightning_pdd.php), not raw Vaisala detections. Fetched keyless by the server through `/api/weather` | "NOAA nowCOAST · NWS/OAR MRMS radar; NESDIS GOES and global satellite partners" and "NOAA/NWS nowCOAST · derived from Vaisala NLDN/GLD360", with the [NOAA disclaimer](https://oceanservice.noaa.gov/disclaimer.html) |
+| **NOAA NHC / CPHC advisories** (`www.nhc.noaa.gov/CurrentStorms.json` and the `mapservices.weather.noaa.gov` tropical weather summary MapServer) | Cyclone advisories: storm positions, forecast tracks, forecast points and uncertainty cones for the Atlantic and eastern/central North Pacific | U.S. public domain (NOAA); [NWS public-data terms](https://www.weather.gov/disclaimer). Fetched keyless by the server through `/api/cyclones`, cached for 5 minutes; no endorsement implied | "NOAA/NWS NHC / CPHC" |
 | **OpenStreetMap (Overpass API)**                                      | Road geometry for traffic                                                                                                           | ODbL 1.0                                                                                                                                                                                                                                                                                                                                              | "© OpenStreetMap contributors"                                                                                                              |
 | **TomTom Traffic API** (flow vector tiles)                            | Live congestion coloring for the traffic layer (optional, BYOK)                                                                     | [TomTom for Developers terms](https://developer.tomtom.com) (proprietary, your own key; free tier currently 200K tile requests/month — see [current pricing](https://docs.tomtom.com/pricing/))                                                                                                                                                       | "Traffic flow data © TomTom" — registered when live mode activates                                                                          |
 | **OpenStreetMap (Overpass API)**                                      | Viewport-bounded mapped installation context for Global Context                                                                     | ODbL 1.0                                                                                                                                                                                                                                                                                                                                              | "© OpenStreetMap contributors" (incomplete mapped context)                                                                                  |
@@ -148,10 +154,128 @@ The OSM-derived datasets are under the **Open Database License**. ODbL's share-a
 
 FIRMS active fires are **fetched live at runtime** (CC0 / U.S. public domain data): the
 `/api/firms` server-side proxy merges the three VIIRS NRT sources (NOAA-20, NOAA-21,
-Suomi-NPP) clamped to the trailing 24 h, cached 30 min to respect the shared MAP_KEY
+Suomi-NPP) and MODIS NRT (Terra + Aqua), clamped to the trailing 24 h, cached 30 min to respect the shared MAP_KEY
 transaction quota. Requires a free `FIRMS_MAP_KEY`
 (https://firms.modaps.eosdis.nasa.gov/api/map_key/); the layer is empty without it.
 The former bundled 2026-05-25 snapshot was removed 2026-07-16.
+
+### NOAA GFS and ECMWF IFS wind
+
+The optional **Wind** layer animates the global 10 m wind field from NOAA's
+Global Forecast System (GFS) or, when the ECMWF model is chosen, from the
+keyless [ECMWF Open Data](https://www.ecmwf.int/en/forecasts/datasets/open-data)
+IFS forecast. Both are **forecasts, not observations**: the curves show model
+flow through one forecast time, not measured wind, and the animation does not
+advance forecast time.
+
+The same-origin `/api/wind` proxy is the only client of either service. For the
+model asked for it selects the latest cycle that should be published (GFS 0.25°,
+5 h availability lag; IFS 0.25° oper, 6 h lag) and the forecast step valid
+closest to now, reads that step's inventory (GFS `.idx`, IFS JSON Lines
+`.index`, at most 2 MiB) and byte-range fetches only the 10 m U and V GRIB2
+messages (GFS `UGRD`/`VGRD`, IFS `10u`/`10v`, at most 8 MiB each), plus 2 m
+temperature (`TMP` / `2t`) or mean sea-level pressure (`PRMSL` / `msl`) from the
+same run and step when that field is selected. Every request sends the
+`vantage-wind-proxy` User-Agent and refuses redirects. The messages are decoded
+in memory by ecCodes compiled to WebAssembly
+([`@meri-imperiumi/eccodes-wasm`](https://github.com/meri-imperiumi/eccodes-wasm),
+Apache-2.0), which the server loads only on the first wind request, and
+resampled to a 1° global grid (360 × 181 points). Temperature is converted from
+K to °C and pressure from Pa to hPa. A missing, malformed or timed-out companion
+field does not discard valid wind: the manifest marks the field unavailable.
+
+Caching is bounded: one entry per model and field (at most six), each holding
+the current and the previous issued grid, refreshed after an hour, with one
+shared in-flight load per entry, a 40-second deadline, at most one upstream
+attempt a minute per entry after a failure, and the last good grid served as
+stale while the upstream is down.
+
+NOAA GFS data is U.S. public domain; the credit is a courtesy and does not imply
+endorsement. ECMWF data is licensed under CC BY 4.0 and the ECMWF Terms of Use;
+the in-app credit states that the service is based on ECMWF data and products,
+names resampling and animation as modifications and keeps ECMWF's liability
+disclaimer.
+
+### NOAA nowCOAST observed weather
+
+The optional **Rain radar**, **Satellite clouds** and **Lightning density**
+layers show observed weather from three fixed NOAA nowCOAST WMS services under
+`https://nowcoast.noaa.gov/geoserver/observations/`:
+
+- `weather_radar` / `conus_base_reflectivity_mosaic` (style
+  `weather_radar_base_reflectivity`): MRMS base reflectivity for the contiguous
+  United States, approximately 1 km, usually 4-minute updates. dBZ measures
+  radar reflectivity, not rainfall rate, probability or future rain, and a
+  coverage gap does not mean no precipitation.
+- `satellite` / `goes_longwave_imagery` (style `goes-lir`): GOES-19/18 Band 14
+  longwave infrared, approximately 2 km and 5-minute updates, regional North
+  America. `satellite` / `global_longwave_imagery_mosaic` (style `reflectance`):
+  the NESDIS global longwave mosaic, approximately 3 km, hourly, nominally
+  60°S–60°N with typically 2–3 hours of latency. "Clouds only" dims pixels below
+  a brightness ramp (0.40 to 0.70 in linear light); it is a display filter, not a
+  cloud mask or measured cloud volume.
+- `lightning_detection` / `ldn_lightning_strike_density` (style
+  `lightning_density`): 15-minute accumulated density on an approximately 8 km
+  grid, in strikes/km²/min ×10³, covering 110°E across the Pacific and the
+  Americas to 0° and 25°S–80°N. It is not individual GLM flashes, a live strike
+  count, an all-clear or global coverage.
+
+The same-origin `/api/weather` proxy is the only client. `/api/weather/manifest`
+reads the service's WMS 1.3.0 capabilities (at most 512 KiB, no DTDs or
+entities) and returns the product bounds and up to 13 exact observation times
+from the last 24 hours; `/api/weather/tile` and `/api/weather/image` issue one
+WMS 1.1.1 `GetMap` (EPSG:4326, PNG) for a level-0–6 geographic tile, the whole
+product extent, or a 2:1 detail window rounded to 0.25° inside it. The browser
+never supplies an upstream URL, only a product, an advertised time and tile
+coordinates, a size or a window. Every request sends the `vantage-weather-proxy`
+User-Agent and refuses redirects; PNG signatures and dimensions are checked,
+whole images and windows are capped at 16 MiB and tiles at 1 MiB (or their raw
+RGBA size for 512 and 1024 px tiles),
+and a 12-second deadline applies. Up to 8 upstream requests run at once, with
+in-flight requests shared and abandoned ones cancelled. Capabilities are cached
+for 2 minutes (lightning 10 minutes) with the last good copy served as stale for
+up to an hour; images share one 16 MiB, 128-entry cache, and a failed image is
+not retried for 30 seconds.
+
+Tile coordinates and detail windows follow the map view, so **NOAA sees the
+approximate area being viewed** (from the server's IP address, never the
+browser's) while one of these layers is on. Nothing is requested while the
+layers are off.
+
+The interface shows the exact advertised observation time; "latest" means the
+newest available observation, not zero-delay real time. No nowcast is
+synthesized. NOAA data is U.S. public domain; the credit is a courtesy and does
+not imply endorsement.
+
+### NOAA NHC / CPHC cyclone advisories
+
+The optional **Cyclone advisories** layer shows active tropical cyclones from
+two fixed official sources: the National Hurricane Center's
+[current storms status](https://www.nhc.noaa.gov/CurrentStorms.json) and the
+NOAA [tropical weather summary GIS](https://mapservices.weather.noaa.gov/tropical/rest/services/tropical/NHC_tropical_weather_summary/MapServer)
+(layers 5, 6 and 7: forecast points, track and cone).
+
+- **Coverage:** the Atlantic and the eastern and central North Pacific (NHC and
+  CPHC basins). It is not worldwide cyclone coverage.
+- **Meaning:** the status position time and the advisory issue time stay
+  separate. A forecast track, its points and its cone are shown only when all
+  three GIS parts carry the same advisory number as the status; older geometry
+  is never relabelled with a newer advisory. The cone is uncertainty in the
+  forecast centre track, not storm size or a complete hazard boundary.
+- **Delivery:** the same-origin `/api/cyclones` proxy is the only client (NHC
+  does not advertise CORS). The browser never names an upstream URL. Every
+  request sends the `vantage-cyclones-proxy` User-Agent and refuses redirects;
+  the status is capped at 128 KiB, points and tracks at 512 KiB and cones at
+  2 MiB, with at most 25,000 coordinates in all and a 12-second deadline. One
+  shared refresh runs at a time (at most 32 waiting requests), the snapshot is
+  cached for 5 minutes, a failed refresh is not retried for a minute, and the
+  last good snapshot is served as stale for up to 12 hours while every advisory
+  in it is younger than that. The requests carry nothing about the view.
+- **Rights/credit:** NOAA/NWS National Hurricane Center / Central Pacific
+  Hurricane Center; U.S. public domain under the
+  [NWS public-data terms](https://www.weather.gov/disclaimer). Official products
+  are fetched at runtime; no advisory archive is bundled and no NOAA
+  endorsement is implied.
 
 ### Natural Earth physical regions (`natural_earth/`)
 

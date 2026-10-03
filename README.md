@@ -501,7 +501,7 @@ address and the Vantage User-Agent, not your browser).
 | `api.cesium.com`, `assets.ion.cesium.com`, `assets.cesium.com`, Bing/Azure imagery hosts | Browser | Only with a Cesium ion token | Assets and tiles in view, ion token |
 | `maps.googleapis.com` (Geocoding) | Browser | HUD **Context: Live**, every 15 s and after each move, with a Google key | View-target latitude/longitude |
 | `places.googleapis.com` | Server | Same HUD trigger, with a Google key | Latitude/longitude and radius |
-| `api.openai.com` (Responses) | Server | Same HUD trigger, with an OpenAI key | Place, street and nearby-place labels, enabled layer names |
+| `api.openai.com` (Responses) | Server | Same HUD trigger, with an OpenAI key | Place, street and nearby-place labels; enabled layer names with each one's feed state (live, stale, fallback…) and source name |
 | `nominatim.openstreetmap.org`, `api.open-meteo.com`, `news.google.com`, `api.gdeltproject.org` | Server | Cockpit mode: regional brief and weather, refreshed as the contact moves | Latitude/longitude; locality name for news |
 | Layer feeds you have switched on | Server | Polling while the layer is on | See below |
 
@@ -514,6 +514,18 @@ noted): OpenSky (`opensky-network.org`, `auth.opensky-network.org`) and
 selected aircraft hex for tracks); `api.adsbdb.com` (selected hex or
 callsign); `stream.aisstream.io` (bounding box from your settings);
 `celestrak.org`; `ll.thespacedevs.com`; `firms.modaps.eosdis.nasa.gov`;
+`services3.arcgis.com` (NIFC WFIGS fire perimeters, every 5 minutes) and
+`inciweb.wildfire.gov` (its incident catalog, at most hourly) for Fire
+Perimeters; `noaa-gfs-bdp-pds.s3.amazonaws.com` (NOAA GFS) and, only with the
+ECMWF model chosen, `data.ecmwf.int` (ECMWF Open Data) for Wind, at most once
+an hour per model and field (global forecast files, nothing about your view);
+`nowcoast.noaa.gov` (NOAA nowCOAST) for Rain radar, Satellite clouds and
+Lightning density: capabilities every 2 minutes (lightning 10) and the image
+tiles or detail window for the area in view, so NOAA sees the approximate
+bounding box you are looking at, from the server's IP address;
+`www.nhc.noaa.gov` (NHC current storms) and `mapservices.weather.noaa.gov`
+(NOAA tropical GIS) for Cyclone advisories, at most every 5 minutes (fixed
+queries, nothing about your view);
 `earthquake.usgs.gov` (fetched by the browser); `api.tomtom.com` (tile
 coordinates in view); Overpass mirrors `overpass-api.de`,
 `lz4.overpass-api.de`, `overpass.kumi.systems`, `overpass.private.coffee`
@@ -530,6 +542,8 @@ Calgary); the Radio Browser directory (`*.api.radio-browser.info`).
 | `maps.googleapis.com` (Geocoding), then `photon.komoot.io`, then `nominatim.openstreetmap.org` (server) | Browser, server | Search box or a voice search | Query text and a bias from the current view |
 | `places.googleapis.com` | Server | Place and nearby searches, with a Google key | Query, latitude/longitude, radius |
 | `routing.openstreetmap.de` | Server | Directions | Route coordinates |
+| `inciweb.wildfire.gov` | Server, then browser | Selecting a fire perimeter checks the matched InciWeb incident page; clicking its **InciWeb** link opens that page in a new tab | Server: the InciWeb incident number. Browser: your IP address, no referrer (`noopener,noreferrer`) |
+| `www.nhc.noaa.gov` | Browser | Clicking **Official advisory ↗** on a Cyclone advisories card opens the NHC advisory in a new tab; the Data attribution credit links the NHC home page | Your IP address, no referrer (`noopener,noreferrer`) |
 | `maps.googleapis.com` (Street View Static) | Server | CCTV fallback frame for a registered camera with no live image | That camera's registered location |
 | `api.openai.com` | Server, then browser | Starting voice | Server mints a short-lived secret; the browser then streams microphone audio, map context and tool results, and — with **VIEW** on — screenshots of local-scale views |
 | The station's stream host | Browser | Pressing play on Radio | Your IP address and origin; `radio-browser` hears about the play only with `VANTAGE_RADIO_REPORT_CLICKS=1` |

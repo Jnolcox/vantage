@@ -52,6 +52,7 @@ const LINKS_AND_ATTRIBUTION = [
   'cwwp2.dot.ca.gov',
   'data.austintexas.gov',
   'data.calgary.ca',
+  'data-nifc.opendata.arcgis.com',
   'data.texas.gov',
   'deflock.org',
   'developer.entur.org',
@@ -60,13 +61,24 @@ const LINKS_AND_ATTRIBUTION = [
   'developers.openai.com',
   'earthdata.nasa.gov',
   'github.com',
+  // Fire Perimeters incident links; the catalog and incident-page checks go
+  // through /api/fire-perimeters/inciweb.
+  'inciweb.wildfire.gov',
   'ion.cesium.com',
   'its.txdot.gov',
+  // Observed-weather credits: NOAA nowCOAST and its disclaimer and lightning
+  // product notes. Imagery is fetched by the server through /api/weather.
+  'nowcoast.noaa.gov',
+  'ocean.weather.gov',
+  'oceanservice.noaa.gov',
   'open-meteo.com',
   'opendatacommons.org',
   'opensky-network.org',
   'platform.openai.com',
   'policies.google.com',
+  // Wind credits: NOAA Open Data on AWS and ECMWF Open Data. Forecast files
+  // are fetched by the server through /api/wind.
+  'registry.opendata.aws',
   'ristmikud.tallinn.ee',
   'routing.openstreetmap.de',
   'tarktee.transpordiamet.ee',
@@ -79,11 +91,15 @@ const LINKS_AND_ATTRIBUTION = [
   'www.capmetro.org',
   'www.digitraffic.fi',
   'www.drivebc.ca',
+  'www.ecmwf.int',
   'www.esri.com',
   'www.gdeltproject.org',
   'www.hsl.fi',
   'www.livetraffic.com',
   'www.naturalearthdata.com',
+  // Cyclone advisories: the credit and the official advisory links, opened in
+  // a new tab without a referrer. Status and GIS go through /api/cyclones.
+  'www.nhc.noaa.gov',
   'www.ontario.ca',
   'www.openstreetmap.org',
   'www.radio-browser.info',

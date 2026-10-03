@@ -79,10 +79,11 @@ export function configureCesiumNetworkDefaults(
 export function createGoogleDirectTileset(Cesium, key) {
   key = clean(key);
   if (!key) throw new Error('Google 3D requires an explicit browser key');
-  return Cesium.createGooglePhotorealistic3DTileset({
-    key,
-    onlyUsingWithGoogleGeocoder: true,
-  });
+  // Tiles keep drawing their own texture while draped weather loads.
+  return Cesium.createGooglePhotorealistic3DTileset(
+    { key, onlyUsingWithGoogleGeocoder: true },
+    { asynchronouslyLoadImagery: true },
+  );
 }
 
 export async function createGoogleIonTileset(
@@ -103,5 +104,7 @@ export async function createGoogleIonTileset(
     cacheBytes: 1536 * 1024 * 1024,
     maximumCacheOverflowBytes: 1024 * 1024 * 1024,
     enableCollision: true,
+    // Tiles keep drawing their own texture while draped weather loads.
+    asynchronouslyLoadImagery: true,
   });
 }

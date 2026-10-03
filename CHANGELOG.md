@@ -10,6 +10,273 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
 
 ## [Unreleased]
 
+### Added
+
+- MODIS NRT (Terra + Aqua, ~1 km) detections join the three VIIRS NRT sources
+  in the Active Fires layer. They share the existing `FIRMS_MAP_KEY`, the
+  30-minute proxy cache and the trailing-24-hour clamp; MODIS confidence is
+  kept as its raw 0-100 value (ported from upstream, Bilawal Sidhu, Gustavo
+  Beneduzi, James Cooke).
+- Fire Perimeters layer in the Events group, off by default: current NIFC
+  WFIGS interagency wildfire perimeters as ground-clamped polygons with a
+  containment-colored fire line and a containment legend on the row,
+  refreshed every 5 minutes. Clicking a perimeter shows an incident card
+  (acreage, containment, cause, behavior, personnel, county, cost, complex)
+  and, when InciWeb has a page for the incident whose state and dates match,
+  a link that opens it in a new tab without a referrer. The layer is
+  reachable from voice (`set_layer_visibility`, `analyst_query`), share links
+  (token `2`) and the analyst query engine. WFIGS and InciWeb are reached
+  only through the same-origin `/api/fire-perimeters` proxy, which sends the
+  Vantage User-Agent, caps and times out every read, pages past the
+  2,000-feature limit in a stable `OBJECTID` order, caches (perimeters
+  5 minutes, InciWeb catalog 1 hour, incident pages 30 minutes, stale on
+  error) and limits each client to 60 requests a minute (ported from
+  upstream, Bilawal Sidhu, Gustavo Beneduzi, James Cooke).
+- Same-origin `/api/wind` forecast proxy for the Wind layer: NOAA GFS and
+  ECMWF IFS 10 m wind, optionally with 2 m temperature or mean sea-level
+  pressure from the same run, decoded server-side by ecCodes (WebAssembly,
+  loaded on the first wind request only) and served as a manifest plus a
+  1° Float32 grid. It byte-range fetches only the needed GRIB2 messages with
+  the Vantage User-Agent, caps every body, caches one entry per model and
+  field for an hour with the previous grid kept for rollovers, retries a
+  failed upstream at most once a minute and serves the last good grid as
+  stale (ported from upstream, Bilawal Sidhu, Gustavo Beneduzi).
+- Same-origin `/api/weather` proxy for observed weather from NOAA nowCOAST:
+  MRMS radar reflectivity, GOES regional and NESDIS global infrared, and
+  15-minute lightning density. It reads WMS capabilities (2 minutes, 10 for
+  lightning, last good copy served stale for an hour) and serves exact
+  advertised frames as geographic tiles, whole-extent images or 0.25°-rounded
+  detail windows, with the Vantage User-Agent, no redirects, checked and
+  capped PNG bodies, a 12-second deadline, 8 concurrent upstream requests and
+  one shared 16 MiB image cache. Tiles and windows follow the view, so NOAA
+  sees the approximate area in view from the server's address (ported from
+  upstream, Bilawal Sidhu).
+- Same-origin `/api/cyclones` proxy for NOAA NHC/CPHC tropical cyclone
+  advisories: the NHC current-storms status plus the forecast points, track
+  and cone from the NOAA tropical weather summary GIS, attached only when
+  their advisory number matches the status. Fixed upstream queries with the
+  Vantage User-Agent, no redirects, capped bodies and geometry, a 12-second
+  deadline, one shared refresh cached for 5 minutes, a one-minute retry
+  cooldown and the last good snapshot served as stale for up to 12 hours
+  (ported from upstream, Bilawal Sidhu).
+- A WEATHER panel in the right rail, between CCTV and Global Context, that
+  holds one card per enabled weather layer (summary, legend, settings,
+  actions and readings). It stays hidden while no weather layer is on, opens
+  on its first appearance unless a stored or shared collapse choice says
+  otherwise, and keeps its scroll position through refreshes (ported from
+  upstream, Bilawal Sidhu).
+- Wind layer in a new Weather group of the Layers panel, off by default:
+  NOAA GFS or ECMWF IFS 10 m forecast wind as flow curves animated on the GPU
+  (a bounded canvas particle fallback where GPU geometry is unavailable),
+  optionally over a speed, 2 m temperature or mean sea-level pressure field
+  draped on the globe or raised over 3D Tiles. Its card in the WEATHER panel
+  picks the model, field, units and motion, shows the forecast valid and issue
+  times, and reads the forecast at the map centre. Curves are capped at 7,200
+  (1,200 on narrow screens) and the fallback at 3,000 particles (1,000 on
+  narrow screens); nothing loads or animates until the layer is enabled, and
+  pause, reduced motion and hidden tabs stop the animation loop. Model, field,
+  units and pause are kept in share links (token `k`), and the GFS and ECMWF
+  credits, including ECMWF's licence notice, are in Data attribution (ported
+  from upstream, Bilawal Sidhu, Gustavo Beneduzi, Daniel Slay, Rehaan
+  Delmotra).
+- Rain radar, Satellite clouds and Lightning density layers in the Weather
+  group, off by default, showing NOAA nowCOAST observations: MRMS radar
+  reflectivity for the contiguous US, GOES regional (North America, about
+  5-minute updates) or NESDIS global longwave infrared with a "Clouds only"
+  brightness filter, and 15-minute lightning density for the Americas and the
+  Pacific. Their cards in the WEATHER panel share one history timeline
+  (Earlier, Later, Play, Latest over up to 13 advertised frames per product,
+  each shown at its nearest frame at or before the chosen time), report the
+  exact observation time and its age, give a legend in dBZ or
+  strikes/km²/min ×10³, and offer opacity, region and image settings and a
+  "View coverage" flight. Imagery drapes the globe or, on Google 3D Tiles,
+  draws as a raised shell per product that rises with the camera over coarse
+  distant tiles, with a sharper image in a window around the view. Nothing
+  loads until a layer is enabled; disabling releases its imagery and caches.
+  Shells hold at most 128 MiB of decoded images per product (32 MiB, with
+  2048-pixel images, on viewports narrower than 700 px) and the global mosaic
+  cache six frames (two on narrow viewports). Product, opacity and image mode
+  are kept in share links (tokens `v`, `o` and `l`); history is not. NOAA
+  credits join Data attribution (ported from upstream, Bilawal Sidhu).
+- Cyclone advisories layer in the Weather group, off by default: NOAA
+  NHC/CPHC storm positions, forecast tracks, lead-hour points and uncertainty
+  cones for the Atlantic and eastern/central North Pacific from
+  `/api/cyclones`, refreshed every 5 minutes. Geometry is drawn only when it
+  matches the current advisory; markers, tracks and cones are hidden beyond
+  the horizon, and storm cards and lead-hour labels share the world overlay.
+  Clicking a storm selects it, and its WEATHER card shows the advisory,
+  position time, wind, pressure and geometry status, a Storms list that flies
+  to each storm, and an "Official advisory" link that opens the NHC text in a
+  new tab without a referrer. A click on an AIS vessel card over cyclone
+  geometry still selects the vessel. The layer is kept in share links (token
+  `y`) and the NHC/CPHC credit joins Data attribution (ported from upstream,
+  Bilawal Sidhu).
+- Voice can show, hide and open the Wind layer (`set_layer_visibility`,
+  `show_data_layers_menu`), including "winds", "wind layer" and "wind
+  forecast".
+- Voice can show, hide and open Rain radar, Satellite clouds and Lightning
+  density (`set_layer_visibility`, `show_data_layers_menu`), including
+  "radar", "rain radar", "precipitation", "clouds", "cloud cover",
+  "lightning" and "lightning strikes"; the layer description tells the model
+  that cloud imagery is `weather-satellite`, not the `satellites` orbit layer.
+- Voice can show, hide and open Cyclone advisories (`set_layer_visibility`,
+  `show_data_layers_menu`), including "cyclones", "hurricanes", "hurricane
+  tracks" and "tropical storms"; the layer description says the advisories
+  cover only the Atlantic and the eastern/central North Pacific.
+- Satellite pass prediction for any loaded catalog satellite: a new
+  `next_satellite_pass` voice tool takes an exact NORAD ID or name (an
+  ambiguous name returns candidates instead of guessing), searches the next
+  24 hours from the camera or given coordinates and can require an estimated
+  visible pass. Rise and set are bisected to about 0.2 s, the peak is fitted
+  with a parabola, and a pass counts as visible when the satellite is outside
+  a cylindrical Earth shadow while the observer's Sun is at or below -6°.
+  `next_iss_pass` keeps its next-geometric-pass answer and now adds
+  visibility, set and peak times. Estimates ignore weather and brightness;
+  everything runs locally on the already loaded catalog (ported from
+  upstream, Rehaan Delmotra, Bilawal Sidhu).
+- Voice answers say how fresh their data is: `analyst_query` and
+  `get_current_view_state` now carry a `feedProvenance` envelope built from
+  the same feed-state the Data Layers chips show (nominal, loading,
+  degraded, partial, stale, fallback, unavailable or off), and the voice
+  instructions forbid presenting a stale, degraded or unavailable count as
+  live. Analyst follow-ups keep the provenance of the rows they re-read;
+  existing result fields are unchanged (ported from upstream, Matt Van Horn,
+  Bilawal Sidhu).
+- `analyst_query` can answer questions about loaded satellites, datacenters
+  and dams ("how many satellites are overhead", "nearest dam", "which
+  datacenters does this operator run"). Records are built on demand only
+  when a query runs; answers state that they cover a bounded slice of the
+  loaded records (2,000 per layer) and that satellite distance is ground
+  distance (ported from upstream, Matt Van Horn, Bilawal Sidhu).
+
+### Changed
+
+- A selected AIS vessel's detail card sits a little further from the
+  contact and may move beside it, not only above or below, to clear solid
+  panels; ambient vessel cards keep their vertical-only placement (ported
+  from upstream, Bilawal Sidhu).
+- The HUD says when its data is not live. The telemetry line appends the
+  worst non-nominal feed state and up to two layer names (for example
+  `| STALE LIVE FLIGHTS`). With HUD Context set to **Live**, the AI summary
+  request also carries each enabled layer's feed state and source name, the
+  five words must include a non-nominal state, and a summary that omits it
+  is replaced by the local line; layer refreshes now refresh the summary.
+  Counts and ages are not sent, so a routine refresh does not trigger a new
+  OpenAI request. In **Local** mode nothing new leaves the browser (ported
+  from upstream, Matt Van Horn, Bilawal Sidhu).
+- Google Photorealistic 3D Tiles (direct and through ion) keep drawing their
+  own texture while draped imagery loads, and the map controller reports the
+  shown tileset so a layer can drape onto it when the globe is hidden; this is
+  the groundwork for weather imagery on 3D Tiles (ported from upstream,
+  Bilawal Sidhu).
+- Layer rows that push their own refresh (a settling catalog, a status
+  change) now repaint at most once per animation frame instead of once per
+  notification, and a pending repaint is cancelled when the panel is torn
+  down (ported from upstream, Bilawal Sidhu).
+- Layer-row color legends are rebuilt only when an entry changes, and rows
+  can carry a plain-text info line and a readout-only mode (toggle and
+  metadata, controls shown elsewhere) for the right-rail panels to come
+  (ported from upstream, Bilawal Sidhu).
+- Share-link layer tokens are durable allocations instead of ad hoc picks.
+  Existing one-character mappings, including the ones upstream published for
+  layers not yet ported, are pinned permanently in
+  `src/data/layerStateTokenReservations.json`; new layers take the next free
+  single-character digit, then two-character base-36 tokens.
+  `npm run layer-token:next -- <layer-id>` reports the next token and
+  `npm run layer-token:check -- --base-ref origin/main` guards published
+  assignments and allocation order in pull-request CI. Existing v2 links keep
+  their exact meaning (ported from upstream, manjunath22466).
+- Clean view and recording mode hide the right rail and every panel it
+  hosts, rather than a fixed list of panel ids, so panels added to the rail
+  later are covered too (ported from upstream, Bilawal Sidhu).
+
+### Fixed
+
+- The right panel rail (Display, CCTV, Context) settles within two layout
+  passes instead of flipping in and out of focus mode as panel heights
+  change. Each pass measures natural heights under a synchronous
+  `data-rail-measuring` override rather than stripping and rewriting
+  allocations, focus mode uses a wider hysteresis band, an automatic
+  collapse schedules at most one follow-up pass, hidden panels are ignored,
+  and only the tactical HUD auto-collapses panels (ported from upstream,
+  Bilawal Sidhu).
+- Scrolling the CCTV or Context panel no longer snaps back to the top when
+  the right rail re-lays itself out (for example when a layer row refreshes
+  every second): every panel body the measuring pass lifts now has its
+  scroll offset restored (ported from upstream, Bilawal Sidhu).
+- The NASA FIRMS proxy now sends the Vantage `firms-proxy` User-Agent with
+  its CSV source and MAP_KEY status requests, as the other server-side
+  proxies do; they previously went out with the runtime's default agent.
+- CCTV media streams whose upstream falls silent after answering are released.
+  The 15-second media deadline covered only the wait for response headers, so a
+  camera that replied and then stopped sending held both the proxy connection
+  and its upstream socket open; a chunked or length-less body had no bound. A
+  30-second idle deadline now bounds the gap between upstream chunks. It is
+  rescheduled while the response is still waiting to drain, so a viewer on a
+  slow link is not mistaken for a dead camera; live feeds are unaffected
+  (ported from upstream, Ethan Stoner).
+- Aircraft track backfill (`/api/opensky-track`, `/api/adsblol/trace`) answers
+  502 when the upstream body exceeds the 5 MB cap, instead of a 200 whose error
+  body the client read as an empty track. The failure is cached like other
+  upstream errors, so retries inside the 60-second window do not spend OpenSky
+  credits (ported from upstream, Raushankumar0720).
+- Saving a key from Provider Settings works on Macs where Nix or Homebrew
+  coreutils sit ahead of `/bin` on `PATH`. The credential hardener now spawns
+  Apple's `/bin/chmod -N` by absolute path; GNU `chmod` has no `-N`, so every
+  save was refused with "could not restrict the credential file" (ported from
+  upstream, Arthur Bogaart).
+- The client terrain-height cache is bounded at 20 000 entries with
+  least-recently-used eviction, so a long session no longer retains every
+  coordinate it ever resolved. Consumer reads promote their entry and a batch
+  still reports every point it resolved (ported from upstream, Pedro Lobato).
+- CCTV cameras whose bearing is a guess now say so. Packs mark bearings derived
+  from a hash of the camera id as `headingConfidence: 'low'`, but nothing read
+  the flag, so roughly 70% of a default catalog rendered like surveyed facings.
+  The HUD now reads `HDG n° (ESTIMATED)` and the coverage wireframe draws
+  dashed; manual calibrations and curated poses are never marked estimated
+  (ported from upstream, bassem chagra).
+- Street Traffic says which upstream declined a road load. The layer row now
+  reads `Overpass rate-limited`, `Overpass timed out`, or
+  `Overpass refused the road query (HTTP 406)` instead of a general
+  "Road data temporarily unavailable", so a reader is not sent to check a
+  TomTom key when the public OpenStreetMap mirrors are the side that failed.
+  The proxy's own 502 (every mirror unreachable) and 503 (local limiter busy)
+  read `Overpass mirrors unreachable` and `Overpass temporarily unavailable`.
+  Failures the layer cannot classify keep the general line (ported from
+  upstream, daikaginza).
+- Vantage renders on iPad and iPhone instead of stopping with "An error
+  occurred while rendering." Cesium's per-vertex model atmosphere binds shader
+  `out` parameters directly to varyings, which Apple's Metal/ANGLE backend
+  cannot link, so the program failed and the render loop was torn down. The
+  stage is now kept out of the pipeline on affected devices by clearing
+  `scene.fog.renderable`, which leaves `fog.enabled` (and the fog density that
+  drives 3D Tiles refinement) untouched. Detection is a WebGL2 link probe of
+  the same pattern, whose throwaway context is released immediately, with
+  iOS/iPadOS detection as a backstop. Affected devices lose distance fog on 3D
+  tiles and globe basemaps (ported from upstream, Sean Armstrong).
+- Expanding a panel at narrow widths (720px and below) no longer adds
+  spurious scrollbars to the panel stacks. Each panel's decorative glow,
+  absolutely positioned with a negative inset, became 18–20px of scrollable
+  overflow on both axes inside the scrolling stacks; the narrow-screen rules
+  now pin the glow to its panel box, so the stacks still scroll for genuinely
+  tall content and the Context radio popover is not clipped (ported from
+  upstream, Bilawal Sidhu).
+- Transit and Directions rows repaint as soon as their data lands again:
+  `refreshLayerStats()` now lives on the layer lifecycle, not only on the
+  compatibility facade. `scripts/qa-radio.mjs` uses it instead of a private
+  panel method (ported from upstream, Bilawal Sidhu).
+- Malformed enabled-layer lists in a share link (empty, repeated or duplicate
+  members, or a repeated `l` field) now reject the whole layer payload instead
+  of restoring a partial list (ported from upstream, manjunath22466).
+- Region scopes in voice analyst queries ("in the Gulf of Mexico", "over the
+  Alps") work in the dev server again: the bundled Natural Earth and
+  neighborhood packs are fetched as same-origin JSON in the browser
+  (`src/data/bundledJson.js`) instead of a JSON-attributed `import()` the
+  browser rejected. When a region is not in the bundled packs, the geocode and
+  admin-boundary fallback answers `region-timeout` after 3 s instead of holding
+  the reply; the lookup keeps running and fills the cache (ported from
+  upstream, Bilawal Sidhu).
+
 ## [1.0.0] - 2026-10-02
 
 First release of Vantage, a fork of

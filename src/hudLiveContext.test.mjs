@@ -110,3 +110,48 @@ test('live mode keeps the AI summary', async () => {
   assert.equal(calls.summarize, 1);
   assert.equal(calls.text.at(-1), 'AI LINE');
 });
+
+test('live mode keeps the local line when the AI summary omits a stale feed-state', async () => {
+  const { hud, calls } = summaryHarness(
+    createHudLiveContextSetting(memoryStorage()),
+  );
+  hud._summaryContext = async () => {
+    calls.context += 1;
+    return { placeLabels: ['Somewhere'], feedProvenance: { overall: 'stale' } };
+  };
+  globalThis.window ??= globalThis;
+  await IntelHUD.prototype._updateSummary.call(hud, false, true);
+  assert.equal(calls.summarize, 1);
+  assert.equal(calls.text.at(-1), 'LOCAL LINE');
+});
+
+function managerHarness() {
+  let listener = null;
+  const hud = { _summaryDirty: false, _summaryRevision: 0 };
+  hud._markSummaryDirty = IntelHUD.prototype._markSummaryDirty.bind(hud);
+  const manager = {
+    subscribe(fn) {
+      listener = fn;
+      return () => {};
+    },
+  };
+  IntelHUD.prototype.attachDataManager.call(hud, manager);
+  hud._summaryDirty = false;
+  return { hud, emit: (change) => listener(change) };
+}
+
+test('a layer refresh marks the summary dirty without discarding an in-flight request', () => {
+  const { hud, emit } = managerHarness();
+  const revision = hud._summaryRevision;
+  emit({ type: 'refresh-transition', layerId: 'flights' });
+  assert.equal(hud._summaryDirty, true);
+  assert.equal(hud._summaryRevision, revision);
+});
+
+test('a visibility change still invalidates an in-flight summary', () => {
+  const { hud, emit } = managerHarness();
+  const revision = hud._summaryRevision;
+  emit({ type: 'visibility', layerId: 'flights' });
+  assert.equal(hud._summaryDirty, true);
+  assert.equal(hud._summaryRevision, revision + 1);
+});

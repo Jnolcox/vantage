@@ -210,6 +210,19 @@ While recording, call out anything in these areas — this is the feedback I mos
   happened? Any command it misunderstood?
 - **Anything that looks wrong, janky, or surprising** — screenshot it; that's the gold.
 
+---
+
+## 6. Live video CCTV (HTTPS HLS) — soak, no mic
+
+> Requires the DelDOT pack (loads by default; `VANTAGE_CCTV_DELDOT_ENABLED=0` disables it).
+
+1. Reload with DevTools → Network open and CCTV off. ✅ No `hls` chunk and no `/api/cctv/media` request.
+2. Turn on **CCTV**, fly to Dover, DE, and activate **DE 1 @ Main Toll Plaza**. ✅ Within ~30 s the monitor plane and the panel preview both show moving video; the `hls` chunk loads only now.
+3. Leave it for **five minutes**. ✅ Continuous playback; at most a short hitch about once a minute (the agency restarts its stream on a timer). ❌ A freeze that does not recover, or the panel picture stopping while the plane keeps moving.
+4. Toggle **PROJECTION** off. ✅ The panel keeps playing; the plane and the active camera's cone hide.
+5. Switch to **DE 8 @ Saulsbury Rd**, then back. ✅ Each switch resumes within ~10 s with no stale frame from the previous camera.
+6. Optional: DevTools → Network, filter `media/`. ✅ Playlist responses carry `X-CCTV-Source: hls-pull`; segments return `video/mp2t`; turning CCTV off sends a `DELETE` for the lease.
+
 ## If something looks off
 
 - **Grey globe / slow tiles:** wait a few seconds after a camera flight; photoreal streams in.

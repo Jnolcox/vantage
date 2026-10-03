@@ -2555,7 +2555,7 @@ its criteria cannot be silently ignored.
 | Satellites | CelesTrak | `src/data/satellites.js` | `/api/celestrak` | 120s |
 | Space Missions (30d) | Launch Library 2 + CelesTrak | `src/data/rocketLaunches.js` | `/api/launches` + `/api/celestrak/active` | 5 min |
 | Traffic | OSM Overpass (+ optional TomTom live flow) | `src/data/traffic.js` | `/api/overpass` + `/api/tomtom` | viewport-driven |
-| CCTV | Austin + Caltrans (CA) + TfL London + Ontario 511 + Fintraffic (FI) + DriveBC (BC) + TxDOT (TX) + Estonia (Tallinn, Tarktee) + Live Traffic NSW + Open Calgary Open Data + Street View fallback | `src/data/cctv.js` | `/api/cctv` | 10s (active) |
+| CCTV | Austin + Caltrans (CA) + TfL London + Ontario 511 + Fintraffic (FI) + DriveBC (BC) + TxDOT (TX) + Estonia (Tallinn, Tarktee) + Live Traffic NSW + Open Calgary Open Data + DelDOT (DE, live HLS) + Street View fallback | `src/data/cctv.js` | `/api/cctv` | 10s (active) |
 | Radio | Radio Browser (public-domain station directory) | `src/data/radio.js` | `/api/radio/stations`, `/api/radio/click/:uuid` | 45 min directory refresh |
 | Transit 🚌 | Operator GTFS-Realtime VehiclePositions (7 keyless regions, `src/data/transitFeeds.js`) | `src/layers/transit/` via `src/app/layers/transit.js` | `/api/transit` | 15s (poll + delayed playback) |
 | Bikeshare 🚲 | GBFS (Lyft + BCycle) | `src/data/bikeshare.js` | `/api/gbfs` | 60s |
@@ -4141,3 +4141,21 @@ releases imagery layers/listeners on replacement. Destroy invalidates pending
 work and releases owned resources, including late factory results. Supplied 3D
 tilesets remain owned by the caller; tilesets created through the controller's
 factory are added to its viewer and removed on destruction.
+
+## Live CCTV video (HLS)
+
+Live HLS cameras share one decoder between the panel and the projection
+plane. DelDOT (Delaware) is the shipped live pack: its catalog registers only
+official `https://video.deldot.gov/live/…/playlist.m3u8` links, and
+`VANTAGE_CCTV_DELDOT_ENABLED=0` disables it. The server pulls registered
+HTTP(S) HLS only (no RTMP/ffmpeg remux, which would not inherit the Node
+redirect policy). Sessions reserve synchronously, cap memory and response
+bytes, reject redirects, and abort on release or shutdown; there is no disk store and no background sweep while
+inactive. The panel paints the same video at most 640 px / 15 fps and its
+paint loop stops while the panel is collapsed or the page is hidden. Camera
+deactivation destroys the decoder, and fatal playback errors revert to the
+labelled frame fallback. Camera changes clear the old panel frame. hls.js is
+imported only when an HLS camera starts. Two live sessions may coexist with
+at most eight independent consumer leases each; a lease with no access for
+15 seconds expires, and closing one consumer leaves the others running.
+Encrypted, fMP4 and byte-range playlists fail closed.

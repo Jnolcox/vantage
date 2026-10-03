@@ -149,6 +149,32 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   loaded records (2,000 per layer) and that satellite distance is ground
   distance (ported from upstream, Matt Van Horn, Bilawal Sidhu).
 
+- Registered CCTV sources with `"feedType": "hls"` and an HTTP(S) `.m3u8`
+  URL are served live through `/api/cctv/media/<id>`: a bounded in-memory
+  puller rewrites the agency playlist to same-origin `seg_N.ts` segments.
+  At most two sessions run at once, each keeping 12 segments / 24 MiB; every
+  download is capped (256 KiB playlists, 4 MiB segments, 10 s deadline),
+  redirects and off-origin, encrypted or non-MPEG-TS playlists are refused,
+  and nothing is written to disk. Each viewer holds its own lease, released
+  by `DELETE` or after 15 s without access; the last release stops upstream
+  work. Requests carry the Vantage CCTV User-Agent (ported from upstream,
+  Daniel Slay, Bilawal Sidhu).
+- Live HLS CCTV cameras play as moving video on the monitor plane and in
+  the CCTV panel from one shared decoder. hls.js (1.7.3) is downloaded only
+  when a live camera becomes active, never at page load; the panel repaints
+  the shared video at most 640 px wide and 15 fps and stops while collapsed
+  or hidden. Switching camera or turning CCTV off destroys the decoder and
+  releases the server lease; a feed that fails falls back to the labelled
+  still frame (ported from upstream, Daniel Slay, Bilawal Sidhu).
+- CCTV Mesh adds Delaware: DelDOT live video cameras, keyless, 300 by
+  default (nearest Wilmington, Dover and Georgetown). The
+  `tmc.deldot.gov` catalog is read with the other CCTV catalogs and only
+  official `https://video.deldot.gov/live/…/playlist.m3u8` links are
+  registered; video is pulled through the same-origin HLS route only while
+  a DelDOT camera is open. `VANTAGE_CCTV_DELDOT_ENABLED=0` disables the
+  pack and `VANTAGE_CCTV_DELDOT_MAX_SOURCES` changes the cap (ported from
+  upstream, Daniel Slay, Bilawal Sidhu).
+
 ### Changed
 
 - A selected AIS vessel's detail card sits a little further from the

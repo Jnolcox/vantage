@@ -153,8 +153,11 @@ const BASE_DIRECTIVES = Object.freeze({
   'font-src': [SELF, 'data:'],
   // 'self' also covers the dev server's same-origin HMR websocket.
   'connect-src': [SELF, 'data:', 'blob:'],
-  // Radio streams come from whichever HTTPS host a station publishes.
+  // Radio streams come from whichever HTTPS host a station publishes. Live
+  // CCTV video plays from same-origin /api/cctv/media through hls.js, which
+  // attaches a MediaSource blob: URL to the <video> element.
   'media-src': [SELF, 'blob:', 'https:'],
+  // Cesium and the hls.js transmuxer start their workers from blob: URLs.
   'worker-src': [SELF, 'blob:'],
   'frame-src': [],
   'object-src': ["'none'"],

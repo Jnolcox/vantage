@@ -54,6 +54,7 @@ const LINKS_AND_ATTRIBUTION = [
   'data.calgary.ca',
   'data-nifc.opendata.arcgis.com',
   'data.texas.gov',
+  'deldot.gov',
   'deflock.org',
   'developer.entur.org',
   'developer.tomtom.com',

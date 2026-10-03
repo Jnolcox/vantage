@@ -257,7 +257,7 @@ Fifteen layers and map sources. **Thirteen have a keyless path.** Some offer add
 | 🛰️ **Satellites**           | 838-object catalog, color-coded by class with a live legend — the **DENSE** chip drops in the whole Starlink shell                                                                                                                                                                                                                                                                  | CelesTrak                               | 🟢                                                                                                  |
 | 🌍 **Earthquakes**          | Global seismic activity, last 24h                                                                                                                                                                                                                                                                                                                                                   | USGS                                    | 🟢                                                                                                  |
 | 🚗 **Traffic**              | Simulated vehicles on OSM roads. With TomTom, live flow speeds drive the simulation and congestion colors below ~8 km; individual vehicle positions are not live observations                                                                                                                                                                                                       | TomTom + OSM                            | 🟢 simulation · 🟡 live flow speeds                                                                 |
-| 📹 **CCTV Mesh**            | ~3,600 public cameras projected _into_ the 3D space — Austin · Texas (TxDOT) · California (Caltrans) · London (TfL) · Ontario (511) · Finland (Fintraffic) · British Columbia (DriveBC) · Estonia (Tallinn, Tarktee) · New South Wales (Live Traffic NSW) · Calgary. Positions are published; poses are estimated priors **you calibrate by dragging a gizmo on the camera itself** | City APIs                               | 🟢                                                                                                  |
+| 📹 **CCTV Mesh**            | ~3,600 public cameras projected _into_ the 3D space — Austin · Texas (TxDOT) · California (Caltrans) · London (TfL) · Ontario (511) · Finland (Fintraffic) · British Columbia (DriveBC) · Estonia (Tallinn, Tarktee) · Delaware (DelDOT live video) · New South Wales (Live Traffic NSW) · Calgary. Positions are published; poses are estimated priors **you calibrate by dragging a gizmo on the camera itself** | City APIs                               | 🟢                                                                                                  |
 | 📻 **Radio**                | Geolocated world radio with an **analog tuner** — drag the needle across up to 750 stations and the globe flies to each broadcaster                                                                                                                                                                                                                                                 | Radio Browser / broadcasters            | 🟢                                                                                                  |
 | 🚌 **Transit**              | Live buses, trams, metros, trains and ferries with delayed playback between reports, selected-vehicle trails, and mode-coloured DETECT labels — Boston, Austin, Minneapolis, Helsinki, the Netherlands, Norway, South East Queensland                                                                                                                                               | Operator GTFS-Realtime feeds            | 🟢                                                                                                  |
 | 🚲 **Bikeshare**            | Live station availability                                                                                                                                                                                                                                                                                                                                                           | GBFS                                    | 🟢                                                                                                  |
@@ -416,6 +416,25 @@ OpenSky can run fully anonymous (`OPENSKY_AUTH_MODE=anon`), or import OAuth cred
 
 </details>
 
+<details>
+<summary>Live video cameras (HLS)</summary>
+
+CCTV sources with `"feedType": "hls"` and a registered HTTP(S) `.m3u8`
+URL play through a lazily loaded hls.js decoder shared by the monitor plane
+and panel. DelDOT uses its official HTTPS HLS catalog links; disable that
+pack with `VANTAGE_CCTV_DELDOT_ENABLED=0`. The server allows two concurrent
+sessions. Each retains at most 12
+segments and 24 MiB in memory; individual downloads are capped at 4 MiB with a
+ten second deadline. There are no segment files or ffmpeg processes.
+Redirects, off-origin references, encrypted playlists and non-MPEG-TS segments
+are refused. Each decoder has its own client lease (at most eight per
+session), including native HLS. Closing it releases only that lease; abandoned
+leases expire after 15 seconds without access. The last release stops upstream
+work. Failed live video uses the existing still/Street View/synthetic
+fallback, which is not live video. RTMP-only sources are not supported.
+
+</details>
+
 ### 💸 What it actually costs
 
 Honest numbers, roughly, as of mid-2026 — always check the provider pricing pages:
@@ -533,7 +552,7 @@ coordinates in view); Overpass mirrors `overpass-api.de`,
 (`src/data/transitFeeds.js`, the GBFS catalog); the CCTV catalogs and
 snapshot hosts registered in `server/providers/cctv/` (TfL, Caltrans, Austin,
 Ontario 511, Fintraffic, DriveBC, TxDOT, Tallinn, Tarktee, Warendorf, NSW,
-Calgary); the Radio Browser directory (`*.api.radio-browser.info`).
+Calgary, and the DelDOT camera list `tmc.deldot.gov`); the Radio Browser directory (`*.api.radio-browser.info`).
 
 **Only when you act**
 
@@ -544,6 +563,7 @@ Calgary); the Radio Browser directory (`*.api.radio-browser.info`).
 | `routing.openstreetmap.de` | Server | Directions | Route coordinates |
 | `inciweb.wildfire.gov` | Server, then browser | Selecting a fire perimeter checks the matched InciWeb incident page; clicking its **InciWeb** link opens that page in a new tab | Server: the InciWeb incident number. Browser: your IP address, no referrer (`noopener,noreferrer`) |
 | `www.nhc.noaa.gov` | Browser | Clicking **Official advisory ↗** on a Cyclone advisories card opens the NHC advisory in a new tab; the Data attribution credit links the NHC home page | Your IP address, no referrer (`noopener,noreferrer`) |
+| `video.deldot.gov` | Server | Opening a DelDOT live camera; segments are pulled while a viewer holds the stream and stop within 15 s of the last one closing | That camera's registered playlist and segment paths; nothing about your view |
 | `maps.googleapis.com` (Street View Static) | Server | CCTV fallback frame for a registered camera with no live image | That camera's registered location |
 | `api.openai.com` | Server, then browser | Starting voice | Server mints a short-lived secret; the browser then streams microphone audio, map context and tool results, and — with **VIEW** on — screenshots of local-scale views |
 | The station's stream host | Browser | Pressing play on Radio | Your IP address and origin; `radio-browser` hears about the play only with `VANTAGE_RADIO_REPORT_CLICKS=1` |

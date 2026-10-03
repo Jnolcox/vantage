@@ -197,6 +197,40 @@ test('a surface applies a new detail window only once its image has drawn; the s
   assert.equal(scene.postRender.size, 0);
 });
 
+test('hidden frames do not count towards a pending detail window', () => {
+  const cesium = createShellCesium();
+  const scene = createShellScene();
+  const surface = createShellSurface({
+    viewer: { scene },
+    cesium,
+    rectangle: Cesium.Rectangle.fromDegrees(-130, 20, -60, 55),
+    height: 6_200,
+  });
+  const [primitive] = scene.primitives.items;
+  const render = (count) => renderShells(cesium, scene, count);
+  const image = () => ({ width: 4096, height: 2048 });
+  surface.setImage(image());
+  const a = { west: 0.25, south: 0.5, east: 0.5, north: 0.75 };
+  surface.setDetail(image(), a);
+  render();
+  assert.deepEqual(windowOf(primitive), { x: 0.25, y: 0.5, z: 0.5, w: 0.75 });
+  // A different window with a same-sized image: the dimensions alone cannot
+  // tell the textures apart, so only shown frames may count.
+  const b = { west: 0.5, south: 0.25, east: 0.75, north: 0.5 };
+  surface.setDetail(image(), b);
+  assert.deepEqual(windowOf(primitive), NONE);
+  for (let i = 0; i < 3; i++) {
+    surface.setShow(false);
+    scene.postRender.emit();
+    surface.setShow(true);
+  }
+  assert.deepEqual(windowOf(primitive), NONE, 'hidden frames counted nothing');
+  render(2);
+  assert.deepEqual(windowOf(primitive), NONE);
+  render(1);
+  assert.deepEqual(windowOf(primitive), { x: 0.5, y: 0.25, z: 0.75, w: 0.5 });
+});
+
 test('shells rise with the camera over coarse 3D tiles, in steps, up to 60 km', () => {
   assert.equal(shellLift(undefined), 0);
   assert.equal(shellLift(1_200), 0, 'city views keep the shell heights');

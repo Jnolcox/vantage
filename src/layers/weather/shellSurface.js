@@ -66,7 +66,8 @@ function registerMaterial(cesium) {
   });
 }
 
-const sameEdges = (a, b) =>
+/** Whether two west/south/east/north rectangles have identical edges. */
+export const sameEdges = (a, b) =>
   a.west === b.west &&
   a.south === b.south &&
   a.east === b.east &&

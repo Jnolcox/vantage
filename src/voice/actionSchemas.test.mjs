@@ -9,6 +9,7 @@ const OBSERVED_WEATHER_LAYERS = Object.freeze([
   'weather-satellite',
   'weather-lightning',
 ]);
+const CYCLONES_LAYER = 'weather-cyclones';
 
 const stable = (value) =>
   Array.isArray(value)
@@ -25,11 +26,11 @@ test('the complete Realtime tool payload retains its pre-extraction contract and
   const digest = createHash('sha256')
     .update(JSON.stringify(stable(VANTAGE_REALTIME_TOOLS)))
     .digest('hex');
-  // Re-derived for the additive `fire-perimeters`, `wind` and observed-weather
-  // layer enum values.
+  // Re-derived for the additive `fire-perimeters`, `wind`, observed-weather
+  // and `weather-cyclones` layer enum values.
   assert.equal(
     digest,
-    'c036d3d3bb9a5c86c640a23c966fe4c4b3ca3f073f06f0c43ab7f87c302c7812',
+    'b42e3ecce664784857b6e970f7fc016032e0b8a6bdc4b8378c2992a78f4d27a9',
   );
 });
 
@@ -39,13 +40,14 @@ test('removing the fire-perimeters enum values restores every prior action argum
     for (const property of Object.values(tool.parameters.properties)) {
       const values = property.enum ?? property.items?.enum;
       if (!values) continue;
-      // Wind and observed weather landed after Fire Perimeters; all are
-      // additive enum values.
+      // Wind, observed weather and cyclones landed after Fire Perimeters; all
+      // are additive enum values.
       const kept = values.filter(
         (key) =>
           key !== 'fire-perimeters' &&
           key !== 'wind' &&
-          !OBSERVED_WEATHER_LAYERS.includes(key),
+          !OBSERVED_WEATHER_LAYERS.includes(key) &&
+          key !== CYCLONES_LAYER,
       );
       if (property.enum) property.enum = kept;
       else property.items.enum = kept;
@@ -63,9 +65,13 @@ test('removing the wind enum values restores every prior action argument byte fo
     for (const property of Object.values(tool.parameters.properties)) {
       const values = property.enum ?? property.items?.enum;
       if (!values) continue;
-      // Observed weather landed after Wind; both are additive enum values.
+      // Observed weather and cyclones landed after Wind; all are additive
+      // enum values.
       const kept = values.filter(
-        (key) => key !== 'wind' && !OBSERVED_WEATHER_LAYERS.includes(key),
+        (key) =>
+          key !== 'wind' &&
+          !OBSERVED_WEATHER_LAYERS.includes(key) &&
+          key !== CYCLONES_LAYER,
       );
       if (property.enum) property.enum = kept;
       else property.items.enum = kept;
@@ -83,8 +89,10 @@ test('removing the observed-weather enum values restores every prior action argu
     for (const property of Object.values(tool.parameters.properties)) {
       const values = property.enum ?? property.items?.enum;
       if (!values) continue;
+      // Cyclones landed after observed weather; both are additive enum values.
       const kept = values.filter(
-        (key) => !OBSERVED_WEATHER_LAYERS.includes(key),
+        (key) =>
+          !OBSERVED_WEATHER_LAYERS.includes(key) && key !== CYCLONES_LAYER,
       );
       if (property.enum) property.enum = kept;
       else property.items.enum = kept;
@@ -93,6 +101,23 @@ test('removing the observed-weather enum values restores every prior action argu
   assert.equal(
     createHash('sha256').update(JSON.stringify(legacy)).digest('hex'),
     '926f6ea461b4f00bdc74d0baa1c6a4b825fc446a25e40180f43f71b5593d11b6',
+  );
+});
+
+test('removing the weather-cyclones enum value restores every prior action argument byte for byte', () => {
+  const legacy = structuredClone(VANTAGE_ACTION_SCHEMAS);
+  for (const tool of legacy) {
+    for (const property of Object.values(tool.parameters.properties)) {
+      const values = property.enum ?? property.items?.enum;
+      if (!values) continue;
+      const kept = values.filter((key) => key !== CYCLONES_LAYER);
+      if (property.enum) property.enum = kept;
+      else property.items.enum = kept;
+    }
+  }
+  assert.equal(
+    createHash('sha256').update(JSON.stringify(legacy)).digest('hex'),
+    'e9c51a05c7db14714674bd4aad0987060b057d1e2eb326e7ec505ce151370e5c',
   );
 });
 

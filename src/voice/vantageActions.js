@@ -239,6 +239,12 @@ const LAYER_ALIASES = new Map([
   ['lightning', 'weather-lightning'],
   ['lightning density', 'weather-lightning'],
   ['lightning strikes', 'weather-lightning'],
+  ['cyclones', 'weather-cyclones'],
+  ['cyclone advisories', 'weather-cyclones'],
+  ['tropical cyclones', 'weather-cyclones'],
+  ['hurricanes', 'weather-cyclones'],
+  ['hurricane tracks', 'weather-cyclones'],
+  ['tropical storms', 'weather-cyclones'],
 ]);
 
 const CITY_ALIASES = new Map([

@@ -119,6 +119,10 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   "radar", "rain radar", "precipitation", "clouds", "cloud cover",
   "lightning" and "lightning strikes"; the layer description tells the model
   that cloud imagery is `weather-satellite`, not the `satellites` orbit layer.
+- Voice can show, hide and open Cyclone advisories (`set_layer_visibility`,
+  `show_data_layers_menu`), including "cyclones", "hurricanes", "hurricane
+  tracks" and "tropical storms"; the layer description says the advisories
+  cover only the Atlantic and the eastern/central North Pacific.
 
 ### Changed
 

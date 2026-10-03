@@ -143,6 +143,7 @@ const schemas = [
             'weather-radar',
             'weather-satellite',
             'weather-lightning',
+            'weather-cyclones',
           ],
         },
         enabled: {
@@ -180,6 +181,7 @@ const schemas = [
             'weather-radar',
             'weather-satellite',
             'weather-lightning',
+            'weather-cyclones',
           ],
         },
       },

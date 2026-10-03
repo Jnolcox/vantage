@@ -3258,3 +3258,46 @@ test('voice resolves radar, cloud and lightning phrasings to the observed-weathe
   }
   assert.equal(requested.length, 11);
 });
+
+test('voice resolves hurricane and cyclone phrasings to Cyclone advisories', async () => {
+  globalThis.window = globalThis.window || { clearTimeout, setTimeout, requestIdleCallback: null };
+  const viewer = {
+    clock: { onTick: { addEventListener: () => () => {} } },
+    scene: { canvas: { addEventListener() {}, removeEventListener() {} } },
+    camera: { moveEnd: { addEventListener() {} } },
+  };
+  const requested = [];
+  const enabled = new Set();
+  const dataManager = {
+    layers: new Map([['weather-cyclones', { module: {} }]]),
+    isEnabled: (id) => enabled.has(id),
+    getLayerLifecycleState: (id) => ({
+      enabled: enabled.has(id),
+      lifecycleState: enabled.has(id) ? 'enabled' : 'disabled',
+      uncertain: false,
+    }),
+    getAll: () => [{ id: 'weather-cyclones', name: 'Cyclone advisories' }],
+    async setEnabled(id, value) {
+      requested.push(id);
+      if (value) enabled.add(id);
+      else enabled.delete(id);
+      return true;
+    },
+  };
+  const runner = createVantageActionRunner({ viewer, styleManager: {}, dataManager });
+  const phrases = [
+    'cyclones',
+    'Cyclone advisories',
+    'tropical cyclones',
+    'hurricanes',
+    'hurricane tracks',
+    'tropical storms',
+    'weather-cyclones',
+  ];
+  for (const phrase of phrases) {
+    const result = await runner('set_layer_visibility', { layerId: phrase, enabled: true });
+    assert.equal(result.ok, true, phrase);
+    assert.equal(result.layerId, 'weather-cyclones', phrase);
+  }
+  assert.deepEqual(requested, phrases.map(() => 'weather-cyclones'));
+});

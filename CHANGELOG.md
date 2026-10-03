@@ -174,6 +174,22 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   a DelDOT camera is open. `VANTAGE_CCTV_DELDOT_ENABLED=0` disables the
   pack and `VANTAGE_CCTV_DELDOT_MAX_SOURCES` changes the cap (ported from
   upstream, Daniel Slay, Bilawal Sidhu).
+- Recent Imagery layer in the Cameras group, off by default: select a box
+  (drag, the current view, or around a pin; up to 1,000 km a side) and a
+  RECENT IMAGERY panel in the right rail lists the last 30 days of NASA HLS
+  Sentinel-2 / Landsat 8/9 (30 m) imagery over it, plus the VIIRS daily
+  overview (250 m) when switched on, with thumbnails and scene cloud. IMAGE
+  shows one day, VS BASEMAP swipes it against the map and A / B swipes two
+  days; SWAP trades the sides, either image exports as a PNG, and box, pins,
+  mode and split travel in share links (token `1`). While imagery is shown on
+  Google 3D the map switches to Esri and comes back when it is cleared.
+  Nothing is requested when the layer is enabled: NASA CMR, Worldview
+  Snapshots and GIBS (one `gibs.earthdata.nasa.gov` origin) are contacted
+  browser-direct only after the operator chooses a box, and a box kept from
+  an earlier session or a share link waits for **SEARCH**. NASA receives the
+  box and the browser's IP address; the three origins are in the CSP and the
+  network inventory, and the NASA acknowledgement is in Data attribution
+  (ported from upstream, Bilawal Sidhu, manjunath22466).
 
 ### Changed
 

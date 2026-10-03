@@ -81,6 +81,24 @@ export const CSP_ORIGINS = Object.freeze([
     directives: ['connect-src'],
     why: 'USGS earthquake feed (no user data)',
   },
+  // Recent Imagery: NASA, browser-direct and keyless, only after the operator
+  // selects a box or presses SEARCH. NASA receives the box and the browser's
+  // IP; a same-origin proxy would still have to forward the box.
+  {
+    origin: 'https://cmr.earthdata.nasa.gov',
+    directives: ['connect-src'],
+    why: 'NASA CMR granule search for the selected box (Recent Imagery)',
+  },
+  {
+    origin: 'https://gibs.earthdata.nasa.gov',
+    directives: ['connect-src', 'img-src'],
+    why: 'NASA GIBS imagery tiles bounded to the selected box (Recent Imagery)',
+  },
+  {
+    origin: 'https://wvs.earthdata.nasa.gov',
+    directives: ['connect-src'],
+    why: 'NASA Worldview snapshots: day thumbnails and PNG exports of the box',
+  },
   // Voice.
   {
     origin: 'https://api.openai.com',

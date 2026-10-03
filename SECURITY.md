@@ -126,6 +126,12 @@ controls that keep it that way:
 - **Cesium fails closed.** `Ion.defaultAccessToken` is the configured token
   or empty, so no implicit call reaches Cesium ion with the SDK's demo token,
   and the Google 3D Tiles credit logo is served locally.
+- **Recent Imagery asks NASA only on a box you choose.** Enabling the layer,
+  or restoring a box from stored state or a share link, sends nothing; NASA
+  CMR, Worldview Snapshots and GIBS are contacted browser-direct (keyless)
+  only after SELECT BOX, USE VIEW, a pin box or SEARCH, and receive that box
+  and your IP address. A same-origin proxy would still have to forward the
+  box, so the page talks to the three NASA origins the CSP lists.
 - **Opt-in third-party reporting only.** Radio plays reach Radio Browser's
   click counter only with `VANTAGE_RADIO_REPORT_CLICKS=1`.
 

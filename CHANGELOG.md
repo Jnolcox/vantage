@@ -134,6 +134,14 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   visibility, set and peak times. Estimates ignore weather and brightness;
   everything runs locally on the already loaded catalog (ported from
   upstream, Rehaan Delmotra, Bilawal Sidhu).
+- Voice answers say how fresh their data is: `analyst_query` and
+  `get_current_view_state` now carry a `feedProvenance` envelope built from
+  the same feed-state the Data Layers chips show (nominal, loading,
+  degraded, partial, stale, fallback, unavailable or off), and the voice
+  instructions forbid presenting a stale, degraded or unavailable count as
+  live. Analyst follow-ups keep the provenance of the rows they re-read;
+  existing result fields are unchanged (ported from upstream, Matt Van Horn,
+  Bilawal Sidhu).
 
 ### Changed
 

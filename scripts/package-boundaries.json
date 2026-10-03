@@ -1792,6 +1792,7 @@
       "src/voice/realtimeEvents.js",
       "src/app/localGeojsonServices.js",
       "src/data/feedState.js",
+      "src/data/layerSnapshot.js",
       "src/layers/alpr/records.js",
       "src/layers/earthquakes/records.js",
       "src/app/layers/perimeters.js",

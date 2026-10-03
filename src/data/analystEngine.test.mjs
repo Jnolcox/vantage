@@ -214,3 +214,20 @@ test('helpers: haversine sanity + scope radius', () => {
   const scoped = applyScope(FLIGHTS, { kind: 'radius' }, { center: { lat: 30.27, lon: -97.74 }, km: 50 });
   assert.deepEqual(scoped.map((f) => f.id).sort(), ['GND1', 'SWA1']);
 });
+
+test('follow-up provenance stays attached to old rows after a feed recovers', async () => {
+  let state = 'stale';
+  const engine = createAnalystEngine({
+    getRecords: () => [{ id: 'A', lat: 0, lon: 0 }],
+    getLayerSnapshot: () => ({ id: 'flights', enabled: true, feedState: state }),
+    getViewContext: () => ({ lat: 0, lon: 0, viewRadiusKm: 25 }),
+  });
+  const first = await engine.query();
+  state = 'nominal';
+  const followUp = await engine.query({ followUp: true });
+  assert.equal(first.coverage.feedProvenance.overall, 'stale');
+  assert.equal(followUp.coverage.feedProvenance.overall, 'stale');
+  engine.reset();
+  assert.equal(engine.hasMemory(), false);
+  assert.equal((await engine.query()).coverage.feedProvenance.overall, 'nominal');
+});

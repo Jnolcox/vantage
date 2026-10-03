@@ -20,10 +20,12 @@
  *   getRecords(layerKey) → Array<record>            (layer accessor snapshot)
  *   resolveRegionRing(name) → Promise<{ring, name}|{error:'region-timeout'}|null>
  *   getViewContext() → {lat, lon, viewRadiusKm, bounds?}  (camera-derived)
+ *   getLayerSnapshot?(layerKey) → layer snapshot          (feed provenance)
  *
  * @module data/analystEngine
  */
 
+import { feedProvenanceEnvelope } from './layerSnapshot.js';
 import { pointInRing } from './naturalEarthRegions.js';
 
 /** Layers the engine understands, with the fields queries may reference. */
@@ -168,12 +170,17 @@ export function createAnalystEngine(providers) {
     // 1) Source records
     let records;
     let layersQueried;
+    let queriedSnapshots;
     if (layers === null) {
       records = lastResult.items.slice();
       layersQueried = lastResult.coverage.layersQueried;
+      // A follow-up re-reads the old rows, so it keeps their provenance even
+      // if the feed has recovered since.
+      queriedSnapshots = lastResult.coverage.feedProvenance?.layers || [];
     } else {
       records = [];
       layersQueried = [];
+      queriedSnapshots = [];
       const unknown = layers.filter((k) => !ANALYST_LAYERS[k]);
       if (unknown.length) {
         return {
@@ -185,7 +192,21 @@ export function createAnalystEngine(providers) {
       for (const key of layers) {
         if (!ANALYST_LAYERS[key]) continue;
         const rows = providers.getRecords(key) || [];
-        layersQueried.push({ layerKey: key, records: rows.length });
+        const snapshot = providers.getLayerSnapshot?.(key);
+        if (snapshot) queriedSnapshots.push(snapshot);
+        layersQueried.push({
+          layerKey: key,
+          records: rows.length,
+          ...(snapshot
+            ? {
+                feedState: snapshot.feedState,
+                source: snapshot.source,
+                lastUpdate: snapshot.lastUpdate,
+                enabled: snapshot.enabled,
+                error: snapshot.error,
+              }
+            : {}),
+        });
         for (const row of rows) records.push({ layerKey: key, ...row });
       }
     }
@@ -305,6 +326,9 @@ export function createAnalystEngine(providers) {
       coverage: {
         layersQueried,
         scope: scopeNote,
+        ...(queriedSnapshots.length
+          ? { feedProvenance: feedProvenanceEnvelope(queriedSnapshots) }
+          : {}),
         followUp: Boolean(spec.followUp && lastResult),
         note: 'client-side data only — answers cover what the enabled layers currently hold',
       },

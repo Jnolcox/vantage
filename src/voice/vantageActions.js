@@ -1,3 +1,8 @@
+import {
+  layerSnapshot,
+  layerSnapshots,
+  feedProvenanceEnvelope,
+} from '../data/layerSnapshot.js';
 import { readLayerLifecycleSummary } from './layerSummary.js';
 export { readLayerLifecycleSummary } from './layerSummary.js';
 import { defaultGeospatial } from '../search/defaults.js';
@@ -3075,6 +3080,8 @@ function getCurrentViewState(
   const cartographic = Cesium.Cartographic.fromCartesian(
     viewer.camera.positionWC,
   );
+  const layers = dataManager.getAll();
+  const snapshots = layerSnapshots(layers);
   return {
     ok: true,
     action: 'get_current_view_state',
@@ -3105,13 +3112,19 @@ function getCurrentViewState(
         : null,
     scenePlayback: sceneDirector?.getPlaybackStatus?.() || null,
     tracked: collectTrackedEntities(dataManager),
-    layers: dataManager.getAll().map((layer) => ({
+    layers: layers.map((layer, index) => ({
       id: layer.id,
       name: layer.name,
       enabled: layer.enabled,
       count: layer.stats?.count || 0,
       error: layer.stats?.error || null,
+      feedState: snapshots[index].feedState,
+      source: snapshots[index].source,
+      lastUpdate: snapshots[index].lastUpdate,
     })),
+    feedProvenance: feedProvenanceEnvelope(
+      snapshots.filter((snapshot) => snapshot.enabled),
+    ),
   };
 }
 
@@ -4238,6 +4251,16 @@ function analystProviders(
         ? mod.getAnalystRecords(requestedLimit) || []
         : mod.getAnalystRecords() || [];
     },
+    getLayerSnapshot(layerKey) {
+      const row = dataManager.getAll?.().find((layer) => layer.id === layerKey);
+      if (row) return layerSnapshot(row);
+      const module = dataManager.layers?.get(layerKey)?.module;
+      return layerSnapshot({
+        id: layerKey,
+        enabled: dataManager.isEnabled?.(layerKey),
+        stats: module?.getStats?.() || {},
+      });
+    },
     resolveRegionRing,
     /**
      * The active Contacts subject, when there is one — the centre the operator
@@ -4369,7 +4392,18 @@ async function runAnalystQuery(
     args,
     result,
   );
-  if (entityWindow) return entityWindow;
+  if (entityWindow) {
+    const provenance = feedProvenanceEnvelope(
+      layerSnapshots(dataManager.getAll?.() || []).filter(
+        (layer) => layer.enabled && ['flights', 'military'].includes(layer.id),
+      ),
+    );
+    return {
+      ...entityWindow,
+      feedProvenance: provenance,
+      feedState: provenance.overall,
+    };
+  }
 
   const contactsWindow = activeContactsWindow(dataManager);
   const aircraftQueried = (result.coverage?.layersQueried || []).some(
@@ -4408,6 +4442,8 @@ async function runAnalystQuery(
     items,
     summary: result.summary,
     coverage: result.coverage,
+    feedProvenance: result.coverage?.feedProvenance || null,
+    feedState: result.coverage?.feedProvenance?.overall || null,
     // The panel's own numbers, carried so the answer can match what the
     // operator is looking at regardless of how the model reads the note.
     // Flattened alongside the object so the count and its subject cannot be

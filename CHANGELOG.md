@@ -222,6 +222,11 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   nobody changed it meanwhile. One owner holds the lease at a time. The
   scene looks and behaves as before (ported from upstream, Bilawal Sidhu,
   manjunath22466).
+- `MapSourceController.subscribe()` reports every settled map switch, silent
+  switches, fallbacks and recoveries included, and `getSwitchOrigin()` says
+  whether the current map was chosen from outside (`manual`) or by the
+  controller's own fallback (`automatic`), so a layer draped on the active
+  map can follow it (ported from upstream, Bilawal Sidhu, manjunath22466).
 
 ### Fixed
 

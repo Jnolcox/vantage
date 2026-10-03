@@ -159,6 +159,13 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   by `DELETE` or after 15 s without access; the last release stops upstream
   work. Requests carry the Vantage CCTV User-Agent (ported from upstream,
   Daniel Slay, Bilawal Sidhu).
+- Live HLS CCTV cameras play as moving video on the monitor plane and in
+  the CCTV panel from one shared decoder. hls.js (1.7.3) is downloaded only
+  when a live camera becomes active, never at page load; the panel repaints
+  the shared video at most 640 px wide and 15 fps and stops while collapsed
+  or hidden. Switching camera or turning CCTV off destroys the decoder and
+  releases the server lease; a feed that fails falls back to the labelled
+  still frame (ported from upstream, Daniel Slay, Bilawal Sidhu).
 
 ### Changed
 

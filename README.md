@@ -416,6 +416,23 @@ OpenSky can run fully anonymous (`OPENSKY_AUTH_MODE=anon`), or import OAuth cred
 
 </details>
 
+<details>
+<summary>Live video cameras (HLS)</summary>
+
+CCTV sources with `"feedType": "hls"` and a registered HTTP(S) `.m3u8`
+URL play through a lazily loaded hls.js decoder shared by the monitor plane
+and panel. The server allows two concurrent sessions. Each retains at most 12
+segments and 24 MiB in memory; individual downloads are capped at 4 MiB with a
+ten second deadline. There are no segment files or ffmpeg processes.
+Redirects, off-origin references, encrypted playlists and non-MPEG-TS segments
+are refused. Each decoder has its own client lease (at most eight per
+session), including native HLS. Closing it releases only that lease; abandoned
+leases expire after 15 seconds without access. The last release stops upstream
+work. Failed live video uses the existing still/Street View/synthetic
+fallback, which is not live video. RTMP-only sources are not supported.
+
+</details>
+
 ### 💸 What it actually costs
 
 Honest numbers, roughly, as of mid-2026 — always check the provider pricing pages:

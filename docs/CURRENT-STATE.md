@@ -4141,3 +4141,19 @@ releases imagery layers/listeners on replacement. Destroy invalidates pending
 work and releases owned resources, including late factory results. Supplied 3D
 tilesets remain owned by the caller; tilesets created through the controller's
 factory are added to its viewer and removed on destruction.
+
+## Live CCTV video (HLS)
+
+Live HLS cameras share one decoder between the panel and the projection
+plane. The server pulls registered HTTP(S) HLS only (no RTMP/ffmpeg remux,
+which would not inherit the Node redirect policy). Sessions reserve
+synchronously, cap memory and response bytes, reject redirects, and abort on
+release or shutdown; there is no disk store and no background sweep while
+inactive. The panel paints the same video at most 640 px / 15 fps and its
+paint loop stops while the panel is collapsed or the page is hidden. Camera
+deactivation destroys the decoder, and fatal playback errors revert to the
+labelled frame fallback. Camera changes clear the old panel frame. hls.js is
+imported only when an HLS camera starts. Two live sessions may coexist with
+at most eight independent consumer leases each; a lease with no access for
+15 seconds expires, and closing one consumer leaves the others running.
+Encrypted, fMP4 and byte-range playlists fail closed.

@@ -773,6 +773,8 @@
   "scripts/qa-director-sharing.mjs",
   "scripts/qa-weather-perf.mjs",
   "scripts/qa-weather-swap.mjs",
+  "scripts/qa-weather-journey.mjs",
+  "scripts/qa-weather-teardown.mjs",
   "server/providers/firePerimeters.js",
   "src/data/firePerimetersProxy.test.mjs",
   "src/data/aisStreamSentinels.test.mjs",

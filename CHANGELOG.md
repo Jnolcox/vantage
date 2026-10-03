@@ -149,6 +149,17 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   loaded records (2,000 per layer) and that satellite distance is ground
   distance (ported from upstream, Matt Van Horn, Bilawal Sidhu).
 
+- Registered CCTV sources with `"feedType": "hls"` and an HTTP(S) `.m3u8`
+  URL are served live through `/api/cctv/media/<id>`: a bounded in-memory
+  puller rewrites the agency playlist to same-origin `seg_N.ts` segments.
+  At most two sessions run at once, each keeping 12 segments / 24 MiB; every
+  download is capped (256 KiB playlists, 4 MiB segments, 10 s deadline),
+  redirects and off-origin, encrypted or non-MPEG-TS playlists are refused,
+  and nothing is written to disk. Each viewer holds its own lease, released
+  by `DELETE` or after 15 s without access; the last release stops upstream
+  work. Requests carry the Vantage CCTV User-Agent (ported from upstream,
+  Daniel Slay, Bilawal Sidhu).
+
 ### Changed
 
 - A selected AIS vessel's detail card sits a little further from the

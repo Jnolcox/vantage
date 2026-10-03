@@ -817,6 +817,8 @@
   "src/data/windProxy.test.mjs",
   "server/providers/weather.js",
   "src/data/weatherProxy.test.mjs",
+  "server/providers/cyclones.js",
+  "src/data/cyclonesProxy.test.mjs",
   "src/layers/weather/imageryHost.js",
   "src/layers/weather/imageryHost.test.mjs",
   "src/layers/weather/imageryOrder.js",

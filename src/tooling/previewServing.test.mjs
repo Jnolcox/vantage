@@ -12,6 +12,7 @@ test('data providers have both hooks; credential editing stays development-only'
   assert.ok(plugins.some(({ name }) => name === 'fire-perimeters'));
   assert.ok(plugins.some(({ name }) => name === 'wind'));
   assert.ok(plugins.some(({ name }) => name === 'weather'));
+  assert.ok(plugins.some(({ name }) => name === 'cyclones'));
   for (const plugin of plugins) {
     if (plugin.name === 'vantage-key-setup') {
       assert.equal(plugin.configurePreviewServer, undefined);
@@ -106,6 +107,7 @@ test('real dev and built-preview servers serve provider JSON and terminate unkno
         ['/api/fire-perimeters/inciweb/publication/invalid', 400],
         ['/api/wind/manifest?model=invalid', 400],
         ['/api/weather/manifest?product=invalid', 400],
+        ['/api/cyclones/invalid', 400],
         ['/api/terrain/heights?points=invalid', 400],
         ['/api/overpass', 405],
         ['/api/cctv/sources', 200],

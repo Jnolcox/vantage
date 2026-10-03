@@ -523,6 +523,9 @@ an hour per model and field (global forecast files, nothing about your view);
 Lightning density: capabilities every 2 minutes (lightning 10) and the image
 tiles or detail window for the area in view, so NOAA sees the approximate
 bounding box you are looking at, from the server's IP address;
+`www.nhc.noaa.gov` (NHC current storms) and `mapservices.weather.noaa.gov`
+(NOAA tropical GIS) for Cyclone advisories, at most every 5 minutes (fixed
+queries, nothing about your view);
 `earthquake.usgs.gov` (fetched by the browser); `api.tomtom.com` (tile
 coordinates in view); Overpass mirrors `overpass-api.de`,
 `lz4.overpass-api.de`, `overpass.kumi.systems`, `overpass.private.coffee`

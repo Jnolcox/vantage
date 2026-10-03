@@ -31,6 +31,7 @@ How to read this:
 | **NOAA GFS** (Global Forecast System, NOAA Open Data on AWS)          | Wind layer: global 10 m wind, optional 2 m temperature and mean sea-level pressure | U.S. public domain (NOAA); fetched keyless by the server through `/api/wind` from the `noaa-gfs-bdp-pds` S3 bucket | "NOAA Global Forecast System (GFS)" (courtesy; not an endorsement) |
 | **ECMWF IFS** (ECMWF Open Data)                                         | Wind layer, ECMWF model: global 10 m wind, optional 2 m temperature and mean sea-level pressure | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) plus the [ECMWF Terms of Use](https://apps.ecmwf.int/datasets/licences/general/); fetched keyless by the server through `/api/wind` from `data.ecmwf.int` | "Based on data and products of the European Centre for Medium-Range Weather Forecasts (ECMWF)", with the CC BY 4.0 link, the modification notice and the ECMWF liability disclaimer |
 | **NOAA nowCOAST** (observed-weather WMS)                               | Rain radar (MRMS base reflectivity, CONUS), Satellite clouds (GOES-19/18 Band 14 regional and the NESDIS global longwave infrared mosaic) and Lightning density (15-minute density derived from Vaisala NLDN/GLD360) | U.S. public domain (NOAA); the lightning layer is NOAA's public Level-5 derived product, [distributable as such](https://ocean.weather.gov/lightning/lightning_pdd.php), not raw Vaisala detections. Fetched keyless by the server through `/api/weather` | "NOAA nowCOAST · NWS/OAR MRMS radar; NESDIS GOES and global satellite partners" and "NOAA/NWS nowCOAST · derived from Vaisala NLDN/GLD360", with the [NOAA disclaimer](https://oceanservice.noaa.gov/disclaimer.html) |
+| **NOAA NHC / CPHC advisories** (`www.nhc.noaa.gov/CurrentStorms.json` and the `mapservices.weather.noaa.gov` tropical weather summary MapServer) | Cyclone advisories: storm positions, forecast tracks, forecast points and uncertainty cones for the Atlantic and eastern/central North Pacific | U.S. public domain (NOAA); [NWS public-data terms](https://www.weather.gov/disclaimer). Fetched keyless by the server through `/api/cyclones`, cached for 5 minutes; no endorsement implied | "NOAA/NWS NHC / CPHC" |
 | **OpenStreetMap (Overpass API)**                                      | Road geometry for traffic                                                                                                           | ODbL 1.0                                                                                                                                                                                                                                                                                                                                              | "© OpenStreetMap contributors"                                                                                                              |
 | **TomTom Traffic API** (flow vector tiles)                            | Live congestion coloring for the traffic layer (optional, BYOK)                                                                     | [TomTom for Developers terms](https://developer.tomtom.com) (proprietary, your own key; free tier currently 200K tile requests/month — see [current pricing](https://docs.tomtom.com/pricing/))                                                                                                                                                       | "Traffic flow data © TomTom" — registered when live mode activates                                                                          |
 | **OpenStreetMap (Overpass API)**                                      | Viewport-bounded mapped installation context for Global Context                                                                     | ODbL 1.0                                                                                                                                                                                                                                                                                                                                              | "© OpenStreetMap contributors" (incomplete mapped context)                                                                                  |
@@ -245,6 +246,36 @@ The interface shows the exact advertised observation time; "latest" means the
 newest available observation, not zero-delay real time. No nowcast is
 synthesized. NOAA data is U.S. public domain; the credit is a courtesy and does
 not imply endorsement.
+
+### NOAA NHC / CPHC cyclone advisories
+
+The optional **Cyclone advisories** layer shows active tropical cyclones from
+two fixed official sources: the National Hurricane Center's
+[current storms status](https://www.nhc.noaa.gov/CurrentStorms.json) and the
+NOAA [tropical weather summary GIS](https://mapservices.weather.noaa.gov/tropical/rest/services/tropical/NHC_tropical_weather_summary/MapServer)
+(layers 5, 6 and 7: forecast points, track and cone).
+
+- **Coverage:** the Atlantic and the eastern and central North Pacific (NHC and
+  CPHC basins). It is not worldwide cyclone coverage.
+- **Meaning:** the status position time and the advisory issue time stay
+  separate. A forecast track, its points and its cone are shown only when all
+  three GIS parts carry the same advisory number as the status; older geometry
+  is never relabelled with a newer advisory. The cone is uncertainty in the
+  forecast centre track, not storm size or a complete hazard boundary.
+- **Delivery:** the same-origin `/api/cyclones` proxy is the only client (NHC
+  does not advertise CORS). The browser never names an upstream URL. Every
+  request sends the `vantage-cyclones-proxy` User-Agent and refuses redirects;
+  the status is capped at 128 KiB, points and tracks at 512 KiB and cones at
+  2 MiB, with at most 25,000 coordinates in all and a 12-second deadline. One
+  shared refresh runs at a time (at most 32 waiting requests), the snapshot is
+  cached for 5 minutes, a failed refresh is not retried for a minute, and the
+  last good snapshot is served as stale for up to 12 hours while every advisory
+  in it is younger than that. The requests carry nothing about the view.
+- **Rights/credit:** NOAA/NWS National Hurricane Center / Central Pacific
+  Hurricane Center; U.S. public domain under the
+  [NWS public-data terms](https://www.weather.gov/disclaimer). Official products
+  are fetched at runtime; no advisory archive is bundled and no NOAA
+  endorsement is implied.
 
 ### Natural Earth physical regions (`natural_earth/`)
 

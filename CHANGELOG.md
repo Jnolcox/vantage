@@ -51,6 +51,14 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   one shared 16 MiB image cache. Tiles and windows follow the view, so NOAA
   sees the approximate area in view from the server's address (ported from
   upstream, Bilawal Sidhu).
+- Same-origin `/api/cyclones` proxy for NOAA NHC/CPHC tropical cyclone
+  advisories: the NHC current-storms status plus the forecast points, track
+  and cone from the NOAA tropical weather summary GIS, attached only when
+  their advisory number matches the status. Fixed upstream queries with the
+  Vantage User-Agent, no redirects, capped bodies and geometry, a 12-second
+  deadline, one shared refresh cached for 5 minutes, a one-minute retry
+  cooldown and the last good snapshot served as stale for up to 12 hours
+  (ported from upstream, Bilawal Sidhu).
 - A WEATHER panel in the right rail, between CCTV and Global Context, that
   holds one card per enabled weather layer (summary, legend, settings,
   actions and readings). It stays hidden while no weather layer is on, opens

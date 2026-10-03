@@ -215,6 +215,13 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
 - Clean view and recording mode hide the right rail and every panel it
   hosts, rather than a fixed list of panel ids, so panels added to the rail
   later are covered too (ported from upstream, Bilawal Sidhu).
+- The Nepal scene's before/after swipe and its switch to Esri imagery now
+  come from shared modules: `src/ui/imagerySplit.js` owns the divider (drag,
+  keyboard, ARIA, the scene split) and `src/maps/imageryComparison.js` leases
+  the map, switching to Esri and handing the previous map back only if
+  nobody changed it meanwhile. One owner holds the lease at a time. The
+  scene looks and behaves as before (ported from upstream, Bilawal Sidhu,
+  manjunath22466).
 
 ### Fixed
 

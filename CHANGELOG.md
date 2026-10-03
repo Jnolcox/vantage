@@ -151,6 +151,15 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
 
 ### Changed
 
+- The HUD says when its data is not live. The telemetry line appends the
+  worst non-nominal feed state and up to two layer names (for example
+  `| STALE LIVE FLIGHTS`). With HUD Context set to **Live**, the AI summary
+  request also carries each enabled layer's feed state and source name, the
+  five words must include a non-nominal state, and a summary that omits it
+  is replaced by the local line; layer refreshes now refresh the summary.
+  Counts and ages are not sent, so a routine refresh does not trigger a new
+  OpenAI request. In **Local** mode nothing new leaves the browser (ported
+  from upstream, Matt Van Horn, Bilawal Sidhu).
 - Google Photorealistic 3D Tiles (direct and through ion) keep drawing their
   own texture while draped imagery loads, and the map controller reports the
   shown tileset so a layer can drape onto it when the globe is hidden; this is

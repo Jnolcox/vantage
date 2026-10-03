@@ -3591,6 +3591,7 @@ silently demoting every later lookup for the session.
 - HUD `SUMMARY` readout requests a five-word intelligence-style summary from `/api/openai/hud-summary` (model `OPENAI_HUD_SUMMARY_MODEL`, default `gpt-5-nano`, minimal reasoning).
 - Input is the live basemap label context (place/street/nearby-place labels + enabled layers) — the model is instructed not to infer from coordinates.
 - Output is sanitized to exactly five words; falls back to the deterministic telemetry summary on error/timeout (5s abort); typewriter animation on update.
+- Feed state: in **Context: Live** the context also carries each enabled layer's id, name, feed state and source plus the worst state (`hudSummaryLayerContext` in `src/hudSummaryResponse.js`, the same `layerSnapshot` envelope voice uses). Counts and ages are deliberately left out so a routine layer refresh does not change the context and re-request the summary; a feed-state change does. The shared `HUD_SUMMARY_INSTRUCTIONS` require a non-nominal state token in the five words, and an AI line that omits it is replaced by the local telemetry line. Layer refreshes now mark the summary dirty as well as visibility changes. In **Local** mode none of this leaves the browser. The deterministic telemetry line appends the non-nominal state and up to two layer names (`| STALE LIVE FLIGHTS`) in both modes.
 
 ### Place-search providers
 

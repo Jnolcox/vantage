@@ -501,7 +501,7 @@ address and the Vantage User-Agent, not your browser).
 | `api.cesium.com`, `assets.ion.cesium.com`, `assets.cesium.com`, Bing/Azure imagery hosts | Browser | Only with a Cesium ion token | Assets and tiles in view, ion token |
 | `maps.googleapis.com` (Geocoding) | Browser | HUD **Context: Live**, every 15 s and after each move, with a Google key | View-target latitude/longitude |
 | `places.googleapis.com` | Server | Same HUD trigger, with a Google key | Latitude/longitude and radius |
-| `api.openai.com` (Responses) | Server | Same HUD trigger, with an OpenAI key | Place, street and nearby-place labels, enabled layer names |
+| `api.openai.com` (Responses) | Server | Same HUD trigger, with an OpenAI key | Place, street and nearby-place labels; enabled layer names with each one's feed state (live, stale, fallback…) and source name |
 | `nominatim.openstreetmap.org`, `api.open-meteo.com`, `news.google.com`, `api.gdeltproject.org` | Server | Cockpit mode: regional brief and weather, refreshed as the contact moves | Latitude/longitude; locality name for news |
 | Layer feeds you have switched on | Server | Polling while the layer is on | See below |
 

@@ -3301,3 +3301,27 @@ test('voice resolves hurricane and cyclone phrasings to Cyclone advisories', asy
   }
   assert.deepEqual(requested, phrases.map(() => 'weather-cyclones'));
 });
+
+test('general satellite pass resolves once, refuses ambiguity, and preserves ISS call semantics', async () => {
+  const calls = [];
+  const pass = { riseMs: Date.now() + 60000, setMs: Date.now() + 360000, maxElevMs: Date.now() + 180000, maxElevDeg: 30, riseAzDeg: 90, visible: false };
+  const layer = {
+    resolveSatelliteForPass(target) { return target === 'starlink' ? { status: 'ambiguous', candidates: [{ noradId: 1 }, { noradId: 2 }] } : { status: 'ok', noradId: 25544, name: 'ISS' }; },
+    getNextSatellitePass(id, options) { calls.push({ id, ...options }); return { status: 'ok', pass }; },
+    getNextIssPass(options) { calls.push(options); return { status: 'ok', pass }; },
+  };
+  const viewer = { clock: { onTick: { addEventListener: () => () => {} } }, scene: { canvas: { addEventListener() {}, removeEventListener() {} } }, camera: { moveEnd: { addEventListener() {} } } };
+  const runner = createVantageActionRunner({ viewer, styleManager: {}, dataManager: { layers: new Map([['satellites', { module: layer }]]) } });
+  const ambiguous = await runner('next_satellite_pass', { target: 'starlink' });
+  assert.equal(ambiguous.status, 'ambiguous');
+  assert.equal(calls.length, 0);
+  const args = { latitude: 30, longitude: -97, minElevationDeg: 15 };
+  const general = await runner('next_satellite_pass', { target: '25544', visibleOnly: true, ...args });
+  assert.equal(general.action, 'next_satellite_pass');
+  assert.deepEqual(calls[0], { id: 25544, latDeg: 30, lonDeg: -97, minElevDeg: 15, requireVisible: true });
+  const iss = await runner('next_iss_pass', args);
+  assert.deepEqual(calls[1], { latDeg: 30, lonDeg: -97, minElevDeg: 15 });
+  for (const key of ['observer', 'riseIso', 'minutesFromNow', 'durationMin', 'peakElevationDeg', 'riseDirection']) assert.deepEqual(iss[key], general[key]);
+  assert.equal(iss.visible, false);
+  assert.equal(iss.action, 'next_iss_pass');
+});

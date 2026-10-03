@@ -63,6 +63,8 @@ export function createSatellitesLayer({ services, source }) {
       applySatellitePointFocusDeemphasis:
         parts.rendering.applySatellitePointFocusDeemphasis,
       getNextIssPass: parts.orbits.getNextIssPass,
+      getNextSatellitePass: parts.orbits.getNextSatellitePass,
+      resolveSatelliteForPass: parts.orbits.resolveSatelliteForPass,
       scoreSatelliteNameMatch: parts.orbits.scoreSatelliteNameMatch,
       findSatelliteOrbitTrackInTle: parts.orbits.findSatelliteOrbitTrackInTle,
       getSatelliteOrbitTrack: parts.orbits.getSatelliteOrbitTrack,

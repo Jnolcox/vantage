@@ -123,6 +123,17 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   `show_data_layers_menu`), including "cyclones", "hurricanes", "hurricane
   tracks" and "tropical storms"; the layer description says the advisories
   cover only the Atlantic and the eastern/central North Pacific.
+- Satellite pass prediction for any loaded catalog satellite: a new
+  `next_satellite_pass` voice tool takes an exact NORAD ID or name (an
+  ambiguous name returns candidates instead of guessing), searches the next
+  24 hours from the camera or given coordinates and can require an estimated
+  visible pass. Rise and set are bisected to about 0.2 s, the peak is fitted
+  with a parabola, and a pass counts as visible when the satellite is outside
+  a cylindrical Earth shadow while the observer's Sun is at or below -6°.
+  `next_iss_pass` keeps its next-geometric-pass answer and now adds
+  visibility, set and peak times. Estimates ignore weather and brightness;
+  everything runs locally on the already loaded catalog (ported from
+  upstream, Rehaan Delmotra, Bilawal Sidhu).
 
 ### Changed
 

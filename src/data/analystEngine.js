@@ -21,6 +21,7 @@
  *   resolveRegionRing(name) → Promise<{ring, name}|{error:'region-timeout'}|null>
  *   getViewContext() → {lat, lon, viewRadiusKm, bounds?}  (camera-derived)
  *   getLayerSnapshot?(layerKey) → layer snapshot          (feed provenance)
+ *   getRecordCoverage?(layerKey, rows) → coverage fields  (bounded cohorts)
  *
  * @module data/analystEngine
  */
@@ -66,6 +67,21 @@ export const ANALYST_LAYERS = {
   'fire-perimeters': {
     numeric: ['acres', 'containedPct', 'personnel', 'costToDate'],
     text: ['name', 'state', 'county', 'cause', 'behavior', 'complexity'],
+    flags: [],
+  },
+  satellites: {
+    numeric: ['altitudeM', 'speedMps'],
+    text: ['name', 'noradId', 'satelliteClass', 'group'],
+    flags: [],
+  },
+  'local-datacenters': {
+    numeric: [],
+    text: ['name', 'operator', 'capacity'],
+    flags: [],
+  },
+  'local-dams': {
+    numeric: [],
+    text: ['name', 'operator', 'river', 'output'],
     flags: [],
   },
 };
@@ -206,6 +222,7 @@ export function createAnalystEngine(providers) {
                 error: snapshot.error,
               }
             : {}),
+          ...providers.getRecordCoverage?.(key, rows),
         });
         for (const row of rows) records.push({ layerKey: key, ...row });
       }
@@ -330,7 +347,11 @@ export function createAnalystEngine(providers) {
           ? { feedProvenance: feedProvenanceEnvelope(queriedSnapshots) }
           : {}),
         followUp: Boolean(spec.followUp && lastResult),
-        note: 'client-side data only — answers cover what the enabled layers currently hold',
+        note: layersQueried.some(
+          (layer) => layer.basis === 'bounded-loaded-records',
+        )
+          ? 'Counts and ranks cover the bounded examined loaded records only; omitted records may change the nearest item or count. Satellite distance is ground distance, not slant range.'
+          : 'client-side data only — answers cover what the enabled layers currently hold',
       },
       // Surfaced so the narration can name the centre it measured from rather
       // than implying a view-centred answer.

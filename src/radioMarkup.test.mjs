@@ -182,19 +182,21 @@ test('no unchanged Realtime tool definition drifts silently', () => {
     'set_map_stack',
     'next_iss_pass',
     'next_satellite_pass',
+    'analyst_query',
   ]);
   const unchanged = realtimeTools()
     .filter((tool) => !TOUCHED.has(tool.name))
     .sort((a, b) => a.name.localeCompare(b.name));
-  assert.equal(unchanged.length, 20);
+  assert.equal(unchanged.length, 19);
   const digest = createHash('sha256')
     .update(JSON.stringify(unchanged))
     .digest('hex')
     .slice(0, 16);
   // ALPR, Fire Perimeters, Wind, the observed-weather layers and Cyclone
-  // advisories intentionally extend the layer enums; the ISS wording correction
-  // and the new satellite-pass tool are excluded above. Retain the complete pin.
-  assert.equal(digest, '5d58b00a74003770', 'an unchanged Realtime tool definition drifted');
+  // advisories intentionally extend the layer enums; the ISS wording correction,
+  // the new satellite-pass tool and the analyst satellite/infrastructure layers
+  // are excluded above. Retain the complete pin.
+  assert.equal(digest, 'e6966726204f247a', 'an unchanged Realtime tool definition drifted');
 });
 
 test('Radio volume and mission speed share the Sharpen slider visual language', () => {

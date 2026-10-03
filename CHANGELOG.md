@@ -142,6 +142,12 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   live. Analyst follow-ups keep the provenance of the rows they re-read;
   existing result fields are unchanged (ported from upstream, Matt Van Horn,
   Bilawal Sidhu).
+- `analyst_query` can answer questions about loaded satellites, datacenters
+  and dams ("how many satellites are overhead", "nearest dam", "which
+  datacenters does this operator run"). Records are built on demand only
+  when a query runs; answers state that they cover a bounded slice of the
+  loaded records (2,000 per layer) and that satellite distance is ground
+  distance (ported from upstream, Matt Van Horn, Bilawal Sidhu).
 
 ### Changed
 

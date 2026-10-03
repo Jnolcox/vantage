@@ -660,16 +660,16 @@ test('the voice TOOL SCHEMA matches the pinned release — the mission mapping i
   // ALPR, Fire Perimeters, Wind, the observed-weather layers and Cyclone
   // advisories deliberately add their IDs to the layer menus and visibility
   // aliases; the observed layers and cyclones are also named in the layerId
-  // common-name mapping. The separate satellite-pass tool deliberately extends
-  // the schema.
+  // common-name mapping. The separate satellite-pass tool and the analyst
+  // satellite/infrastructure layers deliberately extend the schema.
   // Canonical serialization pins every tool name, description, property and
   // ordering while allowing source formatting. Derived from the unchanged
   // release schema before formatting (the previous source-byte pin passed).
   const block = JSON.stringify(VANTAGE_REALTIME_TOOLS);
-  assert.equal(block.length, 27537, 'serialized tool schema length drifted');
+  assert.equal(block.length, 27752, 'serialized tool schema length drifted');
   assert.equal(
     crypto.createHash('sha256').update(block).digest('hex'),
-    '6a540b1f5c200852297cc51e08c1a11af5826e92fc114ac08ba85b6e8fdb451a',
+    'a68ff1b677a398566259feca66e4d6be2562660d6112712a621c491766034d4b',
     'the first-run missions must ride EXISTING tools: no schema edit, no cache bust',
   );
   const instructions = fs.readFileSync(new URL('../server/providers/openai/instructions.js', import.meta.url), 'utf8');

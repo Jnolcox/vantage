@@ -11,6 +11,22 @@ const OBSERVED_WEATHER_LAYERS = Object.freeze([
 ]);
 const CYCLONES_LAYER = 'weather-cyclones';
 const SATELLITE_PASS_TOOL = 'next_satellite_pass';
+const ANALYST_RECORD_LAYERS = Object.freeze([
+  'satellites',
+  'local-datacenters',
+  'local-dams',
+]);
+
+// The analyst_query layer enum gained the satellite and infrastructure
+// layers last; only that enum, not the visibility menus, carries them here.
+function withoutAnalystRecordLayers(schemas) {
+  const layers = schemas.find((tool) => tool.name === 'analyst_query')
+    .parameters.properties.layers.items;
+  layers.enum = layers.enum.filter(
+    (key) => !ANALYST_RECORD_LAYERS.includes(key),
+  );
+  return schemas;
+}
 
 const stable = (value) =>
   Array.isArray(value)
@@ -28,17 +44,21 @@ test('the complete Realtime tool payload retains its pre-extraction contract and
     .update(JSON.stringify(stable(VANTAGE_REALTIME_TOOLS)))
     .digest('hex');
   // Re-derived for the additive `fire-perimeters`, `wind`, observed-weather
-  // and `weather-cyclones` layer enum values and the `next_satellite_pass` tool.
+  // and `weather-cyclones` layer enum values, the `next_satellite_pass` tool
+  // and the satellite/infrastructure analyst layers.
   assert.equal(
     digest,
-    'eb8e77b588b9f6db7e11d21637ee436107efcc4a9f4cfc44d4d327f238a76317',
+    '8b5daa6937b82a65d6b724ecb2d1398a938699b128b47352e3aaa2de3cd09bc9',
   );
 });
 
 test('removing the fire-perimeters enum values restores every prior action argument byte for byte', () => {
-  // next_satellite_pass landed after every enum addition below; drop it first.
-  const legacy = structuredClone(VANTAGE_ACTION_SCHEMAS).filter(
-    (tool) => tool.name !== SATELLITE_PASS_TOOL,
+  // next_satellite_pass and the analyst record layers landed after every
+  // enum addition below; drop them first.
+  const legacy = withoutAnalystRecordLayers(
+    structuredClone(VANTAGE_ACTION_SCHEMAS).filter(
+      (tool) => tool.name !== SATELLITE_PASS_TOOL,
+    ),
   );
   for (const tool of legacy) {
     for (const property of Object.values(tool.parameters.properties)) {
@@ -64,9 +84,12 @@ test('removing the fire-perimeters enum values restores every prior action argum
 });
 
 test('removing the wind enum values restores every prior action argument byte for byte', () => {
-  // next_satellite_pass landed after every enum addition below; drop it first.
-  const legacy = structuredClone(VANTAGE_ACTION_SCHEMAS).filter(
-    (tool) => tool.name !== SATELLITE_PASS_TOOL,
+  // next_satellite_pass and the analyst record layers landed after every
+  // enum addition below; drop them first.
+  const legacy = withoutAnalystRecordLayers(
+    structuredClone(VANTAGE_ACTION_SCHEMAS).filter(
+      (tool) => tool.name !== SATELLITE_PASS_TOOL,
+    ),
   );
   for (const tool of legacy) {
     for (const property of Object.values(tool.parameters.properties)) {
@@ -91,9 +114,12 @@ test('removing the wind enum values restores every prior action argument byte fo
 });
 
 test('removing the observed-weather enum values restores every prior action argument byte for byte', () => {
-  // next_satellite_pass landed after every enum addition below; drop it first.
-  const legacy = structuredClone(VANTAGE_ACTION_SCHEMAS).filter(
-    (tool) => tool.name !== SATELLITE_PASS_TOOL,
+  // next_satellite_pass and the analyst record layers landed after every
+  // enum addition below; drop them first.
+  const legacy = withoutAnalystRecordLayers(
+    structuredClone(VANTAGE_ACTION_SCHEMAS).filter(
+      (tool) => tool.name !== SATELLITE_PASS_TOOL,
+    ),
   );
   for (const tool of legacy) {
     for (const property of Object.values(tool.parameters.properties)) {
@@ -115,9 +141,12 @@ test('removing the observed-weather enum values restores every prior action argu
 });
 
 test('removing the weather-cyclones enum value restores every prior action argument byte for byte', () => {
-  // next_satellite_pass landed after every enum addition below; drop it first.
-  const legacy = structuredClone(VANTAGE_ACTION_SCHEMAS).filter(
-    (tool) => tool.name !== SATELLITE_PASS_TOOL,
+  // next_satellite_pass and the analyst record layers landed after every
+  // enum addition below; drop them first.
+  const legacy = withoutAnalystRecordLayers(
+    structuredClone(VANTAGE_ACTION_SCHEMAS).filter(
+      (tool) => tool.name !== SATELLITE_PASS_TOOL,
+    ),
   );
   for (const tool of legacy) {
     for (const property of Object.values(tool.parameters.properties)) {
@@ -135,12 +164,25 @@ test('removing the weather-cyclones enum value restores every prior action argum
 });
 
 test('removing the next_satellite_pass tool restores every prior action argument byte for byte', () => {
-  const legacy = structuredClone(VANTAGE_ACTION_SCHEMAS).filter(
-    (tool) => tool.name !== SATELLITE_PASS_TOOL,
+  // The analyst record layers landed after the tool; drop them first.
+  const legacy = withoutAnalystRecordLayers(
+    structuredClone(VANTAGE_ACTION_SCHEMAS).filter(
+      (tool) => tool.name !== SATELLITE_PASS_TOOL,
+    ),
   );
   assert.equal(
     createHash('sha256').update(JSON.stringify(legacy)).digest('hex'),
     '14ea4fa18b10e9613ab7ad03244193ac32e56118ff46490d79262759ef1f21d0',
+  );
+});
+
+test('removing the analyst record layers restores every prior action argument byte for byte', () => {
+  const legacy = withoutAnalystRecordLayers(
+    structuredClone(VANTAGE_ACTION_SCHEMAS),
+  );
+  assert.equal(
+    createHash('sha256').update(JSON.stringify(legacy)).digest('hex'),
+    'b70d195f0c142a8efb9f7436f8c4951e8ead1786a98774778daa5d83c6990e37',
   );
 });
 

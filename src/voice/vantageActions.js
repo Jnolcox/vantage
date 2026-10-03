@@ -4226,6 +4226,13 @@ function activeContactsWindow(dataManager) {
   }
 }
 
+/** Analyst layers whose records are a bounded slice of a larger loaded set. */
+const BOUNDED_ANALYST_LAYERS = new Set([
+  'satellites',
+  'local-datacenters',
+  'local-dams',
+]);
+
 function analystProviders(
   viewer,
   dataManager,
@@ -4260,6 +4267,18 @@ function analystProviders(
         enabled: dataManager.isEnabled?.(layerKey),
         stats: module?.getStats?.() || {},
       });
+    },
+    getRecordCoverage(layerKey, rows) {
+      if (!BOUNDED_ANALYST_LAYERS.has(layerKey)) return null;
+      const module = dataManager.layers.get(layerKey)?.module;
+      const loaded = module?.getStats?.().count;
+      return {
+        basis: 'bounded-loaded-records',
+        recordsExamined: rows.length,
+        loadedCount: Number.isFinite(loaded) ? loaded : null,
+        sourceTruncated: Number.isFinite(loaded) ? loaded > rows.length : null,
+        note: 'Counts and ranks apply only to these examined loaded records, not all satellites or infrastructure; distance is ground great-circle distance.',
+      };
     },
     resolveRegionRing,
     /**
@@ -4353,6 +4372,12 @@ async function runAnalystQuery(
       'distanceKm',
       'confidence',
       'place',
+      'noradId',
+      'satelliteClass',
+      'group',
+      'river',
+      'output',
+      'capacity',
     ]) {
       if (r[k] !== null && r[k] !== undefined) compact[k] = r[k];
     }

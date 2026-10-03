@@ -4,6 +4,12 @@ import { createHash } from 'node:crypto';
 import { VANTAGE_ACTION_SCHEMAS, createActionTools } from './actionSchemas.js';
 import { VANTAGE_REALTIME_TOOLS } from '../../server/providers/openai/tools.js';
 
+const OBSERVED_WEATHER_LAYERS = Object.freeze([
+  'weather-radar',
+  'weather-satellite',
+  'weather-lightning',
+]);
+
 const stable = (value) =>
   Array.isArray(value)
     ? value.map(stable)
@@ -19,10 +25,11 @@ test('the complete Realtime tool payload retains its pre-extraction contract and
   const digest = createHash('sha256')
     .update(JSON.stringify(stable(VANTAGE_REALTIME_TOOLS)))
     .digest('hex');
-  // Re-derived for the additive `fire-perimeters` and `wind` layer enum values.
+  // Re-derived for the additive `fire-perimeters`, `wind` and observed-weather
+  // layer enum values.
   assert.equal(
     digest,
-    '4e65bbfdb66844afa0d0944c8e4429dc83fb077981d8243d0a1e0857c270086b',
+    'c036d3d3bb9a5c86c640a23c966fe4c4b3ca3f073f06f0c43ab7f87c302c7812',
   );
 });
 
@@ -32,9 +39,13 @@ test('removing the fire-perimeters enum values restores every prior action argum
     for (const property of Object.values(tool.parameters.properties)) {
       const values = property.enum ?? property.items?.enum;
       if (!values) continue;
-      // Wind landed after Fire Perimeters; both are additive enum values.
+      // Wind and observed weather landed after Fire Perimeters; all are
+      // additive enum values.
       const kept = values.filter(
-        (key) => key !== 'fire-perimeters' && key !== 'wind',
+        (key) =>
+          key !== 'fire-perimeters' &&
+          key !== 'wind' &&
+          !OBSERVED_WEATHER_LAYERS.includes(key),
       );
       if (property.enum) property.enum = kept;
       else property.items.enum = kept;
@@ -52,7 +63,10 @@ test('removing the wind enum values restores every prior action argument byte fo
     for (const property of Object.values(tool.parameters.properties)) {
       const values = property.enum ?? property.items?.enum;
       if (!values) continue;
-      const kept = values.filter((key) => key !== 'wind');
+      // Observed weather landed after Wind; both are additive enum values.
+      const kept = values.filter(
+        (key) => key !== 'wind' && !OBSERVED_WEATHER_LAYERS.includes(key),
+      );
       if (property.enum) property.enum = kept;
       else property.items.enum = kept;
     }
@@ -60,6 +74,25 @@ test('removing the wind enum values restores every prior action argument byte fo
   assert.equal(
     createHash('sha256').update(JSON.stringify(legacy)).digest('hex'),
     '43f32f6a51a006bd0c09eed1ee9300e0f0bc1695cbee74bd2569eef29a599f44',
+  );
+});
+
+test('removing the observed-weather enum values restores every prior action argument byte for byte', () => {
+  const legacy = structuredClone(VANTAGE_ACTION_SCHEMAS);
+  for (const tool of legacy) {
+    for (const property of Object.values(tool.parameters.properties)) {
+      const values = property.enum ?? property.items?.enum;
+      if (!values) continue;
+      const kept = values.filter(
+        (key) => !OBSERVED_WEATHER_LAYERS.includes(key),
+      );
+      if (property.enum) property.enum = kept;
+      else property.items.enum = kept;
+    }
+  }
+  assert.equal(
+    createHash('sha256').update(JSON.stringify(legacy)).digest('hex'),
+    '926f6ea461b4f00bdc74d0baa1c6a4b825fc446a25e40180f43f71b5593d11b6',
   );
 });
 

@@ -3211,3 +3211,50 @@ test('voice resolves wind phrasings to the Wind layer', async () => {
   }
   assert.deepEqual(requested, ['wind', 'wind', 'wind', 'wind']);
 });
+
+test('voice resolves radar, cloud and lightning phrasings to the observed-weather layers', async () => {
+  globalThis.window = globalThis.window || { clearTimeout, setTimeout, requestIdleCallback: null };
+  const viewer = {
+    clock: { onTick: { addEventListener: () => () => {} } },
+    scene: { canvas: { addEventListener() {}, removeEventListener() {} } },
+    camera: { moveEnd: { addEventListener() {} } },
+  };
+  const ids = ['weather-radar', 'weather-satellite', 'weather-lightning'];
+  const requested = [];
+  const enabled = new Set();
+  const dataManager = {
+    layers: new Map(ids.map((id) => [id, { module: {} }])),
+    isEnabled: (id) => enabled.has(id),
+    getLayerLifecycleState: (id) => ({
+      enabled: enabled.has(id),
+      lifecycleState: enabled.has(id) ? 'enabled' : 'disabled',
+      uncertain: false,
+    }),
+    getAll: () => ids.map((id) => ({ id, name: id })),
+    async setEnabled(id, value) {
+      requested.push(id);
+      if (value) enabled.add(id);
+      else enabled.delete(id);
+      return true;
+    },
+  };
+  const runner = createVantageActionRunner({ viewer, styleManager: {}, dataManager });
+  for (const [phrase, layerId] of [
+    ['radar', 'weather-radar'],
+    ['Rain radar', 'weather-radar'],
+    ['weather radar', 'weather-radar'],
+    ['precipitation', 'weather-radar'],
+    ['clouds', 'weather-satellite'],
+    ['satellite clouds', 'weather-satellite'],
+    ['cloud cover', 'weather-satellite'],
+    ['infrared clouds', 'weather-satellite'],
+    ['lightning', 'weather-lightning'],
+    ['lightning density', 'weather-lightning'],
+    ['lightning strikes', 'weather-lightning'],
+  ]) {
+    const result = await runner('set_layer_visibility', { layerId: phrase, enabled: true });
+    assert.equal(result.ok, true, phrase);
+    assert.equal(result.layerId, layerId, phrase);
+  }
+  assert.equal(requested.length, 11);
+});

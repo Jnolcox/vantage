@@ -93,6 +93,11 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
 - Voice can show, hide and open the Wind layer (`set_layer_visibility`,
   `show_data_layers_menu`), including "winds", "wind layer" and "wind
   forecast".
+- Voice can show, hide and open Rain radar, Satellite clouds and Lightning
+  density (`set_layer_visibility`, `show_data_layers_menu`), including
+  "radar", "rain radar", "precipitation", "clouds", "cloud cover",
+  "lightning" and "lightning strikes"; the layer description tells the model
+  that cloud imagery is `weather-satellite`, not the `satellites` orbit layer.
 
 ### Changed
 

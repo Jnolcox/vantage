@@ -228,6 +228,17 @@ const LAYER_ALIASES = new Map([
   ['winds', 'wind'],
   ['wind layer', 'wind'],
   ['wind forecast', 'wind'],
+  ['radar', 'weather-radar'],
+  ['rain radar', 'weather-radar'],
+  ['weather radar', 'weather-radar'],
+  ['precipitation', 'weather-radar'],
+  ['clouds', 'weather-satellite'],
+  ['satellite clouds', 'weather-satellite'],
+  ['cloud cover', 'weather-satellite'],
+  ['infrared clouds', 'weather-satellite'],
+  ['lightning', 'weather-lightning'],
+  ['lightning density', 'weather-lightning'],
+  ['lightning strikes', 'weather-lightning'],
 ]);
 
 const CITY_ALIASES = new Map([

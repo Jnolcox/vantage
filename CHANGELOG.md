@@ -98,6 +98,19 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   cache six frames (two on narrow viewports). Product, opacity and image mode
   are kept in share links (tokens `v`, `o` and `l`); history is not. NOAA
   credits join Data attribution (ported from upstream, Bilawal Sidhu).
+- Cyclone advisories layer in the Weather group, off by default: NOAA
+  NHC/CPHC storm positions, forecast tracks, lead-hour points and uncertainty
+  cones for the Atlantic and eastern/central North Pacific from
+  `/api/cyclones`, refreshed every 5 minutes. Geometry is drawn only when it
+  matches the current advisory; markers, tracks and cones are hidden beyond
+  the horizon, and storm cards and lead-hour labels share the world overlay.
+  Clicking a storm selects it, and its WEATHER card shows the advisory,
+  position time, wind, pressure and geometry status, a Storms list that flies
+  to each storm, and an "Official advisory" link that opens the NHC text in a
+  new tab without a referrer. A click on an AIS vessel card over cyclone
+  geometry still selects the vessel. The layer is kept in share links (token
+  `y`) and the NHC/CPHC credit joins Data attribution (ported from upstream,
+  Bilawal Sidhu).
 - Voice can show, hide and open the Wind layer (`set_layer_visibility`,
   `show_data_layers_menu`), including "winds", "wind layer" and "wind
   forecast".

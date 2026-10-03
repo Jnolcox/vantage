@@ -39,7 +39,8 @@ test('catalogs construct distinct layers and classification from their supplied 
     signal: b.signal,
     surface: fixtureSurface(b.signal),
   });
-  assert.equal(first.layers.length, 26);
+  assert.equal(first.layers.length, 27);
+  assert.ok(first.get('weather-cyclones'));
   assert.ok(first.get('fire-perimeters'));
   assert.ok(first.get('wind'));
   assert.notEqual(first.weatherClock, second.weatherClock);

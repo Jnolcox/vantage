@@ -2566,6 +2566,7 @@ its criteria cannot be silently ignored.
 | FIRMS Active Fires ▲ | NASA FIRMS live (VIIRS ×3 NRT + MODIS NRT, trailing 24h) | `src/data/firmsHeatmap.js` | `/api/firms` (`FIRMS_MAP_KEY`) | 10 min (proxy TTL 30 min) |
 | Fire Perimeters 🔥 | NIFC WFIGS current interagency perimeters (keyless, paged past the 2000-record cap in `OBJECTID` order); InciWeb catalog + incident page origin and update time checks for verified incident-page links | `src/layers/perimeters/` via `src/app/layers/perimeters.js` | `/api/fire-perimeters` + `/api/fire-perimeters/inciweb/*` | 5 min (server caches: catalog 1 h; incident pages 30 min) |
 | Wind 🌬 | NOAA GFS or ECMWF IFS 10 m forecast (keyless, resampled 0.25°→1°; GPU flow curves with a canvas fallback; optional speed, temperature or pressure field) | `src/layers/wind/` via `src/app/constructCatalog.js` | `/api/wind` | 1 h (forecast cycle) |
+| Cyclone advisories ◉ | NOAA NHC current storms status + NOAA tropical weather summary GIS (forecast points, track, cone; Atlantic and eastern/central North Pacific; keyless) | `src/layers/cyclones/` via `src/app/constructCatalog.js` | `/api/cyclones` | 5 min |
 | Rain radar ◉, Satellite clouds ☁, Lightning density ϟ | NOAA nowCOAST WMS: MRMS base reflectivity (CONUS), GOES-19/18 Band 14 regional or NESDIS global longwave infrared, 15-minute lightning density (keyless) | `src/layers/weather/` via `src/app/constructCatalog.js` | `/api/weather` | 2 min (lightning 10 min) |
 
 Fire Perimeters uses capped, timed server reads that send the Vantage
@@ -2649,6 +2650,32 @@ tiles, the next mosaic, or the next shell images), best effort and cancelled
 on replacement, pause or suspension. Hidden tabs and reduced motion suspend
 playback. Disabling a layer releases its imagery, shells, caches and
 listeners.
+
+Cyclone advisories is off by default in the Weather group. `/api/cyclones`
+combines the fixed NHC status and NOAA tropical GIS endpoints (NHC does not
+advertise browser CORS) into a five-minute snapshot covering the Atlantic and
+the eastern/central North Pacific only. Current position time and advisory
+issue time stay distinct. Tracks, forecast lead-hour points and cones render
+only when all three GIS parts match the status advisory; a newer status shows
+its position with geometry "awaiting advisory" rather than relabelling older
+geometry. The cone is forecast centre-track uncertainty, not storm size or the
+full hazard area. A successful empty snapshot ("No active NHC/CPHC systems")
+and an unavailable source are different states, and an expired or failed
+snapshot clears the map rather than presenting old advisories as current.
+
+The layer draws one owned Cesium data source (polygon holes and dateline seams
+preserved), culls markers, tracks and cones beyond the horizon on every map
+source, and publishes storm cards and lead-hour labels (within 4,000 km of the
+camera) to the shared world overlay. Clicking a storm, its card or a lead-hour
+label selects it; clicking empty map clears the selection; a click on an AIS
+vessel card over cyclone geometry still selects the vessel. The WEATHER card
+shows the selected storm's advisory, position time, wind, pressure and geometry
+status, a Storms list whose entries select the storm and fly to it through the
+shell's navigation authority, and an **Official advisory ↗** link that opens
+the NHC text in a new tab (`noopener,noreferrer`). Nothing is fetched until the
+layer is enabled; disabling cancels the request and releases the entities,
+labels, click handler and selection. Share links keep only the enabled state
+(token `y`).
 
 Directions is a keyless front end to the routing the voice agent already
 uses. Its row chips are the whole interface: DRIVE / WALK / BIKE pick the

@@ -1903,6 +1903,10 @@
       "src/layers/weather/infraredImage.js",
       "src/layers/weather/rasterTiles.js",
       "src/layers/weather/source.js",
+      "src/layers/cyclones/index.js",
+      "src/layers/cyclones/rendering.js",
+      "src/layers/cyclones/labels.js",
+      "src/layers/cyclones/source.js",
       "src/data/wind.js"
     ],
     "external": [
@@ -2329,7 +2333,11 @@
       "src/layers/weather/infraredAlpha.js",
       "src/layers/weather/infraredImage.js",
       "src/layers/weather/rasterTiles.js",
-      "src/layers/weather/source.js"
+      "src/layers/weather/source.js",
+      "src/layers/cyclones/index.js",
+      "src/layers/cyclones/rendering.js",
+      "src/layers/cyclones/labels.js",
+      "src/layers/cyclones/source.js"
     ],
     "external": [
       "cesium",

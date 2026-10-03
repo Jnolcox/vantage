@@ -48,7 +48,13 @@ const PANEL_GROUPS = [
   },
   {
     label: 'Weather',
-    ids: ['wind', 'weather-radar', 'weather-satellite', 'weather-lightning'],
+    ids: [
+      'wind',
+      'weather-radar',
+      'weather-satellite',
+      'weather-lightning',
+      'weather-cyclones',
+    ],
   },
   {
     label: 'Utilities',

@@ -97,6 +97,9 @@ const LINKS_AND_ATTRIBUTION = [
   'www.hsl.fi',
   'www.livetraffic.com',
   'www.naturalearthdata.com',
+  // Cyclone advisories: the credit and the official advisory links, opened in
+  // a new tab without a referrer. Status and GIS go through /api/cyclones.
+  'www.nhc.noaa.gov',
   'www.ontario.ca',
   'www.openstreetmap.org',
   'www.radio-browser.info',

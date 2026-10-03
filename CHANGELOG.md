@@ -151,6 +151,10 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
 
 ### Changed
 
+- A selected AIS vessel's detail card sits a little further from the
+  contact and may move beside it, not only above or below, to clear solid
+  panels; ambient vessel cards keep their vertical-only placement (ported
+  from upstream, Bilawal Sidhu).
 - The HUD says when its data is not live. The telemetry line appends the
   worst non-nominal feed state and up to two layer names (for example
   `| STALE LIVE FLIGHTS`). With HUD Context set to **Live**, the AI summary

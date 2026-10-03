@@ -166,6 +166,14 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   or hidden. Switching camera or turning CCTV off destroys the decoder and
   releases the server lease; a feed that fails falls back to the labelled
   still frame (ported from upstream, Daniel Slay, Bilawal Sidhu).
+- CCTV Mesh adds Delaware: DelDOT live video cameras, keyless, 300 by
+  default (nearest Wilmington, Dover and Georgetown). The
+  `tmc.deldot.gov` catalog is read with the other CCTV catalogs and only
+  official `https://video.deldot.gov/live/…/playlist.m3u8` links are
+  registered; video is pulled through the same-origin HLS route only while
+  a DelDOT camera is open. `VANTAGE_CCTV_DELDOT_ENABLED=0` disables the
+  pack and `VANTAGE_CCTV_DELDOT_MAX_SOURCES` changes the cap (ported from
+  upstream, Daniel Slay, Bilawal Sidhu).
 
 ### Changed
 

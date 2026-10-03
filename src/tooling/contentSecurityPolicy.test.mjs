@@ -66,6 +66,8 @@ const LINKS_AND_ATTRIBUTION = [
   // through /api/fire-perimeters/inciweb.
   'inciweb.wildfire.gov',
   'ion.cesium.com',
+  // Recent Imagery credit: the HLS product page.
+  'lpdaac.usgs.gov',
   'its.txdot.gov',
   // Observed-weather credits: NOAA nowCOAST and its disclaimer and lightning
   // product notes. Imagery is fetched by the server through /api/weather.

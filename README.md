@@ -569,6 +569,7 @@ Calgary, and the DelDOT camera list `tmc.deldot.gov`); the Radio Browser directo
 | The station's stream host | Browser | Pressing play on Radio | Your IP address and origin; `radio-browser` hears about the play only with `VANTAGE_RADIO_REPORT_CLICKS=1` |
 | `www.youtube-nocookie.com`, `www.youtube.com`; `www.facebook.com`, `connect.facebook.net`; `platform.twitter.com` | Browser | Pressing **LOAD** or **ALWAYS ALLOW** on an embedded witness clip | Your IP address, origin and that provider's cookies |
 | `i.ytimg.com` | Browser | Opening the Bhote Koshi event | Your IP address and origin, no cookies (the event's YouTube thumbnail posters) |
+| `cmr.earthdata.nasa.gov`, `wvs.earthdata.nasa.gov`, `gibs.earthdata.nasa.gov` (NASA) | Browser | Recent Imagery: choosing a box (SELECT BOX, USE VIEW, around a pin) or pressing **SEARCH** for a kept or shared box; then thumbnails and tiles for the days shown, and **EXPORT**. Enabling the layer alone contacts nothing | The box (its corner coordinates) and the dates asked about, with your IP address and origin |
 
 Nothing else leaves the machine: no analytics, crash reporting, geolocation
 or IP lookups. API keys stay on the server except `GOOGLE_MAPS_API_KEY` and

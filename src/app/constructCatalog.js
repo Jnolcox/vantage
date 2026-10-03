@@ -1,6 +1,7 @@
 import { createLayerCatalog } from './catalog.js';
 import { createWindLayer } from '../layers/wind/index.js';
 import { createWeatherClock } from '../layers/weather/clock.js';
+import { createWeatherLayer } from '../layers/weather/index.js';
 import { LAYER_STATE_REGISTRY } from '../data/layerState.js';
 import { createMilitaryRegistry } from '../layers/aircraft/classification.js';
 import { createApplicationFlights } from './layers/flights.js';
@@ -46,6 +47,7 @@ const SOURCE_METHODS = Object.freeze({
   alpr: ['fetch'],
   firms: ['getSnapshot'],
   wind: ['getSnapshot'],
+  weather: ['getSnapshot'],
   earthquakes: ['getSnapshot'],
   'fire-perimeters': ['getSnapshot'],
   cables: ['fetch'],
@@ -139,6 +141,21 @@ export function createApplicationCatalog({
           installations,
         }),
         createWindLayer({ feed: sources.wind, clock: weatherClock }),
+        createWeatherLayer({
+          feed: sources.weather,
+          id: 'weather-radar',
+          clock: weatherClock,
+        }),
+        createWeatherLayer({
+          feed: sources.weather,
+          id: 'weather-satellite',
+          clock: weatherClock,
+        }),
+        createWeatherLayer({
+          feed: sources.weather,
+          id: 'weather-lightning',
+          clock: weatherClock,
+        }),
         ...createInfrastructureLayers(localGeoJsonServices),
         createApplicationCables({ source: sources.cables }),
         createApplicationFirms({

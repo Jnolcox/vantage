@@ -147,6 +147,7 @@ test('weather shell supplies live imagery hosts to wind and observations and rel
     subscribe: () => () => {},
   });
   for (const id of ids) assert.equal(attached.get(id).imageryHost(), host);
+  for (const id of ids) assert.equal(typeof attached.get(id).runNavigation, 'function');
   host = { collection: null, kind: 'none' };
   for (const id of ids) assert.equal(attached.get(id).imageryHost(), host);
   owner.disconnect();

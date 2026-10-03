@@ -66,6 +66,11 @@ const LINKS_AND_ATTRIBUTION = [
   'inciweb.wildfire.gov',
   'ion.cesium.com',
   'its.txdot.gov',
+  // Observed-weather credits: NOAA nowCOAST and its disclaimer and lightning
+  // product notes. Imagery is fetched by the server through /api/weather.
+  'nowcoast.noaa.gov',
+  'ocean.weather.gov',
+  'oceanservice.noaa.gov',
   'open-meteo.com',
   'opendatacommons.org',
   'opensky-network.org',

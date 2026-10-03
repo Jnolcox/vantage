@@ -163,8 +163,8 @@ function encode(state) {
 
 test('production registry is exact, canonical, and rejects incomplete contracts', async () => {
   assert.equal(validateLayerStateRegistry(), true);
-  assert.equal(REGISTERED_LAYER_IDS.length, 23);
-  assert.equal(new Set(REGISTERED_LAYER_IDS).size, 23);
+  assert.equal(REGISTERED_LAYER_IDS.length, 26);
+  assert.equal(new Set(REGISTERED_LAYER_IDS).size, 26);
   assert.ok(REGISTERED_LAYER_IDS.includes('transit'));
   assert.deepEqual(REGISTERED_LAYER_IDS, [...REGISTERED_LAYER_IDS].sort());
   assert.deepEqual(LEGACY_LAYER_STATE_TOKENS, {
@@ -1860,4 +1860,25 @@ test('wind appearance shares round trip while old links retain weather defaults'
     },
   });
   assert.deepEqual(invalid.options.wind, defaults);
+});
+
+test('observed weather round trips product and opacity without persisting historical playback', () => {
+  const state = normalizeLayerState({ enabledLayerIds: ['weather-radar', 'weather-satellite'], options: { 'weather-radar': { opacity: 'light', play: true }, 'weather-satellite': { product: 'clouds', opacity: 'light', step: -1 } } });
+  const params = new URLSearchParams(encode(state));
+  const decoded = decodeLayerStateParams(params);
+  assert.deepEqual(decoded, state);
+  assert.equal(state.options['weather-satellite'].product, 'clouds');
+  assert.equal(Object.hasOwn(state.options['weather-radar'], 'play'), false);
+});
+
+test('satellite infrared display mode round trips and invalid or absent values use filtered', () => {
+  for (const infrared of ['full', 'filtered', undefined, 'invalid']) {
+    const state = normalizeLayerState({ enabledLayerIds: ['weather-satellite'], options: {
+      'weather-satellite': { infrared, product: 'clouds', step: -1, play: true },
+    } });
+    assert.deepEqual(decodeLayerStateParams(new URLSearchParams(encode(state))), state);
+    assert.equal(state.options['weather-satellite'].infrared, infrared === 'full' ? 'full' : 'filtered');
+    assert.equal(Object.hasOwn(state.options['weather-satellite'], 'step'), false);
+    assert.equal(Object.hasOwn(state.options['weather-satellite'], 'play'), false);
+  }
 });

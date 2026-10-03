@@ -220,6 +220,35 @@ function integerOption(key, token, defaultValue) {
 }
 
 const OPTION_GROUPS = Object.freeze({
+  'weather-lightning': Object.freeze([
+    enumOption('opacity', 'o', 'strong', ['light', 'strong'], {
+      light: 'l',
+      strong: 's',
+    }),
+  ]),
+  'weather-radar': Object.freeze([
+    enumOption('opacity', 'o', 'strong', ['light', 'strong'], {
+      light: 'l',
+      strong: 's',
+    }),
+  ]),
+  'weather-satellite': Object.freeze([
+    enumOption('infrared', 'i', 'filtered', ['filtered', 'full'], {
+      filtered: 'f',
+      full: 'a',
+    }),
+    enumOption('opacity', 'o', 'strong', ['light', 'strong'], {
+      light: 'l',
+      strong: 's',
+    }),
+    enumOption(
+      'product',
+      'p',
+      'clouds-regional',
+      ['clouds', 'clouds-regional'],
+      { clouds: 'g', 'clouds-regional': 'r' },
+    ),
+  ]),
   wind: Object.freeze([
     enumOption('model', 'm', 'gfs', ['gfs', 'ifs'], { gfs: 'g', ifs: 'i' }),
     // Links written before the motion-only default showed the speed field.
@@ -510,6 +539,24 @@ export const LAYER_STATE_REGISTRY = Object.freeze([
   }),
   Object.freeze({ id: 'traffic', token: 't', disposition: 'enabled-only' }),
   Object.freeze({ id: 'transit', token: 'j', disposition: 'enabled-only' }),
+  Object.freeze({
+    id: 'weather-lightning',
+    token: 'l',
+    disposition: 'enabled+options',
+    optionOwner: 'weather-lightning',
+  }),
+  Object.freeze({
+    id: 'weather-radar',
+    token: 'v',
+    disposition: 'enabled+options',
+    optionOwner: 'weather-radar',
+  }),
+  Object.freeze({
+    id: 'weather-satellite',
+    token: 'o',
+    disposition: 'enabled+options',
+    optionOwner: 'weather-satellite',
+  }),
   Object.freeze({
     id: 'wind',
     token: 'k',

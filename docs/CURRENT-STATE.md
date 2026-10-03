@@ -2566,6 +2566,7 @@ its criteria cannot be silently ignored.
 | FIRMS Active Fires ▲ | NASA FIRMS live (VIIRS ×3 NRT + MODIS NRT, trailing 24h) | `src/data/firmsHeatmap.js` | `/api/firms` (`FIRMS_MAP_KEY`) | 10 min (proxy TTL 30 min) |
 | Fire Perimeters 🔥 | NIFC WFIGS current interagency perimeters (keyless, paged past the 2000-record cap in `OBJECTID` order); InciWeb catalog + incident page origin and update time checks for verified incident-page links | `src/layers/perimeters/` via `src/app/layers/perimeters.js` | `/api/fire-perimeters` + `/api/fire-perimeters/inciweb/*` | 5 min (server caches: catalog 1 h; incident pages 30 min) |
 | Wind 🌬 | NOAA GFS or ECMWF IFS 10 m forecast (keyless, resampled 0.25°→1°; GPU flow curves with a canvas fallback; optional speed, temperature or pressure field) | `src/layers/wind/` via `src/app/constructCatalog.js` | `/api/wind` | 1 h (forecast cycle) |
+| Rain radar ◉, Satellite clouds ☁, Lightning density ϟ | NOAA nowCOAST WMS: MRMS base reflectivity (CONUS), GOES-19/18 Band 14 regional or NESDIS global longwave infrared, 15-minute lightning density (keyless) | `src/layers/weather/` via `src/app/constructCatalog.js` | `/api/weather` | 2 min (lightning 10 min) |
 
 Fire Perimeters uses capped, timed server reads that send the Vantage
 User-Agent, with stale-on-error caching and a per-client limit. Unchanged
@@ -2610,6 +2611,44 @@ settles, wraps, and stops with fewer than two union times. Latest returns each
 product to its own newest frame. History is never written to share links, and
 the viewer clock is untouched. Wind does not follow history: its card says
 "Forecast · does not follow history" while the clock is in history mode.
+
+Rain radar, Satellite clouds and Lightning density are the observed products,
+off by default in the Weather group. Their rows carry only the toggle and
+source line; their cards in the WEATHER panel hold coverage, opacity (Soft or
+Vivid), the satellite region (N. America GOES or Global) and image (Clouds
+only or Full) settings, a legend for radar (dBZ) and lightning
+(strikes/km²/min ×10³), "View coverage" and the shared history timeline. Each
+card shows the exact advertised observation time and its age, "synced" or
+"nearest" in history, the missing-frame gap when no frame is eligible, and
+whether the map centre is outside coverage. Product, opacity and image mode
+are share-link options; history is transient and a link opens latest.
+
+Imagery drapes the globe's imagery layers: radar, regional infrared and
+lightning as 256 px tiles to level 6, global infrared as one decoded
+2048×1024 mosaic cropped to level-3 tiles so its request-dependent contrast
+shows no seams. A frame stages invisibly and replaces the shown one only once
+its own tiles are loaded and quiet; a failed frame keeps the previous one.
+Throttled tiles (429/503) get at most three retries each. Up to six decoded
+mosaics are cached (two on viewports narrower than 700 px).
+
+On photorealistic 3D Tiles each product is a raised, translucent shell
+(global infrared 5.5 km, regional infrared 5.8 km, radar 6.2 km, lightning
+6.6 km), drawn first in the opaque pass in height order without depth writes,
+so lightning draws over the other products and other map content over all of
+them. Shells rise with the camera over coarse distant tiles (4 m per km of
+camera height, at most 60 km, in 500 m steps). Each shell except global
+infrared also samples a 4096×2048 image of a window around the view, centred
+on the camera footprint, max(2 × its span, 6°) wide, on a 0.5° grid, applied
+only once its image has drawn. A shell keeps its decoded full-extent and
+detail images, for the shown and the warmed next frame, in one LRU of at most
+128 MiB; on viewports narrower than 700 px it requests 2048×1024 images and
+keeps 32 MiB. A map-source change tears one renderer down and restages the
+shown frame on the other; a map without an imagery host pauses the products.
+During playback a shown frame warms the next one (at most eight level-0/1
+tiles, the next mosaic, or the next shell images), best effort and cancelled
+on replacement, pause or suspension. Hidden tabs and reduced motion suspend
+playback. Disabling a layer releases its imagery, shells, caches and
+listeners.
 
 Directions is a keyless front end to the routing the voice agent already
 uses. Its row chips are the whole interface: DRIVE / WALK / BIKE pick the

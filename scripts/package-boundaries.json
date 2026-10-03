@@ -1896,6 +1896,13 @@
       "src/layers/wind/rendering.js",
       "src/layers/wind/index.js",
       "src/layers/weather/clock.js",
+      "src/layers/weather/index.js",
+      "src/layers/weather/rendering.js",
+      "src/layers/weather/shellRendering.js",
+      "src/layers/weather/infraredAlpha.js",
+      "src/layers/weather/infraredImage.js",
+      "src/layers/weather/rasterTiles.js",
+      "src/layers/weather/source.js",
       "src/data/wind.js"
     ],
     "external": [
@@ -2315,7 +2322,14 @@
       "src/layers/wind/gpuRendering.js",
       "src/layers/wind/rendering.js",
       "src/layers/wind/index.js",
-      "src/layers/weather/clock.js"
+      "src/layers/weather/clock.js",
+      "src/layers/weather/index.js",
+      "src/layers/weather/rendering.js",
+      "src/layers/weather/shellRendering.js",
+      "src/layers/weather/infraredAlpha.js",
+      "src/layers/weather/infraredImage.js",
+      "src/layers/weather/rasterTiles.js",
+      "src/layers/weather/source.js"
     ],
     "external": [
       "cesium",

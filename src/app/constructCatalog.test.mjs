@@ -39,7 +39,7 @@ test('catalogs construct distinct layers and classification from their supplied 
     signal: b.signal,
     surface: fixtureSurface(b.signal),
   });
-  assert.equal(first.layers.length, 23);
+  assert.equal(first.layers.length, 26);
   assert.ok(first.get('fire-perimeters'));
   assert.ok(first.get('wind'));
   assert.notEqual(first.weatherClock, second.weatherClock);
@@ -49,6 +49,11 @@ test('catalogs construct distinct layers and classification from their supplied 
     /Forecast · does not follow history/,
   );
   assert.equal(second.get('wind').getRowControls().summary.status, null);
+  for (const id of ['weather-radar', 'weather-satellite', 'weather-lightning'])
+    assert.equal(
+      first.get(id).getDiagnostics().clock.target,
+      '2026-09-21T12:00:00.000Z',
+    );
   assert.ok(first.get('transit'));
   const order = first.layers.map(({ id }) => id);
   assert.deepEqual(

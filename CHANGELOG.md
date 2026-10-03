@@ -71,6 +71,25 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   credits, including ECMWF's licence notice, are in Data attribution (ported
   from upstream, Bilawal Sidhu, Gustavo Beneduzi, Daniel Slay, Rehaan
   Delmotra).
+- Rain radar, Satellite clouds and Lightning density layers in the Weather
+  group, off by default, showing NOAA nowCOAST observations: MRMS radar
+  reflectivity for the contiguous US, GOES regional (North America, about
+  5-minute updates) or NESDIS global longwave infrared with a "Clouds only"
+  brightness filter, and 15-minute lightning density for the Americas and the
+  Pacific. Their cards in the WEATHER panel share one history timeline
+  (Earlier, Later, Play, Latest over up to 13 advertised frames per product,
+  each shown at its nearest frame at or before the chosen time), report the
+  exact observation time and its age, give a legend in dBZ or
+  strikes/km²/min ×10³, and offer opacity, region and image settings and a
+  "View coverage" flight. Imagery drapes the globe or, on Google 3D Tiles,
+  draws as a raised shell per product that rises with the camera over coarse
+  distant tiles, with a sharper image in a window around the view. Nothing
+  loads until a layer is enabled; disabling releases its imagery and caches.
+  Shells hold at most 128 MiB of decoded images per product (32 MiB, with
+  2048-pixel images, on viewports narrower than 700 px) and the global mosaic
+  cache six frames (two on narrow viewports). Product, opacity and image mode
+  are kept in share links (tokens `v`, `o` and `l`); history is not. NOAA
+  credits join Data attribution (ported from upstream, Bilawal Sidhu).
 - Voice can show, hide and open the Wind layer (`set_layer_visibility`,
   `show_data_layers_menu`), including "winds", "wind layer" and "wind
   forecast".

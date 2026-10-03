@@ -118,7 +118,8 @@ export class LayerBindings {
     });
   }
 
-  /** Give weather layers the live draped-imagery host; release it on detach. */
+  /** Give weather layers the live draped-imagery host and camera navigation;
+   * release both on detach. */
   _connectWeatherShellServices() {
     for (const layer of this._weatherShellModules)
       layer.attachShellServices?.(null);
@@ -126,7 +127,11 @@ export class LayerBindings {
     for (const id of WEATHER_LAYER_IDS) {
       const layer = this._dataManager?.layers?.get(id)?.module;
       if (typeof layer?.attachShellServices !== 'function') continue;
-      layer.attachShellServices({ imageryHost: this.services.imageryHost });
+      layer.attachShellServices({
+        runNavigation: (navigate) =>
+          this.runImmediateNavigation('weather', navigate),
+        imageryHost: this.services.imageryHost,
+      });
       this._weatherShellModules.push(layer);
     }
   }

@@ -313,3 +313,40 @@ test('aircraft searches keep the feeds that answered and name the others', async
       error.code === 'unavailable' && error.message === 'OpenSky HTTP 503',
   );
 });
+
+test('aircraft searches say when a feed that answered is stale', async () => {
+  const stale = feed([], { freshness: 'stale' });
+  const result = await composeCatalog({
+    tools: coreTools,
+    services: { aircraft: stale, military: feed([]) },
+  }).call('find_aircraft', { callsign: 'UAL1' });
+  assert.equal(
+    result.summary,
+    'No aircraft with callsign UAL1 is currently reported. The civil feed data may be stale.',
+  );
+  assert.deepEqual(result.data.stale_feeds, ['civil']);
+  assert.deepEqual(
+    result.data.feeds.map((entry) => [entry.feed, entry.freshness]),
+    [
+      ['civil', 'stale'],
+      ['military', 'current'],
+    ],
+  );
+});
+
+test('the real OpenSky source marks an hour-old snapshot stale for searches', async () => {
+  const { createOpenSkySource } =
+    await import('../../sources/live/standalone.js');
+  const now = Date.UTC(2026, 0, 1, 12);
+  const opensky = createOpenSkySource({
+    now: () => now,
+    fetchImpl: async () =>
+      Response.json({ time: now / 1000 - 3600, states: [] }),
+  });
+  const result = await composeCatalog({
+    tools: coreTools,
+    services: { aircraft: opensky },
+  }).call('find_aircraft', { callsign: 'UAL1' });
+  assert.deepEqual(result.data.stale_feeds, ['civil']);
+  assert.match(result.summary, /may be stale\.$/);
+});

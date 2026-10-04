@@ -409,6 +409,11 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
 
 ### Fixed
 
+- A stalled OpenSky global snapshot no longer holds `/api/opensky` for over
+  a minute. Each attempt gets 10 seconds, a timed-out or failed attempt is
+  retried once, and a second failure is answered from the stale cache or the
+  regional fallback; the OAuth token request gets the same limit (ported from
+  upstream, Sameh Khamis).
 - The routes that spend provider quota or write the voice debug log
   (`/api/realtime/token`, `/api/realtime/debug-log`, `/api/openai/*`,
   `/api/google/text-search`, `/api/google/nearby-places`) refuse requests

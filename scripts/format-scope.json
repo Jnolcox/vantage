@@ -959,5 +959,7 @@
   "src/ui/cyberTheme.test.mjs",
   "src/ui/radioPanelPlacement.test.mjs",
   "src/ui/styles/cyber.css",
-  "src/ui/styles/panel-surfaces.css"
+  "src/ui/styles/panel-surfaces.css",
+  "src/localRequestGate.mjs",
+  "src/localRequestGate.test.mjs"
 ]

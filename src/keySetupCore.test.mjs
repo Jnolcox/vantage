@@ -363,3 +363,17 @@ test('server Google key remains supported without appearing in setup or its miss
   assert.ok(!JSON.stringify(status).includes('GOOGLE_MAPS_SERVER_API_KEY'));
   assert.ok(!JSON.stringify(status).includes(secret));
 });
+
+test('isSharingEnabled reports the launcher tunnel flags and a real share var as sharing', async () => {
+  const { isSharingEnabled } = await import('./keySetupCore.mjs');
+  assert.equal(isSharingEnabled({ PINOKIO_SHARE_CLOUDFLARE: 'true' }), true);
+  assert.equal(isSharingEnabled({ PINOKIO_SHARE_LOCAL: '1' }), true);
+  assert.equal(isSharingEnabled({ PINOKIO_SHARE_VAR: 'MY_TUNNEL_TOKEN' }), true);
+});
+
+test('isSharingEnabled treats unset, empty and sentinel values as sharing off', async () => {
+  const { isSharingEnabled } = await import('./keySetupCore.mjs');
+  assert.equal(isSharingEnabled(), false);
+  assert.equal(isSharingEnabled({ PINOKIO_SHARE_LOCAL: '0', PINOKIO_SHARE_VAR: '' }), false);
+  assert.equal(isSharingEnabled({ PINOKIO_SHARE_VAR: '__vantage_sharing_disabled__' }), false);
+});

@@ -286,6 +286,16 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   parcels across zooms. Contacts lists mapped installations within a true
   100 km surface radius of the tracked subject, including in Cockpit (ported
   from upstream, Bilawal Sidhu).
+- Mapped ALPR Cameras reads an hourly OpenStreetMap extract for the US and
+  Canada (community-hosted vector tiles, through the same-origin `/api/tiles`
+  proxy) instead of an Overpass query per view. Whole-city views load z9–z12
+  tiles, nearby badges sit on the rendered surface, map-source changes
+  reposition markers without replacing them, and the row tells unsupported
+  coverage apart from an empty result and asks for a closer view before
+  exceeding its tile budget. Views outside the extract still query Overpass
+  through the server. The source line credits "© OpenStreetMap contributors"
+  and the inline credit no longer reflows the credit row (ported from
+  upstream, Bilawal Sidhu).
 
 ### Fixed
 

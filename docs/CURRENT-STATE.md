@@ -1,5 +1,21 @@
 # Vantage Current State
 
+Mapped ALPR Cameras reads the community-hosted hourly OpenStreetMap camera
+extract. `createAlprTileSource` (`src/layers/alpr/source.js`) reads the US and
+Canada TileJSON from `/api/tiles/alpr/cameras-{us,ca}-hourly.json`, picks the
+finest z9–z12 zoom whose tiles for the view fit 16 per country
+(`alprDetailZoom`; wider views get a zoom-in prompt before any fetch), decodes
+`surveillance:type=ALPR` features (`tileRecords.js`), keeps each camera's
+finest-zoom position (`createAlprPrecisionCache`) and caps a dense metro at the
+1,500 records nearest the view centre. Views outside both extracts' bounds
+report `noCoverage`. `createAlprSource` composes it with the Overpass adapter:
+only a view the extract does not cover goes to `/api/overpass`, and once the
+server answers `OVERPASS_NOT_CONFIGURED` the source stops asking for the page.
+Marker floors are prepared once per batch with shared, cancellable terrain
+requests (`floors.js`, `resolveGroundFloorCells(points, { signal })`), nearby
+badges are refined onto the rendered surface while the camera is still, and
+map-source changes reposition markers in place.
+
 Mapped Installations reads military areas from OpenStreetMap vector tiles.
 The installation source decodes `landuse=military` polygons from the shared
 OpenFreeMap tile source (`/api/tiles/openfreemap`), clips them to tile cores

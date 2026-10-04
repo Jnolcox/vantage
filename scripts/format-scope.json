@@ -921,5 +921,6 @@
   "src/layers/traffic/motion.test.mjs",
   "scripts/qa-journey-recorder.mjs",
   "src/sources/militaryTileGeometry.test.mjs",
-  "scripts/qa-context-arrivals.mjs"
+  "scripts/qa-context-arrivals.mjs",
+  "scripts/qa-alpr-journey.mjs"
 ]

@@ -9,6 +9,7 @@ import * as annotations from '../annotations/worldAnnotationRenderer.js';
 import { createDirectionsLayer } from '../layers/directions/index.js';
 import { createLifecycle as createCctvLifecycle } from '../layers/cctv/lifecycle.js';
 import * as input from './inputOwnership.js';
+import { createOverpassAlprSource } from '../layers/alpr/source.js';
 
 const noop = () => {};
 const overlayHost = { setEntries: noop, setVisible: noop, clearSource: noop };
@@ -86,4 +87,8 @@ test('Warendorf webcam display introduces the shared OSM credit', (t) => {
     parts: { selection: empty, geometryQueue: empty, rendering: empty, projection: empty, cards: empty, presentation: empty }, source: {} });
   lifecycle.methods.enable(); assertCredit(v); lifecycle.methods.disable();
   assert.equal(v.credits.filter(c => c.showOnScreen).length, 0);
+});
+
+test('optional Overpass ALPR adapter uses the shared contributor wording', () => {
+  assert.equal(createOverpassAlprSource().attribution.text, '© OpenStreetMap contributors');
 });

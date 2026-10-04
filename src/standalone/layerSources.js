@@ -12,7 +12,7 @@ import { createBikeshareSource } from '../layers/bikeshare/source.js';
 import { createInstallationSource } from '../layers/installations/source.js';
 import { createSatelliteSource } from '../layers/satellites/source.js';
 import { createLaunchSource } from '../layers/launches/source.js';
-import { createOverpassAlprSource } from '../layers/alpr/source.js';
+import { createAlprSource } from '../layers/alpr/source.js';
 import { createFirmsSource } from '../layers/firms/source.js';
 import { createWindSource } from '../layers/wind/source.js';
 import { createWeatherSource } from '../layers/weather/source.js';
@@ -38,7 +38,7 @@ export function createStandaloneLayerSources() {
     installations: createInstallationSource({ mapTiles }),
     satellites: createSatelliteSource(),
     launches: createLaunchSource(),
-    alpr: createOverpassAlprSource(),
+    alpr: createAlprSource(),
     firms: createFirmsSource(),
     wind: createWindSource(),
     weather: createWeatherSource(),

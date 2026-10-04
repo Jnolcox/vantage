@@ -548,7 +548,9 @@ queries, nothing about your view);
 `earthquake.usgs.gov` (fetched by the browser); `api.tomtom.com` (tile
 coordinates in view); `tiles.openfreemap.org` (OpenFreeMap vector tiles for
 Traffic roads and Mapped Installations, through `/api/tiles/openfreemap`: tile
-coordinates in view);
+coordinates in view); `tiles.dontgetflocked.com` (the hourly US/Canada
+OpenStreetMap ALPR extract for Mapped ALPR Cameras, through `/api/tiles/alpr`:
+tile coordinates in view);
 Overpass mirrors `overpass-api.de`,
 `lz4.overpass-api.de`, `overpass.kumi.systems`, `overpass.private.coffee`
 (bounding-box queries of the view); registered GTFS-realtime and GBFS feeds

@@ -15,7 +15,7 @@ How to read this:
 
 | Source                                                                | Used for                                                                                                                            | License / terms                                                                                                                                                                                                                                                                                                                                       | Attribution                                                                                                                                 |
 | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| **OpenStreetMap ALPR camera locations** (including DeFlock community mapping) | Optional mapped automatic license-plate-reader camera layer | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/1-0/); commercial use permitted with applicable attribution and database share-alike obligations | [© OpenStreetMap contributors](https://www.openstreetmap.org/copyright); [DeFlock](https://deflock.org) community mapping |
+| **Community hourly ALPR extract** (`tiles.dontgetflocked.com`) | ALPR camera vector tiles for the US and Canada, fetched by the server through `/api/tiles/alpr` when Mapped ALPR Cameras is enabled; the browser never contacts the host. Elsewhere, Overpass through `/api/overpass` | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/1-0/); commercial use permitted with attribution and database share-alike obligations | © OpenStreetMap contributors (shared credit) |
 | **Google Map Tiles API** (Photorealistic 3D Tiles) + Places/Geocoding | The 3D globe, voice scene context, and on-demand nearby installation search                                                         | Google Maps Platform ToS (proprietary, your own key + billing)                                                                                                                                                                                                                                                                                        | "Google" / "Google Maps" logo — **shown in-app**, required                                                                                  |
 | **OpenSky Network**                                                   | Primary worldwide live-flight snapshot                                                                                              | Non-commercial research/education license                                                                                                                                                                                                                                                                                                             | Schäfer et al., _"Bringing Up OpenSky"_, IPSN 2014 + opensky-network.org                                                                    |
 | **adsb.lol point API**                                                | Bounded live-flight fallback when OpenSky has no usable snapshot                                                                    | ODbL 1.0                                                                                                                                                                                                                                                                                                                                              | adsb.lol contributors; `api.adsb.lol/v2/lat/{lat}/lon/{lon}/dist/{radius}`                                                                  |
@@ -124,29 +124,30 @@ The richer structured dataset is licensed separately/commercially by TeleGeograp
 
 ### ALPR camera mapping
 
-The optional ALPR layer queries OpenStreetMap nodes tagged `man_made=surveillance`
-and `surveillance:type=ALPR` (including case-insensitive semicolon multi-values)
-through the shared Overpass proxy. Source/tag reference:
+The optional ALPR layer reads OpenStreetMap `surveillance:type=ALPR` nodes
+from a community-hosted hourly US/Canada extract, using detail vector tiles
+that the server fetches through `/api/tiles/alpr`; the browser never contacts
+the extract host. Source/tag reference:
 [OSM ALPR tagging](https://wiki.openstreetmap.org/wiki/Tag:surveillance:type%3DALPR).
 No DeFlock software, branded assets or separate database is bundled. The layer
-shows contributor-supplied locations and tags, not plate records, camera video,
-current operating status, or exhaustive coverage. All manufacturers share the
-ALPR category and marker color. Manufacturer, operator and camera type are shown
-only when tagged, not inferred or independently verified. Every selected card
-names OpenStreetMap in a smaller, muted source line beneath those details.
+shows mapped locations and available tags, not plate records, camera video,
+current operating status or exhaustive coverage. OSM edit timestamps are not
+presented as field-verification dates. Manufacturer, operator and camera type
+are shown only when tagged, not inferred or independently verified.
 
-Queries are limited to a city-scale viewport (at most 3° per axis), at most
-1,500 returned nodes, with outward-snapped query reuse and explicit stale/limited
-coverage notices. A linked © OpenStreetMap credit appears for five
-seconds when camera locations first display after enabling, then collapses;
-Data attribution retains the full source/license entry, following the
+Outside the extract, views query OpenStreetMap through the server's
+`/api/overpass` route, at most 3° per axis and 1,500 returned nodes.
+
+Reads are viewport-bounded, with at most 16 tiles per country, four concurrent
+reads per country, 1,500 displayed records and an hour-long decoded-tile cache.
+Displayed OSM-derived layers retain a short inline OpenStreetMap credit, plus
+OpenMapTiles while OpenFreeMap tiles are used; Data attribution retains the
+full credits, following the
 [OSMF interactive-map guidance](https://osmfoundation.org/wiki/Licence/Attribution_Guidelines).
-OSM data remains separately attributed under ODbL; querying
-at runtime does not replace the license obligations. ODbL permits commercial
-use and does not license the application code. If publicly using a derivative
-database, follow its share-alike and access requirements; keep independent
-datasets separate rather than treating the whole collection as MIT data.
-Overpass hosting capacity and usage policies are separate from the data license.
+ODbL permits commercial use with attribution and applicable database
+share-alike/access obligations; it does not license the application code.
+Trimmed test-only tile fixtures retain their provenance in
+`src/data/fixtures/README.md`.
 
 ### Bundled OpenStreetMap data (ODbL share-alike)
 

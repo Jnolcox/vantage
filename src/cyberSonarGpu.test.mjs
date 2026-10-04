@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import * as Cesium from 'cesium';
 import {
   createCyberSonarGpu,
@@ -8,6 +9,33 @@ import {
   isCyberSonarCommandVisible,
   syncCyberSonarCommand,
 } from './cyberSonarGpu.js';
+
+const readJson = (url) => JSON.parse(readFileSync(url, 'utf8'));
+
+// The GPU contact path rewrites Cesium's native point/billboard shaders and is
+// validated against one engine release. A Cesium bump must fail here so the
+// adapter is revalidated instead of silently falling back to native contacts.
+test('the installed Cesium is the release the GPU sonar adapter was validated against', () => {
+  assert.equal(Cesium.VERSION, CYBER_SONAR_CESIUM_VERSION);
+  const installed = readJson(
+    new URL('../node_modules/cesium/package.json', import.meta.url),
+  );
+  assert.equal(installed.version, CYBER_SONAR_CESIUM_VERSION);
+});
+
+test('package.json pins Cesium to the exact release the GPU sonar adapter supports', () => {
+  const manifest = readJson(new URL('../package.json', import.meta.url));
+  assert.equal(manifest.dependencies.cesium, CYBER_SONAR_CESIUM_VERSION);
+  const lock = readJson(new URL('../package-lock.json', import.meta.url));
+  assert.equal(
+    lock.packages[''].dependencies.cesium,
+    CYBER_SONAR_CESIUM_VERSION,
+  );
+  assert.equal(
+    lock.packages['node_modules/cesium'].version,
+    CYBER_SONAR_CESIUM_VERSION,
+  );
+});
 
 test('stable commands reuse uniforms and derived pipelines while all native fields remain live', () => {
   const native = new Cesium.DrawCommand({

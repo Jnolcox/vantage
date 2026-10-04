@@ -4449,7 +4449,10 @@ color changes.
 The GPU adapter rewrites Cesium's native point and billboard shaders and is
 validated against one engine release (`CYBER_SONAR_CESIUM_VERSION`, 1.138.0).
 Any other `Cesium.VERSION` reports the shader as unsupported and keeps native
-rendering.
+rendering. `package.json` pins `cesium` to that exact version, and
+`src/cyberSonarGpu.test.mjs` fails when the installed or declared Cesium
+differs, so an engine bump revalidates the adapter instead of silently losing
+the sweep.
 
 The Sonar controls adjust rings, range, power, opacity and sector. Sweep
 opacity affects detection painting rather than label cohort admission. The

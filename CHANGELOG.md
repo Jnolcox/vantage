@@ -256,6 +256,10 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
 
 ### Changed
 
+- `cesium` is pinned to exactly 1.138.0 (was `^1.124.0`). The Cyber sonar GPU
+  path rewrites Cesium's native contact shaders and is validated against that
+  release only; a test fails when the installed or declared version differs,
+  so an engine upgrade is a deliberate change that revalidates the adapter.
 - A selected AIS vessel's detail card sits a little further from the
   contact and may move beside it, not only above or below, to clear solid
   panels; ambient vessel cards keep their vertical-only placement (ported

@@ -371,6 +371,10 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
 
 ### Fixed
 
+- The Cyber HUD's voice-control styling (scan scope, mic orbit, speaker
+  states and their reduced-motion fallback) applies again: its selectors still
+  named the pre-rename `#gev-voice-*` / `.gev-*` ids, so none matched the
+  `vantage-*` elements the voice control renders.
 - The right panel rail (Display, CCTV, Context) settles within two layout
   passes instead of flipping in and out of focus mode as panel heights
   change. Each pass measures natural heights under a synchronous

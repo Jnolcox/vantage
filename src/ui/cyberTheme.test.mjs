@@ -481,18 +481,36 @@ test('the Display selector, voice schema and final stylesheet expose Cyber', () 
 test('Cyber voice telemetry renders a live scan scope without replacing audio ownership', () => {
   assert.match(
     cyberStyles,
-    /#gev-voice-control\s*\{[\s\S]*?--cyber-voice-wave:/,
+    /#vantage-voice-control\s*\{[\s\S]*?--cyber-voice-wave:/,
   );
-  assert.match(cyberStyles, /\.gev-voice-visualizer::before/);
-  assert.match(cyberStyles, /\.gev-voice-visualizer::after/);
-  assert.match(cyberStyles, /@keyframes gev-cyber-voice-scan/);
-  assert.match(cyberStyles, /@keyframes gev-cyber-voice-lock/);
+  assert.match(cyberStyles, /\.vantage-voice-visualizer::before/);
+  assert.match(cyberStyles, /\.vantage-voice-visualizer::after/);
+  assert.match(cyberStyles, /@keyframes vantage-cyber-voice-scan/);
+  assert.match(cyberStyles, /@keyframes vantage-cyber-voice-lock/);
   assert.match(cyberStyles, /\[data-speaker='user'\]/);
   assert.match(cyberStyles, /\[data-speaker='ai'\]/);
   assert.match(
     cyberStyles,
-    /prefers-reduced-motion: reduce[\s\S]*?gev-voice-visualizer::after[\s\S]*?animation: none/,
+    /prefers-reduced-motion: reduce[\s\S]*?vantage-voice-visualizer::after[\s\S]*?animation: none/,
   );
+});
+
+test('Cyber voice styles target only selectors the voice control renders', () => {
+  const voiceControl = readFileSync(
+    new URL('../voice/control.js', import.meta.url),
+    'utf8',
+  );
+  const voiceSelectors = new Set(
+    cyberStyles.match(/[#.]vantage-(?:voice|mic)-[a-z-]+/g) ?? [],
+  );
+  assert.ok(voiceSelectors.size > 0);
+  for (const selector of voiceSelectors) {
+    assert.ok(
+      voiceControl.includes(selector.slice(1)),
+      `${selector} is not rendered by src/voice/control.js`,
+    );
+  }
+  assert.doesNotMatch(cyberStyles, /[#.]gev-/);
 });
 
 test('Cyber Cockpit Display uses the released briefing lane instead of the legacy viewport cap', () => {

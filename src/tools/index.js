@@ -12,7 +12,13 @@ export {
   ToolError,
   TOOL_ERROR_CODES,
 } from './catalog.js';
-export { AREA_SCHEMA, resolveArea, areaContains, distanceKm } from './area.js';
+export {
+  AREA_SCHEMA,
+  resolveArea,
+  areaCenter,
+  areaContains,
+  distanceKm,
+} from './area.js';
 export { LIMIT_SCHEMA, DEFAULT_LIMIT, MAX_LIMIT, capRows } from './results.js';
 export { createGeocodePlaceService, placeFromGeocodeResult } from './places.js';
 

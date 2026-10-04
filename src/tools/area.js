@@ -75,13 +75,25 @@ export async function resolveArea(area, { services, signal } = {}) {
       'invalid_arguments',
       `No place matched "${area.place}"; try a more specific name or a bbox`,
     );
-  return { label: place.name || area.place, ...place.bounds };
+  return {
+    label: place.name || area.place,
+    ...place.bounds,
+    ...(place.point ? { point: place.point } : {}),
+  };
 }
 
+/**
+ * The bounding box of a spherical cap. When the cap reaches a pole it spans
+ * every longitude; otherwise the longitude span is the exact tangent bound,
+ * asin(sin(d) / cos(lat)) for angular radius d.
+ */
 function circleArea(lat, lon, radiusKm) {
-  const latSpan = (radiusKm / EARTH_RADIUS_KM) * (180 / Math.PI);
-  const cosLat = Math.cos((lat * Math.PI) / 180);
-  const lonSpan = cosLat < 1e-6 ? 180 : Math.min(180, latSpan / cosLat);
+  const angular = radiusKm / EARTH_RADIUS_KM;
+  const latSpan = angular * (180 / Math.PI);
+  const reachesPole = lat + latSpan >= 90 || lat - latSpan <= -90;
+  const ratio = Math.sin(angular) / Math.cos((lat * Math.PI) / 180);
+  const lonSpan =
+    reachesPole || ratio >= 1 ? 180 : Math.asin(ratio) * (180 / Math.PI);
   const wrap = (value) => ((((value + 180) % 360) + 360) % 360) - 180;
   return {
     label: `${radiusKm} km around ${lat.toFixed(3)}, ${lon.toFixed(3)}`,
@@ -102,6 +114,24 @@ export function distanceKm(a, b) {
     Math.sin(dLat / 2) ** 2 +
     Math.cos(a.lat * toRad) * Math.cos(b.lat * toRad) * Math.sin(dLon / 2) ** 2;
   return 2 * EARTH_RADIUS_KM * Math.asin(Math.min(1, Math.sqrt(h)));
+}
+
+/**
+ * The center of a resolved area: a radius area's center, a named place's own
+ * point, or the middle of a box (handling boxes across the antimeridian).
+ */
+export function areaCenter(area) {
+  if (area.center) return { lat: area.center.lat, lon: area.center.lon };
+  if (area.point) return { lat: area.point.lat, lon: area.point.lon };
+  const width =
+    area.west <= area.east
+      ? area.east - area.west
+      : area.east + 360 - area.west;
+  const lon = area.west + width / 2;
+  return {
+    lat: (area.south + area.north) / 2,
+    lon: lon > 180 ? lon - 360 : lon,
+  };
 }
 
 /** Whether a point lies inside a resolved area, including radius areas. */

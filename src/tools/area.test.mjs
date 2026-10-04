@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { areaContains, distanceKm, resolveArea } from './area.js';
+import { areaCenter, areaContains, distanceKm, resolveArea } from './area.js';
 import { placeFromGeocodeResult } from './places.js';
 
 test('an area needs exactly one form', async () => {
@@ -91,6 +91,7 @@ test('geocode results become bounded places', () => {
     {
       name: 'Oslo, Norway',
       bounds: { west: 10.5, south: 59.8, east: 10.9, north: 60 },
+      point: { lat: 59.9, lon: 10.7 },
     },
   );
   assert.deepEqual(
@@ -99,4 +100,50 @@ test('geocode results become bounded places', () => {
     { west: 179.65, south: -0.25, east: 180, north: 0.25 },
   );
   assert.equal(placeFromGeocodeResult({ geometry: {} }), null);
+});
+
+test('a named place centers on its own point, not the middle of its bounds', async () => {
+  // Tokyo's prefecture bounds reach remote Pacific islands.
+  const places = {
+    resolve: async () => ({
+      name: 'Tokyo, Japan',
+      bounds: { west: 136.07, south: 20.21, east: 153.99, north: 35.9 },
+      point: { lat: 35.6769, lon: 139.7639 },
+    }),
+  };
+  const tokyo = await resolveArea({ place: 'Tokyo' }, { services: { places } });
+  assert.deepEqual(areaCenter(tokyo), { lat: 35.6769, lon: 139.7639 });
+  assert.equal(areaContains(tokyo, { lat: 27.09, lon: 142.19 }), true);
+  const box = await resolveArea({ bbox: [0, 0, 10, 10] });
+  assert.deepEqual(areaCenter(box), { lat: 5, lon: 5 });
+});
+
+test('radius areas include every point within the radius, near the poles too', async () => {
+  const polar = await resolveArea({ lat: 80, lon: 0, radius_km: 1500 });
+  const across = { lat: 89, lon: 180 };
+  assert.ok(distanceKm({ lat: 80, lon: 0 }, across) < 1500);
+  assert.ok(areaContains(polar, across));
+  assert.equal(polar.west, -180);
+  assert.equal(polar.east, 180);
+  assert.equal(polar.north, 90);
+  // Away from the poles, sample the circle's edge and check each point is kept.
+  const center = { lat: 60, lon: 20 };
+  const wide = await resolveArea({ ...center, radius_km: 2000 });
+  assert.ok(wide.east - wide.west < 360);
+  for (let bearing = 0; bearing < 360; bearing += 5) {
+    const d = 1999 / 6371.0088;
+    const b = (bearing * Math.PI) / 180;
+    const lat1 = (center.lat * Math.PI) / 180;
+    const lat2 = Math.asin(
+      Math.sin(lat1) * Math.cos(d) + Math.cos(lat1) * Math.sin(d) * Math.cos(b),
+    );
+    const lon2 =
+      (center.lon * Math.PI) / 180 +
+      Math.atan2(
+        Math.sin(b) * Math.sin(d) * Math.cos(lat1),
+        Math.cos(d) - Math.sin(lat1) * Math.sin(lat2),
+      );
+    const point = { lat: (lat2 * 180) / Math.PI, lon: (lon2 * 180) / Math.PI };
+    assert.ok(areaContains(wide, point), `bearing ${bearing}`);
+  }
 });

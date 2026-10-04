@@ -190,6 +190,16 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   box and the browser's IP address; the three origins are in the CSP and the
   network inventory, and the NASA acknowledgement is in Data attribution
   (ported from upstream, Bilawal Sidhu, manjunath22466).
+- Same-origin `/api/tiles` vector tile proxy. The server forwards only
+  allow-listed OpenFreeMap (`/api/tiles/openfreemap/...`) and hourly
+  OpenStreetMap ALPR extract (`/api/tiles/alpr/...`) paths to their one host,
+  with the Vantage `openfreemap-proxy` / `alpr-tiles-proxy` User-Agent,
+  a 256 KB TileJSON and 4 MB tile cap, a 10 s deadline, at most eight upstream
+  requests at once, a bounded in-memory (48 MB) and on-disk (256 MB,
+  `.vantage-cache/tiles`) LRU cache that also remembers tiles the upstream has
+  no data for, and stale answers when the upstream fails. TileJSON is
+  rewritten so every tile URL points back at the proxy, so the browser never
+  contacts a third-party tile host.
 
 ### Changed
 

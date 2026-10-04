@@ -114,6 +114,7 @@ test('real dev and built-preview servers serve provider JSON and terminate unkno
         ['/api/gbfs/', 400],
         ['/api/tomtom/status', 200],
         ['/api/radio/unknown', 404],
+        ['/api/tiles/unknown/planet', 404],
         ['/api/setup/status', isPreview ? 404 : 200],
         ['/api/setup/update', 404],
         ['/api/does-not-exist', 404],

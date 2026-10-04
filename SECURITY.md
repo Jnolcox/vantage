@@ -132,6 +132,12 @@ controls that keep it that way:
   only after SELECT BOX, USE VIEW, a pin box or SEARCH, and receive that box
   and your IP address. A same-origin proxy would still have to forward the
   box, so the page talks to the three NASA origins the CSP lists.
+- **Vector tiles go through the local server.** `/api/tiles` forwards an
+  allow-list of OpenFreeMap and hourly ALPR-extract paths to those two hosts
+  only, with the Vantage User-Agent, a size and time limit, and a bounded
+  memory and disk cache under `.vantage-cache/tiles`, and rewrites TileJSON
+  so the page is never handed a third-party tile address. Neither host is in
+  the CSP.
 - **Opt-in third-party reporting only.** Radio plays reach Radio Browser's
   click counter only with `VANTAGE_RADIO_REPORT_CLICKS=1`.
 

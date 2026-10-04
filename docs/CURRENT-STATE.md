@@ -1,5 +1,23 @@
 # Vantage Current State
 
+Third-party vector tiles reach the page only through the local server.
+`server/providers/tiles.js` mounts `/api/tiles/<upstream>/<path>` and forwards
+an allow-list: `openfreemap` → `https://tiles.openfreemap.org` (`planet`
+TileJSON and `planet/<version>/{z}/{x}/{y}.pbf` tiles) and `alpr` →
+`https://tiles.dontgetflocked.com` (`cameras-{us,ca}-hourly.json` and
+`cameras-{us,ca}-hourly/{z}/{x}/{y}.mvt`). Coordinates must fall inside their
+zoom's grid (z ≤ 14); any other path answers 404 without a request. Each
+upstream gets its own `clientUserAgent` (`openfreemap-proxy`,
+`alpr-tiles-proxy`), `redirect: 'error'`, a 10 s deadline and a 256 KB TileJSON
+or 4 MB tile cap; at most eight upstream requests run at once and identical
+requests share one. TileJSON is rewritten so its tile URLs point back at
+`/api/tiles/...`, and a URL on any other host is dropped. Answers are kept in a
+48 MB memory LRU and a 256 MB disk LRU (`.vantage-cache/tiles`, index read
+lazily on first use): versioned OpenFreeMap tiles for 30 days, TileJSON and
+hourly ALPR tiles for an hour (an upstream 404 tile is remembered for the same
+time), and any cached answer up to a week old is served
+(`X-Vantage-Tile-Cache: STALE`) when the upstream fails.
+
 Search arrivals (location bar and voice) end above the rendered surface.
 Precise places without a detailed outline used to frame a 250 m landmark shot
 from a sea-level target, which left Camp Mabry about 1 m above the 171 m mesh

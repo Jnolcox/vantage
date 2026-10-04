@@ -910,5 +910,7 @@
   "scripts/qa-recent-imagery.mjs",
   "src/maps/terrainRetry.js",
   "src/maps/terrainRetry.test.mjs",
-  "scripts/qa-terrain-429.mjs"
+  "scripts/qa-terrain-429.mjs",
+  "server/providers/tiles.js",
+  "src/tileProxy.test.mjs"
 ]

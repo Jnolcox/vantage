@@ -8,6 +8,11 @@
 import { createUsgsEarthquakeSource } from '../layers/earthquakes/source.js';
 import { createFirmsSource } from '../layers/firms/source.js';
 import { createLaunchSource } from '../layers/launches/source.js';
+import { createSatelliteSource } from '../layers/satellites/source.js';
+import {
+  createAdsbLolSource,
+  createOpenSkySource,
+} from '../sources/live/standalone.js';
 import { createGeocodePlaceService } from './places.js';
 
 /** Construct every service Core's tools read. */
@@ -18,6 +23,9 @@ export function createToolServices({ fetchImpl }) {
     earthquakes: createUsgsEarthquakeSource({ fetchImpl }),
     fires: createFirmsSource({ fetchImpl }),
     launches: createLaunchSource({ fetchImpl }),
+    aircraft: createOpenSkySource({ fetchImpl }),
+    military: createAdsbLolSource({ fetchImpl }),
+    satellites: createSatelliteSource({ fetchImpl }),
     places: createGeocodePlaceService({ fetchImpl }),
   };
 }

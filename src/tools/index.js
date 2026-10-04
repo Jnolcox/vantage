@@ -3,8 +3,18 @@
  * surface that exposes them. See docs/TOOLS.md.
  */
 
+import {
+  aircraftInArea,
+  findAircraft,
+  getAircraftInfo,
+  getAircraftTrack,
+} from './queries/aviation.js';
 import { getActiveFires, getEarthquakes } from './queries/hazards.js';
-import { getRecentLaunches } from './queries/space.js';
+import {
+  getRecentLaunches,
+  nextSatellitePass,
+  satellitesOverhead,
+} from './queries/space.js';
 
 export {
   defineTool,
@@ -27,4 +37,10 @@ export const coreTools = Object.freeze([
   getEarthquakes,
   getActiveFires,
   getRecentLaunches,
+  aircraftInArea,
+  findAircraft,
+  getAircraftTrack,
+  getAircraftInfo,
+  nextSatellitePass,
+  satellitesOverhead,
 ]);

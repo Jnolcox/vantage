@@ -456,8 +456,13 @@ serves Core's tools over stdio to a local MCP client, reading from a running
 app's `/api` routes (default `http://127.0.0.1:4173`, `--api-base` to change).
 It opens no listener. Requests a source sends to another origin directly (the
 USGS earthquake feed) carry `clientUserAgent('mcp-tools')`; requests to the app
-pass the `/api` guard as a local non-browser client. The first queries are
-`get_earthquakes`, `get_active_fires` and `get_recent_launches`. Tools take a
+pass the `/api` guard as a local non-browser client. Queries cover
+earthquakes, active fires, recent launches, aircraft (`aircraft_in_area`,
+`find_aircraft`, `get_aircraft_track`, `get_aircraft_info` over the OpenSky,
+adsb.lol and adsbdb routes) and satellites (`next_satellite_pass`, computed by
+`src/data/satellitePass.js` as the voice action of the same name is, and
+`satellites_overhead`). Live-source failures become tool errors with the
+matching code. Tools take a
 shared `area` argument (place name, bounding box, or point and radius) and cap
 lists at 25 rows by default. Nothing under `src/` outside `src/tools/` imports
 the tools (`check:boundaries` enforces it), so the page is unchanged. See

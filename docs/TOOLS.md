@@ -42,8 +42,10 @@ clients that read only one of them.
   outermost first. They can observe, reject or change a call.
 
 Expected failures throw `ToolError` with one of `invalid_arguments`,
-`unavailable`, `unsupported`, `malformed` or `retry_later`. Other errors are
-reported to clients without details.
+`unavailable`, `unsupported`, `malformed` or `retry_later`. Failures the live
+sources report (`LiveSourceError` in `src/sources/live/contract.js`) become
+the matching tool error, so a rate limit reaches clients as `retry_later` with
+a wait time. Other errors are reported to clients without details.
 
 ## Services
 
@@ -115,8 +117,14 @@ process, on a tool call only, with the `vantage-mcp-tools` User-Agent from
 
 ## Tools
 
-| Tool                  | Reads         | Returns                                                         |
-| --------------------- | ------------- | --------------------------------------------------------------- |
-| `get_earthquakes`     | `earthquakes` | USGS M2.5+ events in the last 24 hours, strongest first         |
-| `get_active_fires`    | `fires`       | NASA FIRMS detections in an area, highest radiative power first |
-| `get_recent_launches` | `launches`    | Launch Library 2 launches in the last 30 days, newest first     |
+| Tool                  | Reads         | Returns                                                                        |
+| --------------------- | ------------- | ------------------------------------------------------------------------------ |
+| `get_earthquakes`     | `earthquakes` | USGS M2.5+ events in the last 24 hours, strongest first                        |
+| `get_active_fires`    | `fires`       | NASA FIRMS detections in an area, highest radiative power first                |
+| `get_recent_launches` | `launches`    | Launch Library 2 launches in the last 30 days, newest first                    |
+| `aircraft_in_area`    | `aircraft`    | Aircraft in an area, nearest first; `military: true` reads the `military` feed |
+| `find_aircraft`       | `aircraft`    | Aircraft anywhere by callsign, ICAO address or registration                    |
+| `get_aircraft_track`  | `aircraft`    | Recent positions of one aircraft, thinned to 200 points                        |
+| `get_aircraft_info`   | `aircraft`    | Aircraft type and registration, and flight route, from adsbdb                  |
+| `next_satellite_pass` | `satellites`  | Next pass over a point (default the ISS), with naked-eye visibility            |
+| `satellites_overhead` | `satellites`  | Satellites in a CelesTrak group above a point now, highest first               |

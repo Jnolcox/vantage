@@ -254,8 +254,10 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   so other layouts pay nothing for it (ported from upstream, manjunath22466
   and Sameh Khamis; sonar style inspired by kk376).
 - Tools for language-model clients and a local MCP server. `npm run mcp`
-  serves earthquake, active-fire and recent-launch queries over stdio to
-  clients such as Claude Code, reading from a running app at
+  serves earthquake, active-fire, launch, aircraft (in an area, by
+  identifier, tracks, type and route) and satellite (next pass over a point,
+  those overhead now) queries over stdio to clients such as Claude Code,
+  reading from a running app at
   `http://127.0.0.1:4173` (`--api-base` selects another). Tools are defined
   once in `vantage/tools`, read the services `vantage/tools/services` builds
   from the layers' source factories, and are exposed through the protocol

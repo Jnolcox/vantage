@@ -3151,9 +3151,12 @@
       "src/tools/results.js",
       "src/tools/places.js",
       "src/tools/queries/hazards.js",
-      "src/tools/queries/space.js"
+      "src/tools/queries/space.js",
+      "src/tools/queries/aviation.js",
+      "src/sources/tle.js",
+      "src/data/satellitePass.js"
     ],
-    "external": []
+    "external": ["satellite.js"]
   },
   "tools-mcp": {
     "exports": ["./tools/mcp"],
@@ -3175,7 +3178,12 @@
       "src/layers/earthquakes/records.js",
       "src/layers/firms/source.js",
       "src/layers/launches/source.js",
-      "src/tools/places.js"
+      "src/layers/satellites/source.js",
+      "src/sources/live/standalone.js",
+      "src/tools/places.js",
+      "src/sources/live/contract.js",
+      "src/sources/live/aircraft.js",
+      "src/sources/live/vessels.js"
     ],
     "external": []
   }

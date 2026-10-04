@@ -71,6 +71,13 @@ non-commercial use, or a **Google Maps key** for the direct, metered route and
 in-app place search. Provider terms and quotas apply. Add keys through the
 app's **POWER UP** panel; [Keys & Costs](#-api-keys) explains the options.
 
+> **Already installed?** Update to the latest version. Vantage 1.0.0 queries
+> public OpenStreetMap Overpass servers, which now refuse it, so Traffic,
+> Mapped Installations and ALPR stay empty until you update. Updated installs
+> read OpenStreetMap vector tiles through the local server instead; set
+> `VANTAGE_OVERPASS_UPSTREAMS` only if you run or pay for your own Overpass
+> instance.
+
 ### Path 1 — Pinokio, no terminal
 
 1. Install or update [Pinokio](https://desktop.pinokio.co/) to **8.2 or later**.

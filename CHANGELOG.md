@@ -256,6 +256,14 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
 
 ### Changed
 
+- Performance: each bundled data pack ships once. The region, marine,
+  admin-boundary, county, military-name and neighborhood packs were emitted
+  twice by the production build, as the JSON the browser fetches and as an
+  unused JavaScript copy; `dist/` drops from 55.2 MB to 42.4 MB and the main
+  chunk is unchanged. Under Node the loader reads the JSON file directly
+  (reporting that Node 24.14 or newer is needed on a runtime too old to do
+  so), and a test keeps app code from importing a pack as a module (ported
+  from upstream, Sameh Khamis).
 - The Host check now covers every route, not only `/api`: plugin middleware
   runs before Vite's own check, so a non-`/api` route answered any Host,
   including a DNS-rebinding name. The guard applies the same allowed names to

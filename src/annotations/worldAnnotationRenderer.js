@@ -1,4 +1,5 @@
 import * as Cesium from 'cesium';
+import { showOsmCredit, hideOsmCredit } from '../data/dataCredits.js';
 
 /**
  * World-space annotation renderer (Direction A).
@@ -49,6 +50,7 @@ const CLAMP = Cesium.HeightReference.CLAMP_TO_GROUND;
 export function createWorldAnnotationRenderer(viewer) {
   const dataSource = new Cesium.CustomDataSource('vantage-annotations');
   viewer.dataSources.add(dataSource);
+  const osmAnnotations = new Set();
 
   // Register the VantageRouteFlow fabric once so Cesium's Material.fromType() can build the
   // material the route pipeline renders. The animated `time` uniform is read straight
@@ -229,6 +231,8 @@ export function createWorldAnnotationRenderer(viewer) {
         }),
       );
       if (anno.label) entities.push(labelMarker(anno, base, { point: false }));
+      osmAnnotations.add(anno);
+      showOsmCredit(viewer, anno);
     } else if (anno.type === 'arrow' && anno.to) {
       // Connector draped across the ground from origin to destination.
       const positions = [
@@ -332,6 +336,8 @@ export function createWorldAnnotationRenderer(viewer) {
   }
 
   function remove(anno) {
+    hideOsmCredit(viewer, anno);
+    osmAnnotations.delete(anno);
     if (!anno?._entities) return;
     for (const entity of anno._entities) {
       try {
@@ -348,6 +354,8 @@ export function createWorldAnnotationRenderer(viewer) {
   }
 
   function destroy() {
+    for (const anno of osmAnnotations) hideOsmCredit(viewer, anno);
+    osmAnnotations.clear();
     try {
       viewer.dataSources.remove(dataSource, true);
     } catch {

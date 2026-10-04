@@ -253,6 +253,13 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   whether the current map was chosen from outside (`manual`) or by the
   controller's own fallback (`automatic`), so a layer draped on the active
   map can follow it (ported from upstream, Bilawal Sidhu, manjunath22466).
+- OpenStreetMap-derived displays share one attribution. Data attribution
+  lists a single "Map and place data © OpenStreetMap contributors (ODbL)"
+  entry instead of one per layer, and a short linked "© OpenStreetMap" credit
+  stays on the map while any OSM-derived data is shown (datacenters, dams,
+  Directions and voice routes, the Warendorf webcam and the Nepal locator),
+  until the last of them leaves. The credit row keeps its full width above
+  the command dock (ported from upstream, Bilawal Sidhu).
 
 ### Fixed
 

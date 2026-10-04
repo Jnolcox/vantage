@@ -1,5 +1,17 @@
 # Vantage Current State
 
+OpenStreetMap attribution is one shared credit. `src/data/dataCredits.js`
+exports `OSM_CREDIT` (the single Data attribution entry for every
+OSM-derived source) and `showOsmCredit(viewer, owner, { openMapTiles })` /
+`hideOsmCredit(viewer, owner)`, which keep one short linked "© OpenStreetMap"
+Cesium credit on screen (plus "© OpenMapTiles" while an owner displays
+OpenMapTiles vector tiles) per viewer until its last owner releases it.
+Owners today: the datacenters and dams layers (`osmDerived` local GeoJSON
+layers, once features display), Directions, voice route annotations, the
+Warendorf webcam in the CCTV mesh and the Nepal locator. The per-layer OSM
+entries (traffic roads, ALPR, installation context, cockpit place, datacenters,
+dams, routing, Warendorf, Nepal locator) were folded into it.
+
 Third-party vector tiles reach the page only through the local server.
 `server/providers/tiles.js` mounts `/api/tiles/<upstream>/<path>` and forwards
 an allow-list: `openfreemap` → `https://tiles.openfreemap.org` (`planet`

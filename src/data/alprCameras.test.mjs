@@ -371,16 +371,16 @@ test('OSM attribution introduces displayed data for five seconds, then stays dis
     assert.equal(h.credits.size, 1);
     t.mock.timers.tick(1);
     assert.equal(h.credits.size, 0);
-    const overflow = DATA_CREDITS.find((entry) => entry.key === 'alpr-osm');
-    assert.match(
-      overflow.html,
-      /ALPR camera locations \(automatic license plate readers\)/,
+    // The overflow keeps one shared OpenStreetMap entry for every OSM layer.
+    const overflow = DATA_CREDITS.find(
+      (entry) => entry.key === 'openstreetmap',
     );
+    assert.match(overflow.html, /Map and place data/);
     assert.match(
       overflow.html,
       /href="https:\/\/www.openstreetmap.org\/copyright"/,
     );
-    assert.match(overflow.html, /ODbL 1\.0/);
+    assert.match(overflow.html, /ODbL/);
     await alprCamerasLayer.update();
     assert.equal(
       h.credits.size,

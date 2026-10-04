@@ -5,6 +5,7 @@
  * control in front of it.
  */
 
+import { readResponseTextCapped } from '../../sources/httpBody.js';
 import { MCP_PROTOCOL_VERSIONS, parseErrorResponse } from './protocol.js';
 
 const MAX_BODY_BYTES = 1024 * 1024;
@@ -22,12 +23,16 @@ export function createMcpHttpHandler(server) {
     const type = request.headers.get('content-type') || '';
     if (!/^application\/json\b/i.test(type))
       return json(415, { error: 'Content-Type must be application/json' });
-    const declared = Number(request.headers.get('content-length'));
-    if (declared > MAX_BODY_BYTES)
-      return json(413, { error: 'Request too large' });
-    const text = await request.text();
-    if (new TextEncoder().encode(text).length > MAX_BODY_BYTES)
-      return json(413, { error: 'Request too large' });
+    // Stops reading as soon as the body passes the limit, so a body without
+    // a Content-Length cannot be buffered without bound.
+    let text;
+    try {
+      text = await readResponseTextCapped(request, MAX_BODY_BYTES);
+    } catch (error) {
+      if (error?.code === 'RESPONSE_TOO_LARGE')
+        return json(413, { error: 'Request too large' });
+      throw error;
+    }
     let message;
     try {
       message = JSON.parse(text);

@@ -1219,7 +1219,8 @@
       "src/maps/registry.js",
       "src/maps/terrain.js",
       "src/keySetupCore.mjs",
-      "src/maps/imageryHost.js"
+      "src/maps/imageryHost.js",
+      "src/maps/terrainRetry.js"
     ],
     "external": ["cesium"]
   },
@@ -1948,7 +1949,8 @@
       "src/layers/recentImagery/thumbnails.js",
       "src/maps/imageryHost.js",
       "src/ui/recentImagery.js",
-      "src/ui/imageryBoxTool.js"
+      "src/ui/imageryBoxTool.js",
+      "src/maps/terrainRetry.js"
     ],
     "external": [
       "hls.js",

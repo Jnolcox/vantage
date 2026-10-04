@@ -907,5 +907,8 @@
   "src/ui/recentImagery.js",
   "src/ui/recentImagery.test.mjs",
   "src/app/layers/recentImagery.js",
-  "scripts/qa-recent-imagery.mjs"
+  "scripts/qa-recent-imagery.mjs",
+  "src/maps/terrainRetry.js",
+  "src/maps/terrainRetry.test.mjs",
+  "scripts/qa-terrain-429.mjs"
 ]

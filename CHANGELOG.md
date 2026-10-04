@@ -330,6 +330,11 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   admin-boundary fallback answers `region-timeout` after 3 s instead of holding
   the reply; the lookup keeps running and fills the cache (ported from
   upstream, Bilawal Sidhu).
+- Keyless terrain tiles retry HTTP 429 and transient gateway failures (502,
+  503, 504) with a bounded, shared backoff that honours `Retry-After`, instead
+  of leaving holes in the Re:Earth terrain after a burst of tile requests. One
+  console line is logged per cooldown window, not per tile (ported from
+  upstream, Bilawal Sidhu).
 
 ## [1.0.0] - 2026-10-02
 

@@ -966,5 +966,6 @@
   "src/ui/styles/panel-surfaces.css",
   "src/localRequestGate.mjs",
   "src/localRequestGate.test.mjs",
-  "src/costEndpointThrottle.test.mjs"
+  "src/costEndpointThrottle.test.mjs",
+  "src/layers/transit/source.test.mjs"
 ]

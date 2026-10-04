@@ -387,6 +387,8 @@
   "src/layers/satellites/policy.js",
   "src/layers/satellites/tracking.js",
   "src/layers/satellites/rendering.js",
+  "src/sources/tle.js",
+  "src/sources/tle.test.mjs",
   "src/layers/satellites/testing.js",
   "src/layers/satellites/ingestion.js",
   "src/layers/satellites/index.js",

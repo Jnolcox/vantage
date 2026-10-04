@@ -5,9 +5,11 @@
  * elsewhere a caller supplies a resolving fetch.
  */
 
+import { createCctvSource } from '../layers/cctv/source.js';
 import { createUsgsEarthquakeSource } from '../layers/earthquakes/source.js';
 import { createFirmsSource } from '../layers/firms/source.js';
 import { createLaunchSource } from '../layers/launches/source.js';
+import { createRadioSource } from '../layers/radio/source.js';
 import { createSatelliteSource } from '../layers/satellites/source.js';
 import {
   createAdsbLolSource,
@@ -26,6 +28,8 @@ export function createToolServices({ fetchImpl }) {
     aircraft: createOpenSkySource({ fetchImpl }),
     military: createAdsbLolSource({ fetchImpl }),
     satellites: createSatelliteSource({ fetchImpl }),
+    cctv: createCctvSource({ fetchImpl }),
+    radio: createRadioSource({ fetchImpl }),
     places: createGeocodePlaceService({ fetchImpl }),
   };
 }

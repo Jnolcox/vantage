@@ -461,8 +461,11 @@ earthquakes, active fires, recent launches, aircraft (`aircraft_in_area`,
 `find_aircraft`, `get_aircraft_track`, `get_aircraft_info` over the OpenSky,
 adsb.lol and adsbdb routes) and satellites (`next_satellite_pass`, computed by
 `src/data/satellitePass.js` as the voice action of the same name is, and
-`satellites_overhead`). Live-source failures become tool errors with the
-matching code. Tools take a
+`satellites_overhead`), public cameras (`find_cctv_cameras`, and
+`get_cctv_snapshot`, which returns the frame from `/api/cctv/frame` as MCP
+image content, JPEG, PNG or WebP up to 3 MB) and radio stations
+(`find_radio_stations`, which returns stream URLs and reports no clicks).
+Live-source failures become tool errors with the matching code. Tools take a
 shared `area` argument (place name, bounding box, or point and radius) and cap
 lists at 25 rows by default. Nothing under `src/` outside `src/tools/` imports
 the tools (`check:boundaries` enforces it), so the page is unchanged. See

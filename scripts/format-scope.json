@@ -977,5 +977,6 @@
   "src/tools/localServer.test.mjs",
   "src/tools/services.test.mjs",
   "src/tools/queries/aviation.test.mjs",
-  "src/tools/queries/space.test.mjs"
+  "src/tools/queries/space.test.mjs",
+  "src/tools/queries/media.test.mjs"
 ]

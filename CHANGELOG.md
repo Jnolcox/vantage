@@ -256,7 +256,8 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
 - Tools for language-model clients and a local MCP server. `npm run mcp`
   serves earthquake, active-fire, launch, aircraft (in an area, by
   identifier, tracks, type and route) and satellite (next pass over a point,
-  those overhead now) queries over stdio to clients such as Claude Code,
+  those overhead now), public camera (find cameras, a camera's current
+  image) and radio station queries over stdio to clients such as Claude Code,
   reading from a running app at
   `http://127.0.0.1:4173` (`--api-base` selects another). Tools are defined
   once in `vantage/tools`, read the services `vantage/tools/services` builds

@@ -3153,6 +3153,7 @@
       "src/tools/queries/hazards.js",
       "src/tools/queries/space.js",
       "src/tools/queries/aviation.js",
+      "src/tools/queries/media.js",
       "src/sources/tle.js",
       "src/data/satellitePass.js"
     ],
@@ -3183,7 +3184,11 @@
       "src/tools/places.js",
       "src/sources/live/contract.js",
       "src/sources/live/aircraft.js",
-      "src/sources/live/vessels.js"
+      "src/sources/live/vessels.js",
+      "src/layers/cctv/sourcePolicy.js",
+      "src/layers/cctv/source.js",
+      "src/layers/radio/policy.js",
+      "src/layers/radio/source.js"
     ],
     "external": []
   }

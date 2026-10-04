@@ -85,6 +85,11 @@ export function createMcpServer({
           content: [
             { type: 'text', text: result.summary },
             { type: 'text', text: JSON.stringify(result.data) },
+            ...(result.images || []).map((item) => ({
+              type: 'image',
+              data: item.data,
+              mimeType: item.mimeType,
+            })),
           ],
           structuredContent: result.data,
           isError: false,

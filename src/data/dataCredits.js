@@ -164,6 +164,10 @@ export const DATA_CREDITS = [
   OSM_CREDIT,
   OPENMAPTILES_CREDIT,
   {
+    key: 'overture-military-names',
+    html: 'Military area names: <a href="https://overturemaps.org" target="_blank" rel="noopener">Overture Maps Foundation</a> (ODbL)',
+  },
+  {
     key: 'photon-geocoder',
     html: 'Keyless place search: <a href="https://photon.komoot.io" target="_blank" rel="noopener">Photon</a> (komoot)',
   },

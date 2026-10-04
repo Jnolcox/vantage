@@ -38,7 +38,7 @@ test('adsbdb is credited and carries its published route-data restriction', () =
   assert.match(credit.html, /href="https:\/\/www\.adsbdb\.com"/);
 });
 
-test('OpenStreetMap has one generic data credit with a separate tile distributor', () => {
+test('OpenStreetMap has one generic data credit with separate tile and names distributors', () => {
   const osm = DATA_CREDITS.filter((entry) =>
     entry.html.includes('openstreetmap.org/copyright'),
   );
@@ -49,6 +49,10 @@ test('OpenStreetMap has one generic data credit with a separate tile distributor
   assert.match(
     DATA_CREDITS.find((entry) => entry.key === 'openfreemap').html,
     /Vector tiles:/,
+  );
+  assert.match(
+    DATA_CREDITS.find((entry) => entry.key === 'overture-military-names').html,
+    /Overture Maps Foundation/,
   );
 });
 

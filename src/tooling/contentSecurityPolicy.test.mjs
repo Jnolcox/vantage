@@ -81,6 +81,8 @@ const LINKS_AND_ATTRIBUTION = [
   'openfreemap.org',
   'openmaptiles.org',
   'opensky-network.org',
+  // Military area names credit (bundled Overture/OSM names pack).
+  'overturemaps.org',
   'platform.openai.com',
   'policies.google.com',
   // Wind credits: NOAA Open Data on AWS and ECMWF Open Data. Forecast files

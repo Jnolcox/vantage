@@ -274,6 +274,18 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   admit only public motor roads (no paths, parking, private access, service
   ways or tunnels). Road failures name OpenFreeMap with their HTTP status or
   timeout, separately from TomTom (ported from upstream, Bilawal Sidhu).
+- Mapped Installations draws military areas from OpenStreetMap vector tiles
+  (OpenFreeMap, through `/api/tiles`) and names them from a bundled worldwide
+  Overture/OpenStreetMap name index (36,466 names, loaded only when the layer
+  needs it); wide views show bounded, decluttered named points that hand over
+  to the matching polygons up close. Titles go through the shared world-overlay
+  host and the datacenter/dam card arbitration; selecting an installation
+  replaces its title with one card and drapes a translucent fill over its
+  footprint. Polygons appear while names load, cancelled views cannot publish
+  late names, and footprints keep visible fragments without joining separate
+  parcels across zooms. Contacts lists mapped installations within a true
+  100 km surface radius of the tracked subject, including in Cockpit (ported
+  from upstream, Bilawal Sidhu).
 
 ### Fixed
 

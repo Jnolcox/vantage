@@ -1,5 +1,24 @@
 # Vantage Current State
 
+Mapped Installations reads military areas from OpenStreetMap vector tiles.
+The installation source decodes `landuse=military` polygons from the shared
+OpenFreeMap tile source (`/api/tiles/openfreemap`), clips them to tile cores
+(`src/sources/militaryTileGeometry.js`) and names them from
+`src/data/local_data/osm_military_names/names.json`, a bundled Overture/OSM
+index (36,466 names, ODbL, SHA-256 pinned in `names.sha256`, built by
+`scripts/build-military-names.py`). `src/data/militaryNames.js` loads the pack
+once, on first need, with a deadline and a retry cooldown; a cancelled view
+never publishes late names. Wide views show bounded, decluttered named points
+(`src/layers/installations/namedMarkers.js`) through the world-overlay host,
+handed over to matching polygons up close; titles share the datacenter/dam
+card arbitration (`labelArbiter.js`, `infrastructureOverlayEntry.js`).
+Selecting an installation replaces its title with one card and drapes a
+translucent fill over the footprint on the active map surface.
+`/api/military-installations` still adds Overpass context where available.
+Contacts filters subject-window installation matches by surface distance
+within the stated 100 km radius, including in Cockpit; the tile-fetch square
+is only a loading window.
+
 Street Traffic roads come from OpenStreetMap vector tiles. `src/sources/vectorTiles.js`
 is a bounded XYZ reader (TileJSON once per source, at most 16 tiles per view,
 four workers, a byte-capped decoded LRU, shared in-flight tiles with per-caller

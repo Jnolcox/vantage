@@ -35,7 +35,7 @@ export function createStandaloneLayerSources() {
     traffic: createTrafficSource({ mapTiles }),
     transit: createTransitSource(),
     bikeshare: createBikeshareSource(),
-    installations: createInstallationSource(),
+    installations: createInstallationSource({ mapTiles }),
     satellites: createSatelliteSource(),
     launches: createLaunchSource(),
     alpr: createOverpassAlprSource(),

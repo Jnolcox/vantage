@@ -1,4 +1,5 @@
 import * as Cesium from 'cesium';
+import { createInfrastructureOverlayEntry } from './infrastructureOverlayEntry.js';
 import { isPointerFree } from './inputOwnership.js';
 import {
   selectInfraLod,
@@ -14,10 +15,6 @@ const VISIBILITY_UPDATE_MS = 450;
 export const LOCAL_OVERLAY_COHORT_LIMIT = 160;
 const LOCAL_OVERLAY_COLLISION_CAPACITY = 96;
 const LOCAL_OVERLAY_CELL_SURPLUS = 2;
-const LOCAL_OVERLAY_MAX_DISTANCE_M = 14000000;
-const LOCAL_OVERLAY_FADE_START_M = 250000;
-const LOCAL_OVERLAY_FADE_START_RATIO =
-  LOCAL_OVERLAY_FADE_START_M / LOCAL_OVERLAY_MAX_DISTANCE_M;
 // Stems are anchored at ellipsoid height 0, but high-elevation features
 // (e.g. dams in river canyons) sit hundreds of meters above the ellipsoid,
 // burying the short close-in stem inside the photoreal mesh. Once the
@@ -182,33 +179,15 @@ export function createLocalInfrastructureOverlayEntry({
   accent,
 }) {
   const copy = localInfrastructureOverlayCopy(properties, layerId);
-  return {
-    id: String(id),
+  return createInfrastructureOverlayEntry({
+    id,
     source: layerId,
     position,
-    variant: 'card',
     title: copy.title,
     details: copy.details,
     accent,
     priority,
-    collisionGroup: 'ambient-card',
-    zIndex: 30,
-    interactive: false,
-    minDistance: 0,
-    maxDistance: LOCAL_OVERLAY_MAX_DISTANCE_M,
-    distanceFadeStartRatio: LOCAL_OVERLAY_FADE_START_RATIO,
-    distanceScale: {
-      near: 250000,
-      nearValue: 1,
-      far: 9000000,
-      farValue: 0.62,
-    },
-    edgeFade: 'keyhole',
-    horizonCull: true,
-    terrainOcclusion: false,
-    gapPx: 15,
-    placement: 'above',
-  };
+  });
 }
 
 /**

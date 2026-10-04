@@ -919,5 +919,7 @@
   "src/layers/traffic/roadModes.test.mjs",
   "scripts/qa-traffic-motion.mjs",
   "src/layers/traffic/motion.test.mjs",
-  "scripts/qa-journey-recorder.mjs"
+  "scripts/qa-journey-recorder.mjs",
+  "src/sources/militaryTileGeometry.test.mjs",
+  "scripts/qa-context-arrivals.mjs"
 ]

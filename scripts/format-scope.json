@@ -912,5 +912,12 @@
   "src/maps/terrainRetry.test.mjs",
   "scripts/qa-terrain-429.mjs",
   "server/providers/tiles.js",
-  "src/tileProxy.test.mjs"
+  "src/tileProxy.test.mjs",
+  "src/sources/openFreeMap.test.mjs",
+  "src/sources/vectorTiles.test.mjs",
+  "src/layers/traffic/surface.test.mjs",
+  "src/layers/traffic/roadModes.test.mjs",
+  "scripts/qa-traffic-motion.mjs",
+  "src/layers/traffic/motion.test.mjs",
+  "scripts/qa-journey-recorder.mjs"
 ]

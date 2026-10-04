@@ -30,6 +30,11 @@ export const OSM_CREDIT = {
   html: 'Map and place data <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a> (<a href="https://opendatacommons.org/licenses/odbl/1-0/" target="_blank" rel="noopener">ODbL</a>)',
 };
 
+export const OPENMAPTILES_CREDIT = {
+  key: 'openfreemap',
+  html: 'Vector tiles: <a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> © <a href="https://openmaptiles.org" target="_blank" rel="noopener">OpenMapTiles</a>',
+};
+
 const osmDisplays = new WeakMap();
 
 function updateOsmDisplay(viewer, state) {
@@ -157,6 +162,7 @@ export const DATA_CREDITS = [
       '<a href="https://lpdaac.usgs.gov/products/hlss30v002/" target="_blank" rel="noopener">HLS product page</a>',
   },
   OSM_CREDIT,
+  OPENMAPTILES_CREDIT,
   {
     key: 'photon-geocoder',
     html: 'Keyless place search: <a href="https://photon.komoot.io" target="_blank" rel="noopener">Photon</a> (komoot)',

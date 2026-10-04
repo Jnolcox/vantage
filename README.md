@@ -546,7 +546,9 @@ bounding box you are looking at, from the server's IP address;
 (NOAA tropical GIS) for Cyclone advisories, at most every 5 minutes (fixed
 queries, nothing about your view);
 `earthquake.usgs.gov` (fetched by the browser); `api.tomtom.com` (tile
-coordinates in view); Overpass mirrors `overpass-api.de`,
+coordinates in view); `tiles.openfreemap.org` (OpenFreeMap vector tiles for
+Traffic roads, through `/api/tiles/openfreemap`: tile coordinates in view);
+Overpass mirrors `overpass-api.de`,
 `lz4.overpass-api.de`, `overpass.kumi.systems`, `overpass.private.coffee`
 (bounding-box queries of the view); registered GTFS-realtime and GBFS feeds
 (`src/data/transitFeeds.js`, the GBFS catalog); the CCTV catalogs and

@@ -260,6 +260,20 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   Directions and voice routes, the Warendorf webcam and the Nepal locator),
   until the last of them leaves. The credit row keeps its full width above
   the command dock (ported from upstream, Bilawal Sidhu).
+- Street Traffic roads come from OpenStreetMap vector tiles (OpenFreeMap,
+  through the same-origin `/api/tiles` proxy) instead of Overpass queries, and
+  the layer row chooses the road source: TomTom, OSM or Hybrid (also
+  `?trafficRoads=`, saved with the layer state). With a TomTom key the default
+  is Hybrid: TomTom roads with live flow, plus OpenStreetMap roads TomTom does
+  not cover, simulated. Without a key every choice draws OpenStreetMap roads.
+  OSM mode matches TomTom flow onto OpenStreetMap roads, by travel direction,
+  for congestion colors, speeds and closures. Roads start loading on enable,
+  paint incrementally, keep their dots across camera moves and arriving tiles,
+  follow the reticle footprint at oblique angles with detailed near tiles and
+  coarse distant roads, sit on the rendered surface behind buildings, and
+  admit only public motor roads (no paths, parking, private access, service
+  ways or tunnels). Road failures name OpenFreeMap with their HTTP status or
+  timeout, separately from TomTom (ported from upstream, Bilawal Sidhu).
 
 ### Fixed
 

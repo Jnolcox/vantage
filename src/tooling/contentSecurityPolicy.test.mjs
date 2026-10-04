@@ -76,7 +76,9 @@ const LINKS_AND_ATTRIBUTION = [
   'oceanservice.noaa.gov',
   'open-meteo.com',
   'opendatacommons.org',
-  // Inline OpenMapTiles credit shown while OSM vector tiles are displayed.
+  // Vector tile credits. OpenFreeMap tiles are fetched by the server through
+  // /api/tiles/openfreemap.
+  'openfreemap.org',
   'openmaptiles.org',
   'opensky-network.org',
   'platform.openai.com',

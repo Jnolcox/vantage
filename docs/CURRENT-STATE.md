@@ -1,5 +1,27 @@
 # Vantage Current State
 
+Street Traffic roads come from OpenStreetMap vector tiles. `src/sources/vectorTiles.js`
+is a bounded XYZ reader (TileJSON once per source, at most 16 tiles per view,
+four workers, a byte-capped decoded LRU, shared in-flight tiles with per-caller
+cancellation, 12 s request deadline); `src/sources/openFreeMap.js` decodes the
+OpenMapTiles `transportation` layer (public motor roads only: motorway to
+minor, no paths, parking, private access, service ways or tunnels; one-way
+geometry oriented) and `landuse=military` polygons. Its TileJSON is the
+same-origin `/api/tiles/openfreemap/planet`, so the browser never contacts
+OpenFreeMap. The row's TomTom / OSM / Hybrid chips (`roadMode`, layer-state
+option `r`; `?trafficRoads=tomtom|osm|hybrid`) live in
+`src/layers/traffic/roadModes.js`: keyed installs default to Hybrid (TomTom
+motor roads with flow, plus OpenFreeMap roads TomTom does not cover, simulated);
+keyless installs draw OpenFreeMap roads for every choice. OSM mode matches TomTom
+flow onto OpenFreeMap roads by travel direction (`src/data/flowMatch.js`).
+Roads follow the reticle footprint (`footprint.js`: cached z14 near tiles,
+z12 beyond), retain coarse roads under failed detail tiles with at most three
+retries, ground dots on the rendered surface (`surface.js`, pixel-bounded
+height corrections, building occlusion) and keep dot populations across moves
+(`retention.js`). Road failures report OpenFreeMap's HTTP status or timeout
+separately from TomTom flow. The status chip reports completion without a
+delayed split-flap animation.
+
 OpenStreetMap attribution is one shared credit. `src/data/dataCredits.js`
 exports `OSM_CREDIT` (the single Data attribution entry for every
 OSM-derived source) and `showOsmCredit(viewer, owner, { openMapTiles })` /

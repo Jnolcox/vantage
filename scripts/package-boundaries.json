@@ -989,7 +989,14 @@
       "src/layers/installations/source.js",
       "src/layers/installations/state.js",
       "src/layers/installations/viewport.js",
-      "src/data/inputOwnership.js"
+      "src/data/inputOwnership.js",
+      "src/sources/capability.js",
+      "src/sources/httpBody.js",
+      "src/sources/openFreeMap.js",
+      "src/sources/militaryTileGeometry.js",
+      "src/sources/vectorTiles.js",
+      "src/sources/phaseTiming.js",
+      "src/sources/requestDeadline.js"
     ],
     "external": ["cesium"]
   },
@@ -1045,7 +1052,18 @@
       "src/layers/traffic/style.js",
       "src/layers/traffic/timing.js",
       "src/layers/traffic/viewport.js",
-      "src/sources/overpassRoads.js"
+      "src/sources/overpassRoads.js",
+      "src/layers/traffic/footprint.js",
+      "src/sources/requestDeadline.js",
+      "src/layers/traffic/retention.js",
+      "src/layers/traffic/surface.js",
+      "src/sources/capability.js",
+      "src/sources/httpBody.js",
+      "src/sources/openFreeMap.js",
+      "src/sources/militaryTileGeometry.js",
+      "src/sources/vectorTiles.js",
+      "src/sources/phaseTiming.js",
+      "src/layers/traffic/roadModes.js"
     ],
     "external": ["cesium", "pbf", "@mapbox/vector-tile"]
   },
@@ -1123,7 +1141,11 @@
       "src/layers/alpr/overlay.js",
       "src/layers/alpr/source.js",
       "src/data/inputOwnership.js",
-      "src/layers/alpr/records.js"
+      "src/layers/alpr/records.js",
+      "src/sources/capability.js",
+      "src/sources/httpBody.js",
+      "src/sources/vectorTiles.js",
+      "src/sources/phaseTiming.js"
     ],
     "external": ["cesium"]
   },
@@ -1954,7 +1976,17 @@
       "src/ui/imageryBoxTool.js",
       "src/maps/terrainRetry.js",
       "src/cameraGroundGuard.js",
-      "src/data/cameraArrival.js"
+      "src/data/cameraArrival.js",
+      "src/layers/traffic/footprint.js",
+      "src/sources/requestDeadline.js",
+      "src/layers/traffic/retention.js",
+      "src/layers/traffic/surface.js",
+      "src/sources/capability.js",
+      "src/sources/openFreeMap.js",
+      "src/sources/militaryTileGeometry.js",
+      "src/sources/vectorTiles.js",
+      "src/sources/phaseTiming.js",
+      "src/layers/traffic/roadModes.js"
     ],
     "external": [
       "hls.js",
@@ -2399,7 +2431,17 @@
       "src/layers/recentImagery/thumbnails.js",
       "src/maps/imageryHost.js",
       "src/cameraGroundGuard.js",
-      "src/data/cameraArrival.js"
+      "src/data/cameraArrival.js",
+      "src/layers/traffic/footprint.js",
+      "src/sources/requestDeadline.js",
+      "src/layers/traffic/retention.js",
+      "src/layers/traffic/surface.js",
+      "src/sources/capability.js",
+      "src/sources/openFreeMap.js",
+      "src/sources/militaryTileGeometry.js",
+      "src/sources/vectorTiles.js",
+      "src/sources/phaseTiming.js",
+      "src/layers/traffic/roadModes.js"
     ],
     "external": [
       "hls.js",
@@ -2456,7 +2498,8 @@
       "src/sources/overpassFeatures.js",
       "src/sources/featureSource.js",
       "src/cameraGroundGuard.js",
-      "src/data/cameraArrival.js"
+      "src/data/cameraArrival.js",
+      "src/sources/capability.js"
     ],
     "external": [
       "cesium",
@@ -2634,7 +2677,10 @@
     "modules": [
       "src/layers/alpr/policy.js",
       "src/layers/alpr/records.js",
-      "src/layers/alpr/source.js"
+      "src/layers/alpr/source.js",
+      "src/sources/httpBody.js",
+      "src/sources/vectorTiles.js",
+      "src/sources/phaseTiming.js"
     ],
     "external": []
   },
@@ -2665,7 +2711,14 @@
     "exports": ["./layers/installations/source"],
     "modules": [
       "src/layers/installations/source.js",
-      "src/data/militaryInstallationData.js"
+      "src/data/militaryInstallationData.js",
+      "src/sources/capability.js",
+      "src/sources/httpBody.js",
+      "src/sources/openFreeMap.js",
+      "src/sources/militaryTileGeometry.js",
+      "src/sources/vectorTiles.js",
+      "src/sources/phaseTiming.js",
+      "src/sources/requestDeadline.js"
     ],
     "external": []
   },
@@ -2691,7 +2744,15 @@
       "src/layers/traffic/flowDecode.js",
       "src/layers/traffic/flowSource.js",
       "src/layers/traffic/source.js",
-      "src/sources/overpassRoads.js"
+      "src/sources/overpassRoads.js",
+      "src/layers/traffic/footprint.js",
+      "src/sources/httpBody.js",
+      "src/sources/openFreeMap.js",
+      "src/sources/militaryTileGeometry.js",
+      "src/sources/vectorTiles.js",
+      "src/sources/phaseTiming.js",
+      "src/layers/traffic/roadModes.js",
+      "src/data/flowMatch.js"
     ],
     "external": ["@mapbox/vector-tile", "pbf"]
   },
@@ -2833,7 +2894,8 @@
       "src/sources/overpassFeatures.js",
       "src/sources/featureSource.js",
       "src/sources/projectIdentity.js",
-      "src/sources/version.js"
+      "src/sources/version.js",
+      "src/sources/capability.js"
     ],
     "external": ["cesium", "egm96-universal", "pbf"]
   },
@@ -2906,7 +2968,8 @@
       "src/sources/featureGeometry.js",
       "src/sources/overpassFeaturesRecords.js",
       "src/sources/overpassFeatures.js",
-      "src/sources/featureSource.js"
+      "src/sources/featureSource.js",
+      "src/sources/capability.js"
     ],
     "external": []
   },

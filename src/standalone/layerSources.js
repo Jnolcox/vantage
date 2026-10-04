@@ -1,3 +1,4 @@
+import { createOpenFreeMapSource } from '../sources/openFreeMap.js';
 import {
   createOpenSkySource,
   createAdsbLolSource,
@@ -21,6 +22,7 @@ export { createReferenceSources as createStandaloneReferenceSources } from '../s
 
 /** Select standalone providers without starting their acquisition. */
 export function createStandaloneLayerSources() {
+  const mapTiles = createOpenFreeMapSource();
   return {
     ...createReferenceSources(),
     flights: createOpenSkySource(),
@@ -30,7 +32,7 @@ export function createStandaloneLayerSources() {
     }),
     cctv: createCctvSource(),
     radio: createRadioSource(),
-    traffic: createTrafficSource(),
+    traffic: createTrafficSource({ mapTiles }),
     transit: createTransitSource(),
     bikeshare: createBikeshareSource(),
     installations: createInstallationSource(),

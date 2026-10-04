@@ -18,15 +18,25 @@ import {
   lookupNaturalRegionOutline,
   findNaturalRegion,
 } from '../data/naturalEarthRegions.js';
+import { findAdminArea, findAdminAreaAt } from '../data/adminBoundaries.js';
 import {
   registerDynamicCredit,
   NATURAL_EARTH_CREDIT,
+  US_CENSUS_CREDIT,
 } from '../data/dataCredits.js';
 import { unavailablePlaceSearch } from '../search/placeSearch.js';
 import { isPickedWorldPosition } from '../data/scenePick.js';
 
 /** Ms the analyst region lookup waits on geocode + admin boundary. */
 export const REGION_FALLBACK_BUDGET_MS = 3_000;
+
+/** Entity facts that rule out a state/county reading of the ask. */
+const NON_ADMIN_ENTITY_KINDS = new Set([
+  'building',
+  'compound',
+  'street',
+  'point_feature',
+]);
 
 /** Own annotation lookup caches and ranking of supplied feature candidates. */
 export function createAnnotationResolver({
@@ -175,6 +185,23 @@ export function createAnnotationResolver({
     // Guard bypass is an ASK-SIDE fact. A returned admin type can be a wrong match
     // ("the Texas Capitol" → the state), so geocode types must never grant it.
     const bypassNearViewGuards = Boolean(adminScopeFromAsk(target, entityKind));
+
+    // Bundled administrative outlines resolve settled names without a lookup.
+    // Georgia uses its qualifier or camera; city/state homonyms defer to geocoding.
+    if (
+      footprint &&
+      (!Number.isFinite(lat) || !Number.isFinite(lon)) &&
+      trace.query &&
+      !NON_ADMIN_ENTITY_KINDS.has(entityKind)
+    ) {
+      const center =
+        pickWorldFromScreen(viewer, 0.5, 0.5) || viewportProximity(viewer);
+      const admin = await findAdminArea(trace.query, { near: center }).catch(
+        () => null,
+      );
+      signal?.throwIfAborted();
+      if (admin) return bundledAdminTarget(viewer, admin, trace.query);
+    }
 
     if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
       const query = String(target || '').trim();
@@ -476,6 +503,18 @@ export function createAnnotationResolver({
         // polygon (below) beats a 400 m disc (field test 8's "spherical round one").
         fp = synthesizeBufferedArea(lat, lon, AROUND_LANDMARK_RADIUS_M);
       } else if (isAdmin) {
+        // A country, state or county the geocoder typed: the bundled unit that carries the
+        // name AND contains the geocoded point (offline; the pack's ambiguity
+        // marks don't apply — the geocoder already chose "Georgia" the state).
+        if (scope === 'state' || scope === 'county' || scope === 'country') {
+          const admin = await findAdminAreaAt(
+            [target, matchName],
+            lat,
+            lon,
+            scope,
+          ).catch(() => null);
+          if (admin) return bundledAdminOutline(viewer, admin);
+        }
         // Pure admin: only an admin boundary is correct — never fall back to a
         // building/landuse (a city is never a single building).
         fp = await fetchAdminArea(lat, lon, matchName, scope, signal);
@@ -719,6 +758,64 @@ export function createAnnotationResolver({
   const GROUNDS_RADIUS_M = 300; // "X grounds/compound/campus" loose disc when OSM has no polygon
   const GROUNDS_RADIUS_MIN_M = 150; // viewport-derived grounds disc is clamped to this band so a tiny
   const GROUNDS_RADIUS_MAX_M = 1200; // place can't shrink to a dot, nor a city-wide viewport balloon
+
+  /** Credit the pack a bundled boundary came from. */
+  function creditAdminSource(viewer, admin) {
+    registerDynamicCredit(
+      viewer,
+      admin.source === 'us-census' ? US_CENSUS_CREDIT : NATURAL_EARTH_CREDIT,
+    );
+  }
+
+  /**
+   * Outline patch (resolveOutline's contract) for a bundled administrative unit.
+   * `ring` is the main part, closed; `polygons` carries every part with its
+   * holes (Hawaii's islands, Berlin inside Brandenburg) for renderers that
+   * draw them. Like the Natural Earth rung, it bypasses the scope caps and the
+   * centroid drift bound: the unit IS the asked scope.
+   */
+  function bundledAdminOutline(viewer, admin) {
+    creditAdminSource(viewer, admin);
+    const { lat, lon } = admin.label;
+    return {
+      ring: closeRing([...admin.ring]), // copy: closeRing mutates, the pack is shared
+      polygons: admin.polygons,
+      footprintKind: 'area',
+      buildingHeight: null,
+      synthesized: false,
+      adminArea: admin.name,
+      lat,
+      lon,
+      height: sampleGroundHeight(viewer, lon, lat),
+    };
+  }
+
+  /** A complete resolved target for a bundled administrative unit (no outline pending). */
+  function bundledAdminTarget(viewer, admin, query) {
+    const outline = bundledAdminOutline(viewer, admin);
+    const [west, south, east, north] = admin.bbox;
+    console.log(
+      `[Resolver] "${query}": bundled ${admin.kind} "${admin.name}"` +
+        `${admin.region ? `, ${admin.region}` : ''} (${admin.source}, ` +
+        `${admin.polygons.length} part(s), ${admin.candidates} candidate(s)) → FINAL source=bundled`,
+    );
+    return {
+      lon: outline.lon,
+      lat: outline.lat,
+      height: outline.height,
+      ring: outline.ring,
+      polygons: outline.polygons,
+      footprintKind: 'area',
+      buildingHeight: null,
+      label: admin.name,
+      source: 'bundled',
+      synthesized: false,
+      viewport: {
+        low: { latitude: south, longitude: west },
+        high: { latitude: north, longitude: east },
+      },
+    };
+  }
 
   /**
    * Synthesize an approximate circular AREA by buffering a label point. Returns a ring
@@ -1912,6 +2009,10 @@ export function createAnnotationResolver({
       const ring = [...ne.polygons].sort((a, b) => b.length - a.length)[0];
       if (ring?.length >= 3) return { name: ne.name, ring };
     }
+    // Bundled states/provinces/counties by name (offline); the main part only,
+    // like the Natural Earth rung above.
+    const admin = await findAdminArea(q).catch(() => null);
+    if (admin) return { name: admin.name, ring: [...admin.ring] };
     const lookup = resolveAdminRegionRing(q, signal, placeSearch);
     if (!Number.isFinite(budgetMs)) return lookup;
     let timer;
@@ -1935,6 +2036,15 @@ export function createAnnotationResolver({
     if (!geo) return null;
     const scope = scopeFromTypes(geo.types);
     if (!['country', 'state', 'county', 'city'].includes(scope)) return null;
+    if (scope === 'state' || scope === 'county' || scope === 'country') {
+      const admin = await findAdminAreaAt(
+        [q, geo.primaryName],
+        geo.lat,
+        geo.lon,
+        scope,
+      ).catch(() => null);
+      if (admin) return { name: q, ring: [...admin.ring] };
+    }
     const fp = await fetchAdminArea(geo.lat, geo.lon, q, scope, signal).catch(
       () => null,
     );

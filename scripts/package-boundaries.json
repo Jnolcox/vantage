@@ -2006,7 +2006,11 @@
       "src/layers/installations/namedMarkers.js",
       "src/data/infrastructureOverlayEntry.js",
       "src/layers/alpr/tileRecords.js",
-      "src/layers/alpr/floors.js"
+      "src/layers/alpr/floors.js",
+      "src/data/adminBoundaries.js",
+      "src/data/local_data/natural_earth/states_provinces.json",
+      "src/data/local_data/natural_earth/countries.json",
+      "src/data/local_data/us_census_counties/counties.json"
     ],
     "external": [
       "hls.js",
@@ -2467,7 +2471,11 @@
       "src/layers/installations/namedMarkers.js",
       "src/data/infrastructureOverlayEntry.js",
       "src/layers/alpr/tileRecords.js",
-      "src/layers/alpr/floors.js"
+      "src/layers/alpr/floors.js",
+      "src/data/adminBoundaries.js",
+      "src/data/local_data/natural_earth/states_provinces.json",
+      "src/data/local_data/natural_earth/countries.json",
+      "src/data/local_data/us_census_counties/counties.json"
     ],
     "external": [
       "hls.js",
@@ -2525,7 +2533,11 @@
       "src/sources/featureSource.js",
       "src/cameraGroundGuard.js",
       "src/data/cameraArrival.js",
-      "src/sources/capability.js"
+      "src/sources/capability.js",
+      "src/data/adminBoundaries.js",
+      "src/data/local_data/natural_earth/states_provinces.json",
+      "src/data/local_data/natural_earth/countries.json",
+      "src/data/local_data/us_census_counties/counties.json"
     ],
     "external": [
       "cesium",

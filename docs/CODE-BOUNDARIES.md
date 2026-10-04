@@ -17,6 +17,8 @@ until deliberately adopted.
 Generated output, local configuration, browser evidence and bundled datasets are
 excluded. The formatter validates every entry before writing any file.
 
+New world text labels must use the world-overlay host; Cesium text labels are forbidden.
+
 ## Current component ownership
 
 Package imports use `vantage`; `package.json` is the authoritative

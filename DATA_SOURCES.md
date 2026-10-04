@@ -112,6 +112,8 @@ The [Bhote Koshi event pack](public/events/bhote-koshi-2026/README.md), under `p
 | **TeleGeography Submarine Cable Map** (712 cables + 1,917 landing points)   | `telegeography_submarine_cables/` | **CC BY-NC-SA 3.0**                                                                                       | ❌ **NonCommercial — remove for commercial use** | "© TeleGeography — submarinecablemap.com"                                   |
 | **Natural Earth physical regions** (1,046 land + 292 marine named polygons) | `natural_earth/`                  | **Public domain**                                                                                         | ✅ (no restrictions)                             | "Made with Natural Earth" (courtesy credit — not legally required)          |
 | **DataSF Analysis Neighborhoods** (41 SF neighborhood polygons)             | `neighborhoods/`                  | **PDDL 1.0** (public domain)                                                                              | ✅ (no restrictions)                             | "City & County of San Francisco — DataSF" (courtesy — not legally required) |
+| **Natural Earth countries, states and provinces** (260 admin-0/map units + 4,587 admin-1 polygons) | `natural_earth/` | **Public domain** | ✅ (no restrictions) | "Made with Natural Earth" (courtesy credit — not legally required) |
+| **US Census Bureau counties** (3,235 county polygons)                       | `us_census_counties/`             | **Public domain**                                                                                         | ✅ (no restrictions)                             | "U.S. Census Bureau" (courtesy — not legally required)                      |
 | **CCTV ground heights** (3,445 cameras)                                     | `cctv_ground_heights/`            | Precomputed camera placement heights, aligned to work with Google Photorealistic 3D Tiles (folder README) | —                                                | —                                                                           |
 
 ### ⚠️ TeleGeography is bundled but NonCommercial
@@ -300,6 +302,17 @@ Natural Earth is **public domain** (no permission needed, no attribution legally
 https://www.naturalearthdata.com/about/terms-of-use/). We credit anyway: "Made with Natural
 Earth". Registration in the in-app `dataCredits.js` attribution list ships with the resolver
 wiring (see below).
+
+### Natural Earth countries, states and provinces; US Census counties
+
+`natural_earth/countries.json` and `natural_earth/states_provinces.json` (Natural
+Earth admin-0 map units and admin-1 states/provinces, including the UK constituent
+countries) and `us_census_counties/counties.json` (US Census Bureau cartographic
+county boundaries) are built by `scripts/build-admin-packs.mjs`; each folder's
+README records the source release and simplification. They back area annotations
+("outline Texas", "outline Travis County") offline, with no lookup service, and
+load only on the first annotation that needs them. Both sources are **public
+domain**; the in-app Data attribution list credits them as a courtesy.
 
 ### DataSF Analysis Neighborhoods (`neighborhoods/`)
 

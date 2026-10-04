@@ -922,5 +922,9 @@
   "scripts/qa-journey-recorder.mjs",
   "src/sources/militaryTileGeometry.test.mjs",
   "scripts/qa-context-arrivals.mjs",
-  "scripts/qa-alpr-journey.mjs"
+  "scripts/qa-alpr-journey.mjs",
+  "src/annotations/adminOutline.test.mjs",
+  "src/data/adminBoundaries.test.mjs",
+  "scripts/build-admin-packs.mjs",
+  "scripts/qa-admin-outlines.mjs"
 ]

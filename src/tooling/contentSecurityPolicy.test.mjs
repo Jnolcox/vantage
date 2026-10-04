@@ -98,6 +98,8 @@ const LINKS_AND_ATTRIBUTION = [
   'wiki.openstreetmap.org',
   'www.adsbdb.com',
   'www.capmetro.org',
+  // US county outlines credit (bundled US Census Bureau cartographic data).
+  'www.census.gov',
   'www.digitraffic.fi',
   'www.drivebc.ca',
   'www.ecmwf.int',

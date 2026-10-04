@@ -333,6 +333,7 @@ export function createAnnotationEngine({
               // refreshes it — usually instantly from the footprint cache.
               if (anno.pendingOutline && !anno.ring && dup.ring) {
                 anno.ring = dup.ring;
+                anno.polygons = dup.polygons || null;
                 anno.footprintKind = dup.footprintKind || null;
                 anno.buildingHeight = dup.buildingHeight || null;
                 anno.synthesized = Boolean(dup.synthesized);
@@ -675,6 +676,7 @@ export function createAnnotationEngine({
       anno.pendingOutline = false;
       if (fp) {
         anno.ring = fp.ring;
+        anno.polygons = fp.polygons || null;
         anno.footprintKind = fp.footprintKind || null;
         anno.buildingHeight = fp.buildingHeight || null;
         anno.synthesized = Boolean(fp.synthesized);
@@ -919,6 +921,9 @@ export function createAnnotationEngine({
       anchor: { lon: resolved.lon, lat: resolved.lat, height: resolved.height },
       to: null,
       ring: resolved.ring || null,
+      // Every part with its holes ([outer, ...holes][]), when the outline has
+      // more than the main ring (Hawaii's islands, Berlin inside Brandenburg).
+      polygons: resolved.polygons || null,
       footprintKind: resolved.footprintKind || null, // 'building' | 'area'
       buildingHeight: resolved.buildingHeight || null, // meters, for extruded volume
       synthesized: Boolean(resolved.synthesized), // approximate buffered area → dashed render
@@ -1047,7 +1052,11 @@ export function createAnnotationEngine({
       // Places viewport box when we have one, so a big compound isn't framed at
       // building scale while its outline is traced. Never re-fly when the ring lands.
       const range = anno.ring
-        ? ringRange(anno.ring)
+        ? ringRange(
+            anno.polygons?.length
+              ? anno.polygons.flatMap((poly) => poly[0])
+              : anno.ring,
+          )
         : viewportRange(anno.viewport) || 600;
       viewer.camera.flyToBoundingSphere(
         new Cesium.BoundingSphere(
@@ -1388,7 +1397,11 @@ function ringRange(ring) {
   let maxLat = -Infinity;
   let minLon = Infinity;
   let maxLon = -Infinity;
-  for (const [lon, lat] of ring) {
+  // Unwrap around the first vertex so parts cut at the antimeridian (the
+  // Aleutians) measure as neighbours, not as a globe-wide span.
+  const ref = ring[0]?.[0] ?? 0;
+  for (const [rawLon, lat] of ring) {
+    const lon = rawLon - 360 * Math.round((rawLon - ref) / 360);
     if (lat < minLat) minLat = lat;
     if (lat > maxLat) maxLat = lat;
     if (lon < minLon) minLon = lon;

@@ -1,5 +1,21 @@
 # Vantage Current State
 
+Area annotations resolve countries, states/provinces and US counties offline.
+`src/data/adminBoundaries.js` loads `natural_earth/countries.json`,
+`natural_earth/states_provinces.json` and `us_census_counties/counties.json`
+through `loadBundledJson` on the first lookup that needs each pack, never at
+app start (built by `scripts/build-admin-packs.mjs`). `findAdminArea(query,
+{ near })` matches names, aliases and qualifiers ("Travis County, Texas"),
+breaking ties by geography; `findAdminAreaAt(names, lat, lon, scope)` takes the
+geocoder's typed unit that contains the point. The resolver tries the bundled
+unit before any geocode or feature lookup and returns every part with holes as
+`polygons`; the world renderer drapes one fill and one outline material per
+mark so Cesium batches a multi-part outline. A bundled county credits the US
+Census Bureau, anything else Natural Earth. World annotation captions are now
+drawn only by the screen-space callouts, and `src/noCesiumLabels.test.mjs`
+keeps new runtime code off Cesium text labels (Directions and scene data packs
+are the remaining legacy users).
+
 Mapped ALPR Cameras reads the community-hosted hourly OpenStreetMap camera
 extract. `createAlprTileSource` (`src/layers/alpr/source.js`) reads the US and
 Canada TileJSON from `/api/tiles/alpr/cameras-{us,ca}-hourly.json`, picks the

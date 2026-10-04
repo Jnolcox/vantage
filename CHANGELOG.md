@@ -200,6 +200,15 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   no data for, and stale answers when the upstream fails. TileJSON is
   rewritten so every tile URL points back at the proxy, so the browser never
   contacts a third-party tile host.
+- Area annotations outline countries, states and provinces (Natural Earth,
+  including the UK constituent countries) and US counties (US Census Bureau)
+  from bundled public-domain boundary packs, with no lookup service. County
+  names are disambiguated across countries by aliases, qualifiers and the
+  camera's position; multi-part outlines (Hawaii's islands, Berlin inside
+  Brandenburg) draw every part with its holes. The packs load only on the
+  first annotation that needs them. Annotation captions are drawn by the
+  screen-space callouts instead of Cesium labels (ported from upstream,
+  Bilawal Sidhu).
 
 ### Changed
 

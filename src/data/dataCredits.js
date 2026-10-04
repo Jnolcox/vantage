@@ -369,13 +369,22 @@ export const TOMTOM_CREDIT = {
     '<a href="https://www.tomtom.com" target="_blank" rel="noopener">TomTom</a>',
 };
 
-/** Registered when the first Natural Earth region outline resolves (public
- * domain — no attribution required; credited as a courtesy). */
+/** Registered when the first Natural Earth region or state/province outline
+ * resolves (public domain — no attribution required; credited as a courtesy). */
 export const NATURAL_EARTH_CREDIT = {
   key: 'natural-earth',
   html:
-    'Physical region boundaries from ' +
+    'Country, state/province and physical region boundaries from ' +
     '<a href="https://www.naturalearthdata.com" target="_blank" rel="noopener">Natural Earth</a> (public domain)',
+};
+
+/** Registered when the first bundled US county outline resolves (public
+ * domain — credited as a courtesy). */
+export const US_CENSUS_CREDIT = {
+  key: 'us-census-counties',
+  html:
+    'US county boundaries from the ' +
+    '<a href="https://www.census.gov/geographies/mapping-files/time-series/geo/cartographic-boundary.html" target="_blank" rel="noopener">U.S. Census Bureau</a> (public domain)',
 };
 
 /**

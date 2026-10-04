@@ -13,7 +13,11 @@ import {
   admitRequestHost,
 } from '../../server/standalone/api-request-guard.js';
 import { clientUserAgent } from '../sources/projectIdentity.js';
-import { parseArgs, serveStdio } from '../../server/mcp/stdio.js';
+import {
+  describeRequest,
+  parseArgs,
+  serveStdio,
+} from '../../server/mcp/stdio.js';
 
 const usgs = {
   type: 'FeatureCollection',
@@ -172,4 +176,61 @@ test('command-line arguments are strict', () => {
     apiBase: 'http://localhost:5173',
   });
   assert.throws(() => parseArgs(['--port', '1']), /Unknown argument/);
+});
+
+test('the stdio log names methods and tools but never arguments', () => {
+  assert.equal(describeRequest({ method: 'tools/list' }), 'tools/list');
+  assert.equal(
+    describeRequest({
+      method: 'tools/call',
+      params: { name: 'get_weather', arguments: { location: { place: 'x' } } },
+    }),
+    'tools/call get_weather',
+  );
+  assert.equal(describeRequest({ result: {} }), null);
+});
+
+test('the stdio log does not echo free text given as a method or tool name', () => {
+  assert.equal(
+    describeRequest({
+      method: 'tools/call',
+      params: { name: 'get_earthquakes\n<- forged line' },
+    }),
+    'tools/call (unnamed tool)',
+  );
+  assert.equal(
+    describeRequest({ method: 'my home is at 1 Main St' }),
+    '(unnamed method)',
+  );
+});
+
+test('a failed tool call is logged with its error code, not its message', async () => {
+  const server = {
+    handle: async (message) => ({
+      jsonrpc: '2.0',
+      id: message.id,
+      result: {
+        isError: true,
+        content: [{ type: 'text', text: 'No place matched "Home"' }],
+        structuredContent: { error: 'invalid_arguments' },
+      },
+    }),
+  };
+  const input = new PassThrough();
+  const output = new PassThrough();
+  output.resume();
+  const logged = [];
+  const served = serveStdio(server, {
+    input,
+    output,
+    log: (line) => logged.push(line),
+  });
+  input.end(
+    '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"get_earthquakes","arguments":{"area":{"place":"Home"}}}}\n',
+  );
+  await served;
+  assert.deepEqual(logged, [
+    'tools/call get_earthquakes',
+    '   tools/call get_earthquakes failed: invalid_arguments',
+  ]);
 });

@@ -88,6 +88,13 @@ claude mcp add vantage -- npm --prefix /path/to/vantage run --silent mcp
 default is `http://127.0.0.1:4173`, the IPv4 loopback address the app binds;
 `localhost` may resolve to `::1` first and miss it.
 
+The server writes one line per request to stderr, which clients such as
+Claude Desktop copy into their logs: the method, the tool a `tools/call`
+names, and for a failed call its error code (`invalid_arguments`,
+`retry_later`, ...). Arguments, results and error messages, which can repeat
+an argument, are never logged, and a method or tool name that is not a plain
+name is logged as `(unnamed ...)` rather than echoed.
+
 ## Network and security
 
 The stdio server opens no listener: no port, no socket, nothing another

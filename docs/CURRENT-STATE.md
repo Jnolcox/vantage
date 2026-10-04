@@ -474,7 +474,9 @@ and, over the application request services and the layers' sources, weather
 fire perimeters, terrain height, mapped military installations and map
 features (`get_map_features`, `unavailable` without a configured Overpass
 instance), plus `situation_brief`, which runs weather, earthquake, fire,
-aircraft and cyclone sections and marks failed ones unavailable, and
+aircraft and cyclone sections and marks failed ones unavailable,
+`military_awareness`, which does the same for military aircraft, other
+aircraft and mapped installations within 250 km of a point, and
 `get_hud_caption`, which posts the HUD's label-only summary context to
 `/api/openai/hud-summary`. The caption and regional brief spend provider quota
 under those routes' throttles, on a tool call only; the HUD's Live/Local

@@ -67,9 +67,9 @@ tools inherit their limits: the Google routes keep their per-IP throttle (a
 expose the key. The `weather`, `regional`, `terrain`, `summary` and
 `features` services are the application request services from
 `src/services/requests.js`, the same ones the HUD and cockpit use.
-`situation_brief` runs each section whose services are supplied and marks the
-others unavailable. A new tool adds the services it reads to
-`createToolServices`, so every surface composes the same set.
+`situation_brief` and `military_awareness` run each section whose services are
+supplied and mark the others unavailable. A new tool adds the services it reads
+to `createToolServices`, so every surface composes the same set.
 
 `get_map_features` reads `/api/overpass`, which reaches only the Overpass
 instances an operator lists in `VANTAGE_OVERPASS_UPSTREAMS`. With none, the
@@ -144,29 +144,30 @@ process, on a tool call only, with the `vantage-mcp-tools` User-Agent from
 
 ## Tools
 
-| Tool                          | Reads                | Returns                                                                        |
-| ----------------------------- | -------------------- | ------------------------------------------------------------------------------ |
-| `get_earthquakes`             | `earthquakes`        | USGS M2.5+ events in the last 24 hours, strongest first                        |
-| `get_active_fires`            | `fires`              | NASA FIRMS detections in an area, highest radiative power first                |
-| `get_recent_launches`         | `launches`           | Launch Library 2 launches in the last 30 days, newest first                    |
-| `aircraft_in_area`            | `aircraft`           | Aircraft in an area, nearest first; `military: true` reads the `military` feed |
-| `find_aircraft`               | `aircraft`           | Aircraft anywhere by callsign, ICAO address or registration                    |
-| `get_aircraft_track`          | `aircraft`           | Recent positions of one aircraft, thinned to 200 points                        |
-| `get_aircraft_info`           | `aircraft`           | Aircraft type and registration, and flight route, from adsbdb                  |
-| `next_satellite_pass`         | `satellites`         | Next pass over a point (default the ISS), with naked-eye visibility            |
-| `satellites_overhead`         | `satellites`         | Satellites in a CelesTrak group above a point now, highest first               |
-| `find_cctv_cameras`           | `cctv`               | Public cameras in an area, nearest first                                       |
-| `get_cctv_snapshot`           | `cctv`               | The current image from one camera, returned as image content                   |
-| `find_radio_stations`         | `radio`              | Radio Browser stations by area and/or search terms, with stream URLs           |
-| `search_places`               | `placeSearch`        | Points of interest matching a query within an area (Google Places)             |
-| `places_nearby`               | `placeSearch`        | Notable places around a point (Google Places)                                  |
-| `plan_route`                  | `routing`            | Walking, driving or cycling route over OpenStreetMap, with a simplified path   |
-| `get_weather`                 | `weather`            | Current conditions at a place or point                                         |
-| `get_regional_brief`          | `regional`           | What and where a location is, its weather and recent headlines                 |
-| `get_cyclones`                | `cyclones`           | Active NHC/CPHC tropical cyclones, optionally in an area                       |
-| `get_fire_perimeters`         | `perimeters`         | Mapped WFIGS wildfire perimeters in an area, largest first                     |
-| `get_terrain_height`          | `terrain`            | Ground, geoid and ellipsoid heights at up to 20 points                         |
-| `find_military_installations` | `installations`      | OpenStreetMap military sites in an area of at most 10° per side                |
-| `get_map_features`            | `features`           | Administrative areas, named places or monuments at a location (needs Overpass) |
-| `situation_brief`             | `weather`            | Weather, earthquakes, fires, aircraft and cyclones for an area, by section     |
-| `get_hud_caption`             | `weather`, `summary` | The app's heads-up display caption for an area                                 |
+| Tool                          | Reads                | Returns                                                                                     |
+| ----------------------------- | -------------------- | ------------------------------------------------------------------------------------------- |
+| `get_earthquakes`             | `earthquakes`        | USGS M2.5+ events in the last 24 hours, strongest first                                     |
+| `get_active_fires`            | `fires`              | NASA FIRMS detections in an area, highest radiative power first                             |
+| `get_recent_launches`         | `launches`           | Launch Library 2 launches in the last 30 days, newest first                                 |
+| `aircraft_in_area`            | `aircraft`           | Aircraft in an area, nearest first; `military: true` reads the `military` feed              |
+| `find_aircraft`               | `aircraft`           | Aircraft anywhere by callsign, ICAO address or registration                                 |
+| `get_aircraft_track`          | `aircraft`           | Recent positions of one aircraft, thinned to 200 points                                     |
+| `get_aircraft_info`           | `aircraft`           | Aircraft type and registration, and flight route, from adsbdb                               |
+| `next_satellite_pass`         | `satellites`         | Next pass over a point (default the ISS), with naked-eye visibility                         |
+| `satellites_overhead`         | `satellites`         | Satellites in a CelesTrak group above a point now, highest first                            |
+| `find_cctv_cameras`           | `cctv`               | Public cameras in an area, nearest first                                                    |
+| `get_cctv_snapshot`           | `cctv`               | The current image from one camera, returned as image content                                |
+| `find_radio_stations`         | `radio`              | Radio Browser stations by area and/or search terms, with stream URLs                        |
+| `search_places`               | `placeSearch`        | Points of interest matching a query within an area (Google Places)                          |
+| `places_nearby`               | `placeSearch`        | Notable places around a point (Google Places)                                               |
+| `plan_route`                  | `routing`            | Walking, driving or cycling route over OpenStreetMap, with a simplified path                |
+| `get_weather`                 | `weather`            | Current conditions at a place or point                                                      |
+| `get_regional_brief`          | `regional`           | What and where a location is, its weather and recent headlines                              |
+| `get_cyclones`                | `cyclones`           | Active NHC/CPHC tropical cyclones, optionally in an area                                    |
+| `get_fire_perimeters`         | `perimeters`         | Mapped WFIGS wildfire perimeters in an area, largest first                                  |
+| `get_terrain_height`          | `terrain`            | Ground, geoid and ellipsoid heights at up to 20 points                                      |
+| `find_military_installations` | `installations`      | OpenStreetMap military sites in an area of at most 10° per side                             |
+| `get_map_features`            | `features`           | Administrative areas, named places or monuments at a location (needs Overpass)              |
+| `situation_brief`             | `weather`            | Weather, earthquakes, fires, aircraft and cyclones for an area, by section                  |
+| `military_awareness`          | `military`           | Military and other aircraft and military installations within 250 km of a point, by section |
+| `get_hud_caption`             | `weather`, `summary` | The app's heads-up display caption for an area                                              |

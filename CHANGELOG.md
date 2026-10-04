@@ -335,6 +335,13 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   of leaving holes in the Re:Earth terrain after a burst of tile requests. One
   console line is logged per cooldown window, not per tile (ported from
   upstream, Bilawal Sidhu).
+- Search arrivals (location bar and voice) end above the rendered surface. A
+  precise place without a detailed outline used to be framed from a sea-level
+  target, leaving Camp Mabry about 1 m above the mesh and a Denver coordinate
+  underground. Search now waits briefly for the ground-floor elevation before
+  framing, and after landing the camera is lifted to 120 m clearance once the
+  surface streams in; a new flight, a gesture or teardown cancels the check
+  (ported from upstream, Bilawal Sidhu and Milan Khanal).
 
 ## [1.0.0] - 2026-10-02
 

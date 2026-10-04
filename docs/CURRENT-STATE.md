@@ -1,5 +1,18 @@
 # Vantage Current State
 
+Search arrivals (location bar and voice) end above the rendered surface.
+Precise places without a detailed outline used to frame a 250 m landmark shot
+from a sea-level target, which left Camp Mabry about 1 m above the 171 m mesh
+and a Denver coordinate underground. `searchAndFlyTo` now resolves the
+application's ground-floor elevation (bounded wait, same ellipsoidal datum)
+before framing and warms the cell; after landing, `src/cameraGroundGuard.js`
+samples the rendered surface under the target and the camera once tiles
+stream in and lifts the eye to 120 m clearance, holding heading and pitch.
+Navigation ownership changes (Director, tracking, keyboard/UI controls and
+direct camera flights, through `src/data/cameraArrival.js`), layer/app
+teardown, and pointer/wheel gestures cancel the check and remove its
+listeners.
+
 Keyless terrain tiles retry when Re:Earth throttles them. The browser fetches
 `terrain.reearth.land/cesium-mesh/ellipsoid/{z}/{x}/{y}.terrain` directly; no
 proxy in this repository sees those requests (`/api/terrain/heights` is the

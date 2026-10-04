@@ -632,7 +632,8 @@
       "src/ui/layerBindings.js",
       "src/ui/displayBindings.js",
       "src/ui/shellFacade.js",
-      "src/layers/weather/imageryHost.js"
+      "src/layers/weather/imageryHost.js",
+      "src/data/cameraArrival.js"
     ],
     "external": ["cesium"]
   },
@@ -736,7 +737,8 @@
       "src/director/sharing/lifetime.js",
       "src/director/authoring.js",
       "src/scenes/sharing.js",
-      "src/ui/sceneSharing.js"
+      "src/ui/sceneSharing.js",
+      "src/data/cameraArrival.js"
     ],
     "external": ["cesium"]
   },
@@ -1950,7 +1952,9 @@
       "src/maps/imageryHost.js",
       "src/ui/recentImagery.js",
       "src/ui/imageryBoxTool.js",
-      "src/maps/terrainRetry.js"
+      "src/maps/terrainRetry.js",
+      "src/cameraGroundGuard.js",
+      "src/data/cameraArrival.js"
     ],
     "external": [
       "hls.js",
@@ -2393,7 +2397,9 @@
       "src/layers/recentImagery/catalog.js",
       "src/layers/recentImagery/rendering.js",
       "src/layers/recentImagery/thumbnails.js",
-      "src/maps/imageryHost.js"
+      "src/maps/imageryHost.js",
+      "src/cameraGroundGuard.js",
+      "src/data/cameraArrival.js"
     ],
     "external": [
       "hls.js",
@@ -2448,7 +2454,9 @@
       "src/sources/featureGeometry.js",
       "src/sources/overpassFeaturesRecords.js",
       "src/sources/overpassFeatures.js",
-      "src/sources/featureSource.js"
+      "src/sources/featureSource.js",
+      "src/cameraGroundGuard.js",
+      "src/data/cameraArrival.js"
     ],
     "external": [
       "cesium",
@@ -2461,7 +2469,7 @@
   },
   "layer-lifecycle": {
     "exports": ["./data/lifecycle"],
-    "modules": ["src/data/lifecycle.js"],
+    "modules": ["src/data/lifecycle.js", "src/data/cameraArrival.js"],
     "external": []
   },
   "ui-navigation": {
@@ -2469,7 +2477,8 @@
     "modules": [
       "src/navigationPolicy.js",
       "src/ui/navigationController.js",
-      "src/app/stateChannel.js"
+      "src/app/stateChannel.js",
+      "src/data/cameraArrival.js"
     ],
     "external": ["cesium"]
   },

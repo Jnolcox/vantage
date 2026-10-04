@@ -1,3 +1,5 @@
+import { cancelCameraArrival } from './cameraArrival.js';
+
 function cloneLayerParams(value) {
   if (Array.isArray(value)) return value.map(cloneLayerParams);
   if (value && typeof value === 'object') {
@@ -1072,6 +1074,7 @@ export class LayerLifecycle {
     const entry = this.layers.get(layerId);
     if (!entry) return { intentEpoch: null, promise: Promise.resolve() };
     const desiredState = Boolean(shouldEnable);
+    if (!desiredState) cancelCameraArrival(this.viewer);
     if (entry.destroying) {
       return {
         intentEpoch: null,
@@ -2093,6 +2096,7 @@ export class LayerLifecycle {
   async destroyLayer(layerId) {
     const entry = this.layers.get(layerId);
     if (!entry || entry.destroying) return false;
+    cancelCameraArrival(this.viewer);
     entry.destroying = true;
     this._invalidateRefresh(layerId, entry, 'layer-destroyed');
     // Teardown becomes authoritative before the first await. Advancing the

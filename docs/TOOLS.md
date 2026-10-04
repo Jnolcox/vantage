@@ -28,7 +28,9 @@ validates and freezes a tool. `kind` is `query` (answers from data, read-only)
 or `action`. `inputSchema` uses a JSON Schema subset that `src/tools/schema.js`
 checks completely; unsupported keywords are rejected at definition time.
 `run(args, { services, signal })` resolves to `{ summary, data }`: one sentence
-for people and a structured object for programs.
+for people and a structured object for programs. MCP results carry the
+summary and the data as JSON text, plus the data as `structuredContent`, for
+clients that read only one of them.
 
 `composeCatalog({ tools, services, replace, interceptors })` builds a catalog:
 

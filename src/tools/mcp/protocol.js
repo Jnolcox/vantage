@@ -80,7 +80,12 @@ export function createMcpServer({
           signal,
         });
         return {
-          content: [{ type: 'text', text: result.summary }],
+          // The data is repeated as JSON text for clients that do not read
+          // structuredContent.
+          content: [
+            { type: 'text', text: result.summary },
+            { type: 'text', text: JSON.stringify(result.data) },
+          ],
           structuredContent: result.data,
           isError: false,
         };

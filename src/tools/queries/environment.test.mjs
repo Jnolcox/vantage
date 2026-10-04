@@ -438,8 +438,8 @@ test('the situation brief combines available sections and marks failures', async
   });
   assert.equal(
     result.summary,
-    'Situation in Austin, Texas: Weather at 30.3100, -97.7500: overcast, 26°C, wind 5 km/h. ' +
-      '1 earthquake of M2.5+ in the last 24 hours in the requested box; strongest M3.1 near Austin.',
+    'Situation in Austin, Texas: Weather at Austin, Texas: overcast, 26°C, wind 5 km/h. ' +
+      '1 earthquake of M2.5+ in the last 24 hours in Austin, Texas; strongest M3.1 near Austin.',
   );
   assert.deepEqual(Object.keys(result.data.sections), [
     'weather',
@@ -670,4 +670,27 @@ test('the HUD caption replaces a caption that hides a non-nominal feed', async (
   assert.equal(result.summary, 'Austin, Texas UNAVAILABLE TROPICAL CYCLONES');
   assert.equal(result.data.caption_source, 'app');
   assert.equal(result.data.feed_state, 'unavailable');
+});
+
+test('brief sections use a named place at its own point', async () => {
+  const tokyo = {
+    resolve: async () => ({
+      name: 'Tokyo, Japan',
+      point: { lat: 35.6769, lon: 139.7639 },
+      bounds: { west: 135, south: 20, east: 155, north: 36 },
+    }),
+  };
+  const queries = [];
+  const aircraft = {
+    getSnapshot: async (query) => {
+      queries.push(query);
+      return { records: [], complete: true, source: 'Test feed' };
+    },
+  };
+  const result = await catalogWith({ weather, places: tokyo, aircraft }).call(
+    'situation_brief',
+    { area: { place: 'Tokyo' } },
+  );
+  assert.deepEqual(queries[0], { latitude: 35.6769, longitude: 139.7639 });
+  assert.match(result.data.sections.aircraft.summary, /in Tokyo, Japan\.$/);
 });

@@ -980,5 +980,6 @@
   "src/tools/queries/space.test.mjs",
   "src/tools/queries/media.test.mjs",
   "src/tools/queries/places.test.mjs",
-  "src/tools/queries/environment.test.mjs"
+  "src/tools/queries/environment.test.mjs",
+  "src/tools/places.test.mjs"
 ]

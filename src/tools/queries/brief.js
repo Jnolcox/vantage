@@ -34,7 +34,9 @@ const SECTIONS = [
     label: 'Weather',
     tool: getWeather,
     args: (area, center) => ({
-      location: { lat: center.lat, lon: center.lon },
+      location: area.argument.place
+        ? { place: area.argument.place }
+        : { lat: center.lat, lon: center.lon },
     }),
   },
   {
@@ -101,19 +103,30 @@ function sectionSource(section) {
   return typeof source === 'string' && source ? source : null;
 }
 
-/** The resolved area, plus the argument sections receive in its place. */
-function sectionArea(resolved) {
+/**
+ * The resolved area, plus the argument sections receive. A named place is
+ * passed by name, so sections resolve it to the same point and label as a
+ * direct query does (place lookups are cached).
+ */
+function sectionArea(resolved, original) {
   return {
     ...resolved,
-    argument: resolved.center
-      ? {
-          lat: resolved.center.lat,
-          lon: resolved.center.lon,
-          radius_km: resolved.center.radiusKm,
-        }
-      : {
-          bbox: [resolved.west, resolved.south, resolved.east, resolved.north],
-        },
+    argument: original?.place
+      ? { place: original.place }
+      : resolved.center
+        ? {
+            lat: resolved.center.lat,
+            lon: resolved.center.lon,
+            radius_km: resolved.center.radiusKm,
+          }
+        : {
+            bbox: [
+              resolved.west,
+              resolved.south,
+              resolved.east,
+              resolved.north,
+            ],
+          },
   };
 }
 
@@ -151,8 +164,12 @@ async function runSections(all, area, { services, signal }) {
 }
 
 async function buildBrief(args, { services, signal }) {
-  // Sections receive the resolved box so a place name is looked up once.
-  const area = sectionArea(await resolveArea(args.area, { services, signal }));
+  // Sections receive a named place by name (lookups are cached) and other
+  // areas as the resolved box or circle.
+  const area = sectionArea(
+    await resolveArea(args.area, { services, signal }),
+    args.area,
+  );
   const { center, answers, lines } = await runSections(SECTIONS, area, {
     services,
     signal,

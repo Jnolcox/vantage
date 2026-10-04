@@ -3905,7 +3905,7 @@ are omitted rather than framing the wrong part of the globe.
   an absent marker exposes Install, a present marker exposes Start, and a
   running server with a captured ready URL exposes Open Vantage.
 - Build gate: `npm run build`
-- Network access: local-only by default (`127.0.0.1`); LAN is an explicit opt-in via `VANTAGE_HOST=0.0.0.0` (launcher prints a key-exposure warning + LAN URL and the throttles default on; see SECURITY.md). Every route checks `Host` against an exact-name list, every `/api` route also checks `Origin` and `Sec-Fetch-Site`, and the page ships an enforced Content-Security-Policy.
+- Network access: local-only by default (`127.0.0.1`); LAN is an explicit opt-in via `VANTAGE_HOST=0.0.0.0` (launcher prints a key-exposure warning + LAN URL and the throttles default on; see SECURITY.md). Every route checks `Host` against an exact-name list, every `/api` route also checks `Origin` and `Sec-Fetch-Site`, the cost-bearing and debug-log routes refuse reverse-proxy forwarding headers unless `VANTAGE_TRUST_PROXY=1`, and the page ships an enforced Content-Security-Policy.
 - OpenSky default mode: OAuth (`OPENSKY_AUTH_MODE=oauth`; `anon` works without credentials)
 - Setup doctor resolves `OPENSKY_AUTH_MODE` from the environment and dotenv files. Explicit `anon` and OAuth mode without a client pair report keyless anonymous access (rate-limited); a complete OAuth pair retains the existing presence-only capability wording. Basic and auto modes report the selected mode without guessing which credentials runtime will accept. The proxy's auth behavior is unchanged.
 - Google key expected in Keychain service `google-maps-api` (or `GOOGLE_MAPS_API_KEY`, or `.env`)

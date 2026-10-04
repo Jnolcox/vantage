@@ -5,11 +5,15 @@ import { rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { build, createServer, preview } from 'vite';
 import {
+  COST_BEARING_ROUTES,
   admitApiRequest,
   admitRequestHost,
   apiRequestGuardPlugin,
   isAllowedApiHost,
+  isCostBearingPath,
+  isProxyTrusted,
 } from '../../server/standalone/api-request-guard.js';
+import { PROXY_SIGNALS } from '../localRequestGate.mjs';
 import { makeFixtureRoot } from './fixtureRoot.mjs';
 
 const LOCAL = ['localhost', '127.0.0.1'];
@@ -140,6 +144,119 @@ test('cross-site and same-site fetches are refused even without an Origin', () =
   );
 });
 
+const COST_ROUTE_REQUESTS = [
+  '/api/realtime/token',
+  '/api/realtime/debug-log',
+  '/api/openai/hud-summary',
+  '/api/google/text-search?q=cafe',
+  '/api/google/nearby-places?lat=1&lon=2',
+];
+
+test('the cost-bearing routes are the token, debug log, OpenAI and Google Places routes', () => {
+  assert.deepEqual(
+    [...COST_BEARING_ROUTES],
+    [
+      '/api/realtime/token',
+      '/api/realtime/debug-log',
+      '/api/openai',
+      '/api/google/text-search',
+      '/api/google/nearby-places',
+    ],
+  );
+});
+
+test('every proxy header refuses every cost-bearing route', () => {
+  for (const url of COST_ROUTE_REQUESTS)
+    for (const header of PROXY_SIGNALS)
+      assert.deepEqual(
+        admitApiRequest({
+          hostHeader: 'localhost:4173',
+          url,
+          headers: { [header]: '203.0.113.7' },
+        }),
+        {
+          ok: false,
+          status: 403,
+          error: 'Proxied requests to this endpoint are refused',
+        },
+        `${url} ${header}`,
+      );
+});
+
+test('VANTAGE_TRUST_PROXY lets proxied requests reach the cost-bearing routes', () => {
+  for (const url of COST_ROUTE_REQUESTS)
+    assert.deepEqual(
+      admitApiRequest({
+        hostHeader: 'vantage.local',
+        origin: 'https://vantage.local',
+        fetchSite: 'same-origin',
+        url,
+        headers: {
+          'x-forwarded-for': '192.168.1.30',
+          'x-forwarded-proto': 'https',
+        },
+        trustProxy: true,
+      }),
+      { ok: true },
+      url,
+    );
+});
+
+test('a trusted proxy still cannot send a cross-origin request', () => {
+  assert.equal(
+    admitApiRequest({
+      hostHeader: 'localhost:4173',
+      origin: 'https://evil.example.com',
+      url: '/api/realtime/token',
+      headers: { 'x-forwarded-for': '203.0.113.7' },
+      trustProxy: true,
+    }).ok,
+    false,
+  );
+});
+
+test('proxy headers on other /api routes pass to the route', () => {
+  assert.deepEqual(
+    admitApiRequest({
+      hostHeader: 'localhost:4173',
+      url: '/api/earthquakes',
+      headers: { 'x-forwarded-for': '203.0.113.7' },
+    }),
+    { ok: true },
+  );
+});
+
+test('cost-bearing paths match as the router mounts them', () => {
+  for (const url of [
+    '/api/realtime/token',
+    '/API/Realtime/Token',
+    '/api/realtime/token/',
+    '/api/realtime/token.json',
+    '/api/openai',
+    '/api/openai/hud-summary?x=1',
+    '/api/google/nearby-places#frag',
+  ])
+    assert.equal(isCostBearingPath(url), true, url);
+  for (const url of [
+    '/api/realtime/tokens',
+    '/api/openaix',
+    '/api/google/geocode',
+    '/api/realtime',
+    '',
+    undefined,
+  ])
+    assert.equal(isCostBearingPath(url), false, String(url));
+});
+
+test('VANTAGE_TRUST_PROXY is off unless set to 1 or true, with no legacy name', () => {
+  assert.equal(isProxyTrusted({}), false);
+  assert.equal(isProxyTrusted({ VANTAGE_TRUST_PROXY: '0' }), false);
+  assert.equal(isProxyTrusted({ VANTAGE_TRUST_PROXY: 'yes' }), false);
+  assert.equal(isProxyTrusted({ GEV_TRUST_PROXY: '1' }), false);
+  assert.equal(isProxyTrusted({ VANTAGE_TRUST_PROXY: '1' }), true);
+  assert.equal(isProxyTrusted({ VANTAGE_TRUST_PROXY: ' TRUE ' }), true);
+});
+
 function rawRequest(port, route, headers) {
   return new Promise((resolve, reject) => {
     const request = http.request(
@@ -174,6 +291,9 @@ async function startFixtureServers(t) {
   // later do.
   const answer = (server) => {
     server.middlewares.use('/api/fixture', (_req, res) => res.end('reached'));
+    server.middlewares.use('/api/realtime/token', (_req, res) =>
+      res.end('reached'),
+    );
     server.middlewares.use('/plugin-fixture', (_req, res) =>
       res.end('reached'),
     );
@@ -243,5 +363,24 @@ test('an unlisted Host cannot reach a route outside /api on dev and preview', as
         assert.notEqual(refused.body, 'reached');
       }
     }
+  });
+});
+
+test('real dev and preview servers refuse proxied requests to a cost-bearing route', async (t) => {
+  const { base, provider } = await startFixtureServers(t);
+  await eachServer(base, provider, async (port, label) => {
+    const own = { Host: `localhost:${port}` };
+    const direct = await rawRequest(port, '/api/realtime/token', own);
+    assert.deepEqual(direct, { status: 200, body: 'reached' }, label);
+    const proxied = await rawRequest(port, '/api/realtime/token', {
+      ...own,
+      'X-Forwarded-For': '203.0.113.7',
+    });
+    assert.equal(proxied.status, 403, label);
+    const other = await rawRequest(port, '/api/fixture', {
+      ...own,
+      'X-Forwarded-For': '203.0.113.7',
+    });
+    assert.deepEqual(other, { status: 200, body: 'reached' }, label);
   });
 });

@@ -380,6 +380,14 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
 
 ### Fixed
 
+- The routes that spend provider quota or write the voice debug log
+  (`/api/realtime/token`, `/api/realtime/debug-log`, `/api/openai/*`,
+  `/api/google/text-search`, `/api/google/nearby-places`) refuse requests
+  that carry reverse-proxy or CDN forwarding headers. A TLS proxy you run for
+  LAN voice can be let through with the new `VANTAGE_TRUST_PROXY=1`, which
+  never opens Provider Settings. The `/api` guard already refused foreign and
+  opaque Origins and cross-site `Sec-Fetch-Site` on every route (adapted from
+  upstream, James Sumpter, Sameh Khamis).
 - Cockpit enters on the matching map style and its vision carousel is one
   fixed, duplicate-free sequence: Normal, CRT, NVG, FLIR, Anime, Noir and Snow.
   Normal is a real unfiltered option, and both Exit Cockpit and Reset restore

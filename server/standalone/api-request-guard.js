@@ -1,4 +1,5 @@
 import { isIP } from 'node:net';
+import { hasProxySignals } from '../../src/localRequestGate.mjs';
 
 /**
  * One gate in front of every route, with a stricter layer on /api.
@@ -17,10 +18,26 @@ import { isIP } from 'node:net';
  *    while the page's Origin is https, and no other site can serve pages
  *    from this exact host and port;
  *  - a browser request labelled cross-site or same-site by Sec-Fetch-Site,
- *    which also covers <img> and no-cors loads that carry no Origin.
+ *    which also covers <img> and no-cors loads that carry no Origin;
+ *  - on the cost-bearing and log routes (COST_BEARING_ROUTES), a request
+ *    carrying reverse-proxy or CDN forwarding headers, unless the operator
+ *    set VANTAGE_TRUST_PROXY=1 for a proxy they run themselves.
  * Same-origin browser requests and local non-browser tools (curl, QA scripts)
  * pass unchanged. Provider Settings keeps its stricter gate behind this one.
  */
+
+/**
+ * Routes that spend provider quota or write local files. A request a reverse
+ * proxy forwarded reaches them only with VANTAGE_TRUST_PROXY=1; the flag never
+ * opens Provider Settings, whose own gate refuses proxied requests always.
+ */
+export const COST_BEARING_ROUTES = Object.freeze([
+  '/api/realtime/token',
+  '/api/realtime/debug-log',
+  '/api/openai',
+  '/api/google/text-search',
+  '/api/google/nearby-places',
+]);
 
 const REFUSED_FETCH_SITES = new Set(['cross-site', 'same-site']);
 const WEB_ORIGIN_PROTOCOLS = new Set(['http:', 'https:']);
@@ -76,11 +93,41 @@ export function admitRequestHost({ hostHeader, allowedHosts = [] } = {}) {
 }
 
 /**
+ * Whether a request path reaches a cost-bearing route. Connect matches mount
+ * paths case-insensitively and lets a '/' or '.' follow them, so this does too.
+ */
+export function isCostBearingPath(url) {
+  const pathname = String(url ?? '')
+    .split(/[?#]/, 1)[0]
+    .toLowerCase();
+  return COST_BEARING_ROUTES.some((route) => {
+    if (!pathname.startsWith(route)) return false;
+    const next = pathname.charAt(route.length);
+    return next === '' || next === '/' || next === '.';
+  });
+}
+
+/** VANTAGE_TRUST_PROXY=1 (or `true`); there is no pre-rename name. */
+export function isProxyTrusted(env = process.env) {
+  return /^(1|true)$/i.test(String(env.VANTAGE_TRUST_PROXY ?? '').trim());
+}
+
+/**
  * Decide whether an /api request, already past the Host check, may reach the
- * provider middleware.
+ * provider middleware. `url` is the full request path and `headers` the
+ * request headers keyed by lower-case name.
  * @returns {{ok: true} | {ok: false, status: number, error: string}}
  */
-export function admitApiRequest({ hostHeader, origin, fetchSite } = {}) {
+export function admitApiRequest({
+  hostHeader,
+  origin,
+  fetchSite,
+  url = '',
+  headers = {},
+  trustProxy = false,
+} = {}) {
+  if (!trustProxy && isCostBearingPath(url) && hasProxySignals(headers))
+    return refusal('Proxied requests to this endpoint are refused');
   if (REFUSED_FETCH_SITES.has(String(fetchSite || '').toLowerCase()))
     return refusal('Cross-site requests are refused');
   if (origin !== undefined && origin !== '') {
@@ -132,6 +179,9 @@ function apiCheckMiddleware() {
       hostHeader: req.headers.host,
       origin: req.headers.origin,
       fetchSite: req.headers['sec-fetch-site'],
+      url: req.originalUrl ?? req.url,
+      headers: req.headers,
+      trustProxy: isProxyTrusted(),
     });
     return verdict.ok ? next() : refuse(res, verdict);
   };

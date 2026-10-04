@@ -333,6 +333,17 @@ test('the gate refuses proxied requests even from a loopback socket with local h
   assert.equal(admitKeySetupRequest({ ...base, proxyHeaders: { 'x-forwarded-for': '' } }).ok, true);
 });
 
+test('VANTAGE_TRUST_PROXY never lets a proxied request reach Provider Settings', async () => {
+  const { admitKeySetupRequest } = await import('./keySetupCore.mjs');
+  const verdict = admitKeySetupRequest({
+    method: 'POST', remoteAddress: '127.0.0.1', hostHeader: 'localhost:4173',
+    origin: 'http://localhost:4173', contentType: 'application/json',
+    proxyHeaders: { 'x-forwarded-for': '192.168.1.30' },
+    env: { VANTAGE_TRUST_PROXY: '1' },
+  });
+  assert.deepEqual(verdict, { ok: false, status: 403, error: 'Provider Settings does not answer proxied requests' });
+});
+
 test('validation rejects dotenv metacharacters that would round-trip wrong', () => {
   for (const bad of ['abc#def', 'ab"cd', "ab'cd", 'ab$cd', 'ab\\cd', 'ab`cd']) {
     assert.equal(validateKeySetupUpdates({ OPENAI_API_KEY: bad }).ok, false, `${JSON.stringify(bad)} refused`);

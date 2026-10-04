@@ -521,7 +521,7 @@ address and the Vantage User-Agent, not your browser).
 | `maps.googleapis.com` (Geocoding) | Browser | HUD **Context: Live**, every 15 s and after each move, with a Google key | View-target latitude/longitude |
 | `places.googleapis.com` | Server | Same HUD trigger, with a Google key | Latitude/longitude and radius |
 | `api.openai.com` (Responses) | Server | Same HUD trigger, with an OpenAI key | Place, street and nearby-place labels; enabled layer names with each one's feed state (live, stale, fallback…) and source name |
-| `nominatim.openstreetmap.org`, `api.open-meteo.com`, `news.google.com`, `api.gdeltproject.org` | Server | Cockpit mode: regional brief and weather, refreshed as the contact moves | Latitude/longitude; locality name for news |
+| `api.open-meteo.com`, `news.google.com`, `api.gdeltproject.org` | Server | Cockpit mode: regional brief and weather, refreshed as the contact moves (the region name comes from bundled Natural Earth data, with no lookup) | Latitude/longitude; locality name for news |
 | Layer feeds you have switched on | Server | Polling while the layer is on | See below |
 
 Set DISPLAY ▸ HUD ▸ **Context** to **Local** to stop the three HUD rows; the
@@ -550,10 +550,10 @@ coordinates in view); `tiles.openfreemap.org` (OpenFreeMap vector tiles for
 Traffic roads and Mapped Installations, through `/api/tiles/openfreemap`: tile
 coordinates in view); `tiles.dontgetflocked.com` (the hourly US/Canada
 OpenStreetMap ALPR extract for Mapped ALPR Cameras, through `/api/tiles/alpr`:
-tile coordinates in view);
-Overpass mirrors `overpass-api.de`,
-`lz4.overpass-api.de`, `overpass.kumi.systems`, `overpass.private.coffee`
-(bounding-box queries of the view); registered GTFS-realtime and GBFS feeds
+tile coordinates in view); no public Overpass instance, only those you name
+in `VANTAGE_OVERPASS_UPSTREAMS`, if any (bounding-box queries of the view for
+area and footprint annotations, installation context and ALPR outside the US
+and Canada); registered GTFS-realtime and GBFS feeds
 (`src/data/transitFeeds.js`, the GBFS catalog); the CCTV catalogs and
 snapshot hosts registered in `server/providers/cctv/` (TfL, Caltrans, Austin,
 Ontario 511, Fintraffic, DriveBC, TxDOT, Tallinn, Tarktee, Warendorf, NSW,

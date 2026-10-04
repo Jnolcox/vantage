@@ -600,7 +600,7 @@ test('search without an authority hook preserves the existing caller contract', 
 });
 
 test('a precise search without an outline frames against the resolved ground, not sea level', async () => {
-  // Camp Mabry field report: with no detailed outline
+  // Camp Mabry field report: with no detailed outline (no configured Overpass)
   // framing used the 250 m landmark range from a sea-level target, and the eye
   // landed about 1 m above the 171 m mesh. The ground service now anchors it.
   const viewer = stubViewer();
@@ -618,7 +618,11 @@ test('a precise search without an outline frames against the resolved ground, no
     {
       ground,
       features: {
-        getFocusFootprints: async () => [],
+        getFocusFootprints: async () => ({
+          unavailable: true,
+          retryable: false,
+          code: 'OVERPASS_NOT_CONFIGURED',
+        }),
       },
       recoverNearView: async () => null,
     },
@@ -632,6 +636,7 @@ test('a precise search without an outline frames against the resolved ground, no
     },
   );
   assert.equal(result.navigationMode, 'precise-place');
+  assert.equal(result.outlineUnavailable, true);
   assert.equal(resolved.length, 1);
   assert.equal(warmed.length, 1);
   const flight = viewer.flights[0];

@@ -1,5 +1,27 @@
 # Vantage Current State
 
+Public Overpass instances are not used. `server/providers/overpass/constants.js`
+resolves `VANTAGE_OVERPASS_UPSTREAMS` (falling back to the upstream project's
+unprefixed `OVERPASS_UPSTREAMS`; blank counts as unset) into at most eight
+HTTP(S) endpoints, re-parsed only when the value changes; invalid entries are
+dropped and never logged. With none configured, `/api/overpass` and
+`/api/military-installations` answer `{code: 'OVERPASS_NOT_CONFIGURED',
+retryable: false}` (or a cached last-good answer) without any request, and
+`GET /api/overpass/status` reports `{configured}`. Configured instances get
+the Vantage User-Agent, `redirect: 'error'`, URL credentials as a Basic
+`Authorization` header, and a per-instance cooldown from `Retry-After` or a
+bounded exponential backoff. In the page, `src/sources/capability.js`'s
+`isUnavailableCapability` marks the capability miss: the request services probe
+`/api/overpass/status` once per page (3 s, 30 s backoff after a failure) and
+skip queries when nothing is configured; the resolver, annotation engine and
+search return the miss instead of retrying, so a footprint or neighborhood
+mark keeps its pin and its callout says "Detailed outline unavailable", and a
+search without an outline toasts the same. The cockpit regional brief resolves
+its region from bundled Natural Earth polygons (`naturalRegionAtPoint`) instead
+of a Nominatim reverse lookup; `/api/geocode` keeps Nominatim as the
+last-resort forward search with the honest User-Agent and one-request-per-second
+queue.
+
 Area annotations resolve countries, states/provinces and US counties offline.
 `src/data/adminBoundaries.js` loads `natural_earth/countries.json`,
 `natural_earth/states_provinces.json` and `us_census_counties/counties.json`

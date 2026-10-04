@@ -137,7 +137,8 @@ controls that keep it that way:
   only, with the Vantage User-Agent, a size and time limit, and a bounded
   memory and disk cache under `.vantage-cache/tiles`, and rewrites TileJSON
   so the page is never handed a third-party tile address. Neither host is in
-  the CSP.
+  the CSP. Public Overpass instances are never contacted; `/api/overpass`
+  reaches only instances an operator names in `VANTAGE_OVERPASS_UPSTREAMS`.
 - **Opt-in third-party reporting only.** Radio plays reach Radio Browser's
   click counter only with `VANTAGE_RADIO_REPORT_CLICKS=1`.
 

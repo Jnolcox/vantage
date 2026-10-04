@@ -305,6 +305,21 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   through the server. The source line credits "© OpenStreetMap contributors"
   and the inline credit no longer reflows the credit row (ported from
   upstream, Bilawal Sidhu).
+- Public OpenStreetMap Overpass instances are no longer used. Overpass is
+  queried only at instances the operator names in the new
+  `VANTAGE_OVERPASS_UPSTREAMS` (comma-separated; the upstream project's
+  `OVERPASS_UPSTREAMS` is also read), with the Vantage User-Agent, per-instance
+  cooldowns that honour `Retry-After`, and credentials in the URL sent as
+  Basic auth. Without one, `/api/overpass` and `/api/military-installations`
+  answer at once that detailed queries are not configured and send nothing;
+  `/api/overpass/status` lets the page check once. Footprint and neighborhood
+  outlines that only Overpass could supply keep their pins and say "Detailed
+  outline unavailable"; countries, states, counties and physical regions still
+  outline from bundled data. The cockpit regional brief names the region from
+  bundled Natural Earth polygons instead of a Nominatim reverse lookup;
+  Nominatim remains only as the last-resort place search. Configured Overpass
+  area queries keep relation member geometry (ported from upstream, Bilawal
+  Sidhu).
 
 ### Fixed
 

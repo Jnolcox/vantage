@@ -52,6 +52,26 @@ test('a LAN bind also allows this machine hostname', () => {
   );
 });
 
+test('suffix and wildcard VANTAGE_ALLOWED_HOSTS entries are ignored', () => {
+  assert.deepEqual(
+    extraAllowedHosts(
+      { VANTAGE_ALLOWED_HOSTS: '.local,*.lan,desk*,vantage.local' },
+      '127.0.0.1',
+      'studio',
+    ),
+    ['vantage.local'],
+  );
+});
+
+test('a bind address given as a name is accepted as itself', () => {
+  assert.deepEqual(extraAllowedHosts({}, 'Studio.lan', 'studio'), [
+    'studio',
+    'studio.lan',
+  ]);
+  assert.deepEqual(extraAllowedHosts({}, '192.168.1.20', 'studio'), ['studio']);
+  assert.deepEqual(extraAllowedHosts({}, '::', 'studio'), ['studio']);
+});
+
 test('a LAN bind turns on the paid-proxy throttles when they are unset', () => {
   const env = {};
   assert.deepEqual(applyLanRateLimitDefaults(env, '0.0.0.0'), [

@@ -467,7 +467,7 @@ Everything above is the deliberately cheap baseline — enough to get a real tas
 
 ### 🔒 Sharing an instance
 
-By default nobody else can reach your server — it binds to `127.0.0.1`. To share on your LAN, opt in explicitly (`VANTAGE_HOST=0.0.0.0 npm run dev`, or `VANTAGE_HOST=0.0.0.0 ./scripts/dev-fresh.sh` on macOS/Linux; `HOST` still works as the old name) — but know that ⚠️ **a LAN-visible server brokers your configured API keys to anyone who can reach it.** In that mode the per-IP throttles (`VANTAGE_RATELIMIT_OPENAI_PER_MIN`, `VANTAGE_RATELIMIT_GOOGLE_PER_MIN` — see `.env.example`) switch on at 30 and 60 requests a minute unless you set them, and only local names, IP addresses, this machine's hostname and `VANTAGE_ALLOWED_HOSTS` are accepted as the `Host`. Before anything else, **configure provider quotas, usage limits, and billing alerts**: app-level throttles are not billing caps, and a budget alert alone does not stop spending. Full threat model in [SECURITY.md](SECURITY.md).
+By default nobody else can reach your server — it binds to `127.0.0.1`. To share on your LAN, opt in explicitly (`VANTAGE_HOST=0.0.0.0 npm run dev`, or `VANTAGE_HOST=0.0.0.0 ./scripts/dev-fresh.sh` on macOS/Linux; `HOST` still works as the old name) — but know that ⚠️ **a LAN-visible server brokers your configured API keys to anyone who can reach it.** In that mode the per-IP throttles (`VANTAGE_RATELIMIT_OPENAI_PER_MIN`, `VANTAGE_RATELIMIT_GOOGLE_PER_MIN` — see `.env.example`) switch on at 30 and 60 requests a minute unless you set them, and only local names, IP addresses, this machine's hostname and the exact names in `VANTAGE_ALLOWED_HOSTS` are accepted as the `Host` (list a TLS-proxy name such as `vantage.local` there). Before anything else, **configure provider quotas, usage limits, and billing alerts**: app-level throttles are not billing caps, and a budget alert alone does not stop spending. Full threat model in [SECURITY.md](SECURITY.md).
 
 Provider Settings is disabled when the server is shared, so remote users cannot
 access the key-entry panel.
@@ -496,9 +496,10 @@ a separately reviewed authentication proxy if remote access is required.
   browser may reach; anything else is blocked. The referrer policy is
   `strict-origin-when-cross-origin`, so other sites see only
   `http://localhost:<port>/`, never the path or your share-link state.
-- **Other websites cannot drive your server.** Every `/api` route refuses a
-  foreign `Host` (DNS rebinding), a foreign `Origin`, and requests the browser
-  marks cross-site, so a page you visit cannot spend your keys.
+- **Other websites cannot drive your server.** Every route refuses a foreign
+  `Host` (DNS rebinding), and every `/api` route also refuses a foreign
+  `Origin` and requests the browser marks cross-site, so a page you visit
+  cannot spend your keys.
 - **Voice debug log is opt-in.** Nothing is written to `.vantage-logs/` unless you
   start the server with `VANTAGE_REALTIME_DEBUG_LOG=1` (in `.env`, or in
   `pinokio/ENVIRONMENT` under Pinokio). When enabled, the log stays local,

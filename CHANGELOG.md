@@ -256,6 +256,15 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
 
 ### Changed
 
+- The Host check now covers every route, not only `/api`: plugin middleware
+  runs before Vite's own check, so a non-`/api` route answered any Host,
+  including a DNS-rebinding name. The guard applies the same allowed names to
+  every path on the dev and preview servers. The built-in `.local` suffix is
+  gone, and suffix (`.lan`) and wildcard (`*.lan`) entries in
+  `VANTAGE_ALLOWED_HOSTS` are ignored, so every trusted name is listed
+  exactly. LAN mode still adds this machine's hostname; a TLS-proxy name such
+  as `vantage.local` must now be listed in `VANTAGE_ALLOWED_HOSTS` (adapted
+  from upstream, Sameh Khamis, Puspo Aditya).
 - `cesium` is pinned to exactly 1.138.0 (was `^1.124.0`). The Cyber sonar GPU
   path rewrites Cesium's native contact shaders and is validated against that
   release only; a test fails when the installed or declared version differs,

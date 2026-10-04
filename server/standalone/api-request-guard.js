@@ -1,14 +1,16 @@
 import { isIP } from 'node:net';
 
 /**
- * One gate in front of every /api route.
+ * One gate in front of every route, with a stricter layer on /api.
  *
- * Provider middleware is added in configureServer, which Vite runs before its
- * own Host check and CORS middleware, so without this gate /api answered any
- * Host header (DNS rebinding) and any cross-site page could make the browser
- * fire requests that spend provider quota. The gate refuses:
- *  - a Host header that is not localhost, an IP literal, or an allowed name
- *    (the same list Vite's allowedHosts uses for the page itself);
+ * Plugin middleware is added in configureServer, which Vite runs before its
+ * own Host check and CORS middleware, so without this gate every plugin route
+ * answered any Host header (DNS rebinding) and any cross-site page could make
+ * the browser fire requests that spend provider quota. On every path the gate
+ * refuses:
+ *  - a Host header that is not localhost, an IP literal, or a listed name
+ *    (the same list Vite's allowedHosts uses for the page itself).
+ * On /api it also refuses:
  *  - an Origin header whose host and port are not this server's own. The
  *    scheme is not compared: a TLS proxy in front of this plain-HTTP server
  *    (the microphone needs HTTPS on any other device) keeps the Host header
@@ -40,7 +42,12 @@ function hostnameOf(hostHeader) {
   }
 }
 
-/** Vite's allowedHosts semantics: IP literals and localhost always pass. */
+/**
+ * Whether a hostname is one this server answers. IP literals, localhost and
+ * *.localhost always pass, because a DNS-rebinding page cannot present them;
+ * any other name must be listed exactly. Vite would read a leading-dot entry
+ * as a suffix wildcard, so suffix and wildcard entries never match here.
+ */
 export function isAllowedApiHost(hostname, allowedHosts = []) {
   if (!hostname) return false;
   if (allowedHosts === true) return true;
@@ -48,25 +55,32 @@ export function isAllowedApiHost(hostname, allowedHosts = []) {
   if (hostname === 'localhost' || hostname.endsWith('.localhost')) return true;
   return allowedHosts.some((entry) => {
     const name = String(entry).toLowerCase();
-    return name.startsWith('.')
-      ? hostname === name.slice(1) || hostname.endsWith(name)
-      : hostname === name;
+    return !isPatternHostEntry(name) && hostname === name;
   });
 }
 
+/** True for an allowed-hosts entry that names a pattern, not one host. */
+export function isPatternHostEntry(entry) {
+  const name = String(entry);
+  return name.startsWith('.') || name.includes('*');
+}
+
 /**
- * Decide whether an /api request may reach the provider middleware.
+ * Decide whether a request's Host header may reach any route.
  * @returns {{ok: true} | {ok: false, status: number, error: string}}
  */
-export function admitApiRequest({
-  hostHeader,
-  origin,
-  fetchSite,
-  allowedHosts = [],
-} = {}) {
-  const hostname = hostnameOf(hostHeader);
-  if (!isAllowedApiHost(hostname, allowedHosts))
-    return refusal('Unrecognized Host refused');
+export function admitRequestHost({ hostHeader, allowedHosts = [] } = {}) {
+  return isAllowedApiHost(hostnameOf(hostHeader), allowedHosts)
+    ? { ok: true }
+    : refusal('Unrecognized Host refused');
+}
+
+/**
+ * Decide whether an /api request, already past the Host check, may reach the
+ * provider middleware.
+ * @returns {{ok: true} | {ok: false, status: number, error: string}}
+ */
+export function admitApiRequest({ hostHeader, origin, fetchSite } = {}) {
   if (REFUSED_FETCH_SITES.has(String(fetchSite || '').toLowerCase()))
     return refusal('Cross-site requests are refused');
   if (origin !== undefined && origin !== '') {
@@ -80,48 +94,67 @@ export function admitApiRequest({
       return refusal('Unrecognized Origin refused');
     // Normalize the Host header under the Origin's scheme so default ports
     // compare equal (https://name and Host name:443).
-    const own = new URL(
-      `${parsed.protocol}//${String(hostHeader).trim().toLowerCase()}`,
-    );
+    let own;
+    try {
+      own = new URL(
+        `${parsed.protocol}//${String(hostHeader).trim().toLowerCase()}`,
+      );
+    } catch {
+      return refusal('Cross-origin requests are refused');
+    }
     if (parsed.host !== own.host)
       return refusal('Cross-origin requests are refused');
   }
   return { ok: true };
 }
 
-function guardMiddleware(allowedHosts) {
+function refuse(res, verdict) {
+  res.writeHead(verdict.status, {
+    'Content-Type': 'application/json',
+    'Cache-Control': 'no-store',
+  });
+  res.end(JSON.stringify({ error: verdict.error }));
+}
+
+function hostCheckMiddleware(allowedHosts) {
+  return (req, res, next) => {
+    const verdict = admitRequestHost({
+      hostHeader: req.headers.host,
+      allowedHosts,
+    });
+    return verdict.ok ? next() : refuse(res, verdict);
+  };
+}
+
+function apiCheckMiddleware() {
   return (req, res, next) => {
     const verdict = admitApiRequest({
       hostHeader: req.headers.host,
       origin: req.headers.origin,
       fetchSite: req.headers['sec-fetch-site'],
-      allowedHosts,
     });
-    if (verdict.ok) return next();
-    res.writeHead(verdict.status, {
-      'Content-Type': 'application/json',
-      'Cache-Control': 'no-store',
-    });
-    res.end(JSON.stringify({ error: verdict.error }));
+    return verdict.ok ? next() : refuse(res, verdict);
   };
 }
 
-/** Install the gate ahead of every provider; `enforce: 'pre'` keeps it first. */
+function installGuard(middlewares, allowedHosts) {
+  middlewares.use(hostCheckMiddleware(allowedHosts));
+  middlewares.use('/api', apiCheckMiddleware());
+}
+
+/**
+ * Install the Host check on every path and the /api check behind it, ahead of
+ * every other plugin's middleware (`enforce: 'pre'`), on dev and preview.
+ */
 export function apiRequestGuardPlugin() {
   return {
     name: 'vantage-api-request-guard',
     enforce: 'pre',
     configureServer(server) {
-      server.middlewares.use(
-        '/api',
-        guardMiddleware(server.config.server.allowedHosts),
-      );
+      installGuard(server.middlewares, server.config.server.allowedHosts);
     },
     configurePreviewServer(server) {
-      server.middlewares.use(
-        '/api',
-        guardMiddleware(server.config.preview.allowedHosts),
-      );
+      installGuard(server.middlewares, server.config.preview.allowedHosts);
     },
   };
 }

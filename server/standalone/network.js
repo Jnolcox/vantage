@@ -1,5 +1,7 @@
+import { isIP } from 'node:net';
 import os from 'node:os';
 import { readVantageEnv } from '../providers/common/env.js';
+import { isPatternHostEntry } from './api-request-guard.js';
 
 /**
  * Network exposure policy for the standalone server.
@@ -42,9 +44,11 @@ export function isLoopbackBindHost(host) {
 
 /**
  * Host names, beyond the built-in local names, that requests may carry.
- * VANTAGE_ALLOWED_HOSTS is a comma-separated list; LAN mode adds this
- * machine's hostname. IP literals are always accepted, because a DNS-rebinding
- * page cannot present one.
+ * VANTAGE_ALLOWED_HOSTS is a comma-separated list of exact names; suffix
+ * (`.lan`) and wildcard (`*.lan`) entries are ignored, so every trusted name
+ * is spelled out. LAN mode adds this machine's hostname, and a bind address
+ * given as a name is accepted as itself. IP literals are always accepted,
+ * because a DNS-rebinding page cannot present one.
  */
 export function extraAllowedHosts(
   env = process.env,
@@ -54,10 +58,15 @@ export function extraAllowedHosts(
   const listed = String(readVantageEnv('ALLOWED_HOSTS', env) ?? '')
     .split(',')
     .map((name) => name.trim().toLowerCase())
-    .filter(Boolean);
+    .filter((name) => name && !isPatternHostEntry(name));
+  const bindName = String(host ?? '')
+    .trim()
+    .toLowerCase();
   const machine = isLoopbackBindHost(host)
     ? []
-    : [String(hostname || '').toLowerCase()].filter(Boolean);
+    : [String(hostname || '').toLowerCase(), bindName].filter(
+        (name) => name && !isIP(name.replace(/^\[|\]$/g, '')),
+      );
   return [...new Set([...machine, ...listed])];
 }
 

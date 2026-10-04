@@ -947,5 +947,16 @@
   "scripts/build-admin-packs.mjs",
   "scripts/qa-admin-outlines.mjs",
   "scripts/qa-overpass-offload.mjs",
-  "src/overpassOffload.test.mjs"
+  "src/overpassOffload.test.mjs",
+  "src/cyberSonar.test.mjs",
+  "src/cyberSonarGpu.test.mjs",
+  "src/cyberSonarScene.test.mjs",
+  "src/cyberSonarSceneInstaller.test.mjs",
+  "src/data/detectionSonarAdmission.test.mjs",
+  "src/layers/launches/panelScroll.test.mjs",
+  "src/ui/cyberPanelDisclosure.test.mjs",
+  "src/ui/cyberSonarControls.test.mjs",
+  "src/ui/cyberTheme.test.mjs",
+  "src/ui/radioPanelPlacement.test.mjs",
+  "src/ui/styles/cyber.css"
 ]

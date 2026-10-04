@@ -243,6 +243,16 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   aircraft are looked up on adsbdb only while it is on; because a receiver
   hears only aircraft in its range, those lookups hint at its location, and
   clearing it keeps every local aircraft on the device.
+- Cyber HUD layout (Display > HUD > Layout, or "switch to cyber layout" by
+  voice), opt-in: coordinated red/slate map and cockpit panel styling with a
+  one-panel-at-a-time right rail. Its contact sonar sweeps native points,
+  billboards and labels on the GPU, with Display controls for rings, range,
+  power, opacity and sector, and a `set_cyber_sonar` voice action that reports
+  configured settings separately from the active effect. Unsupported shaders
+  keep native contact rendering; leaving Cyber restores the standard shell and
+  contacts. The sonar scene hook loads and runs only while Cyber is selected,
+  so other layouts pay nothing for it (ported from upstream, manjunath22466
+  and Sameh Khamis; sonar style inspired by kk376).
 
 ### Changed
 

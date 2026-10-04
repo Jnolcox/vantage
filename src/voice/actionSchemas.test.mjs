@@ -12,6 +12,8 @@ const OBSERVED_WEATHER_LAYERS = Object.freeze([
 const CYCLONES_LAYER = 'weather-cyclones';
 const SATELLITE_PASS_TOOL = 'next_satellite_pass';
 const LOCAL_ADSB_LAYER = 'local-adsb';
+const CYBER_SONAR_TOOL = 'set_cyber_sonar';
+const CYBER_HUD_LAYOUT = 'cyber';
 const ANALYST_RECORD_LAYERS = Object.freeze([
   'satellites',
   'local-datacenters',
@@ -38,6 +40,16 @@ function withoutLocalAdsb(schemas) {
   return schemas;
 }
 
+// The Cyber HUD landed after Local ADS-B as one additive set_hud layout and
+// the separate set_cyber_sonar tool.
+function withoutCyberHud(schemas) {
+  const kept = schemas.filter((tool) => tool.name !== CYBER_SONAR_TOOL);
+  const layout = kept.find((tool) => tool.name === 'set_hud').parameters
+    .properties.layout;
+  layout.enum = layout.enum.filter((key) => key !== CYBER_HUD_LAYOUT);
+  return kept;
+}
+
 const stable = (value) =>
   Array.isArray(value)
     ? value.map(stable)
@@ -55,8 +67,19 @@ test('the complete Realtime tool payload retains its pre-extraction contract and
     .digest('hex');
   // Re-derived for the additive `fire-perimeters`, `wind`, observed-weather
   // and `weather-cyclones` layer enum values, the `next_satellite_pass` tool,
-  // the satellite/infrastructure analyst layers and the `local-adsb`
-  // visibility layer.
+  // the satellite/infrastructure analyst layers, the `local-adsb`
+  // visibility layer, the `cyber` HUD layout and the `set_cyber_sonar` tool.
+  assert.equal(
+    digest,
+    '3776a910bc10568857c4026d00aa76b1ae389345c3fad7e42400c48ca8fb36eb',
+  );
+});
+
+test('removing the Cyber HUD additions restores the prior Realtime tool payload and wording', () => {
+  const legacy = withoutCyberHud(structuredClone(VANTAGE_REALTIME_TOOLS));
+  const digest = createHash('sha256')
+    .update(JSON.stringify(stable(legacy)))
+    .digest('hex');
   assert.equal(
     digest,
     '1bb02dca455cb2ec50d9255bf27a9ff24de0ade7e2f44906eed67ae91c9121a3',
@@ -64,12 +87,12 @@ test('the complete Realtime tool payload retains its pre-extraction contract and
 });
 
 test('removing the fire-perimeters enum values restores every prior action argument byte for byte', () => {
-  // Local ADS-B, next_satellite_pass and the analyst record layers landed
+  // Cyber HUD, Local ADS-B, next_satellite_pass and the analyst record layers landed
   // after every enum addition below; drop them first.
   const legacy = withoutAnalystRecordLayers(
-    withoutLocalAdsb(structuredClone(VANTAGE_ACTION_SCHEMAS)).filter(
-      (tool) => tool.name !== SATELLITE_PASS_TOOL,
-    ),
+    withoutLocalAdsb(
+      withoutCyberHud(structuredClone(VANTAGE_ACTION_SCHEMAS)),
+    ).filter((tool) => tool.name !== SATELLITE_PASS_TOOL),
   );
   for (const tool of legacy) {
     for (const property of Object.values(tool.parameters.properties)) {
@@ -95,12 +118,12 @@ test('removing the fire-perimeters enum values restores every prior action argum
 });
 
 test('removing the wind enum values restores every prior action argument byte for byte', () => {
-  // Local ADS-B, next_satellite_pass and the analyst record layers landed
+  // Cyber HUD, Local ADS-B, next_satellite_pass and the analyst record layers landed
   // after every enum addition below; drop them first.
   const legacy = withoutAnalystRecordLayers(
-    withoutLocalAdsb(structuredClone(VANTAGE_ACTION_SCHEMAS)).filter(
-      (tool) => tool.name !== SATELLITE_PASS_TOOL,
-    ),
+    withoutLocalAdsb(
+      withoutCyberHud(structuredClone(VANTAGE_ACTION_SCHEMAS)),
+    ).filter((tool) => tool.name !== SATELLITE_PASS_TOOL),
   );
   for (const tool of legacy) {
     for (const property of Object.values(tool.parameters.properties)) {
@@ -125,12 +148,12 @@ test('removing the wind enum values restores every prior action argument byte fo
 });
 
 test('removing the observed-weather enum values restores every prior action argument byte for byte', () => {
-  // Local ADS-B, next_satellite_pass and the analyst record layers landed
+  // Cyber HUD, Local ADS-B, next_satellite_pass and the analyst record layers landed
   // after every enum addition below; drop them first.
   const legacy = withoutAnalystRecordLayers(
-    withoutLocalAdsb(structuredClone(VANTAGE_ACTION_SCHEMAS)).filter(
-      (tool) => tool.name !== SATELLITE_PASS_TOOL,
-    ),
+    withoutLocalAdsb(
+      withoutCyberHud(structuredClone(VANTAGE_ACTION_SCHEMAS)),
+    ).filter((tool) => tool.name !== SATELLITE_PASS_TOOL),
   );
   for (const tool of legacy) {
     for (const property of Object.values(tool.parameters.properties)) {
@@ -152,12 +175,12 @@ test('removing the observed-weather enum values restores every prior action argu
 });
 
 test('removing the weather-cyclones enum value restores every prior action argument byte for byte', () => {
-  // Local ADS-B, next_satellite_pass and the analyst record layers landed
+  // Cyber HUD, Local ADS-B, next_satellite_pass and the analyst record layers landed
   // after every enum addition below; drop them first.
   const legacy = withoutAnalystRecordLayers(
-    withoutLocalAdsb(structuredClone(VANTAGE_ACTION_SCHEMAS)).filter(
-      (tool) => tool.name !== SATELLITE_PASS_TOOL,
-    ),
+    withoutLocalAdsb(
+      withoutCyberHud(structuredClone(VANTAGE_ACTION_SCHEMAS)),
+    ).filter((tool) => tool.name !== SATELLITE_PASS_TOOL),
   );
   for (const tool of legacy) {
     for (const property of Object.values(tool.parameters.properties)) {
@@ -175,12 +198,12 @@ test('removing the weather-cyclones enum value restores every prior action argum
 });
 
 test('removing the next_satellite_pass tool restores every prior action argument byte for byte', () => {
-  // Local ADS-B and the analyst record layers landed after the tool; drop
+  // Cyber HUD, Local ADS-B and the analyst record layers landed after the tool; drop
   // them first.
   const legacy = withoutAnalystRecordLayers(
-    withoutLocalAdsb(structuredClone(VANTAGE_ACTION_SCHEMAS)).filter(
-      (tool) => tool.name !== SATELLITE_PASS_TOOL,
-    ),
+    withoutLocalAdsb(
+      withoutCyberHud(structuredClone(VANTAGE_ACTION_SCHEMAS)),
+    ).filter((tool) => tool.name !== SATELLITE_PASS_TOOL),
   );
   assert.equal(
     createHash('sha256').update(JSON.stringify(legacy)).digest('hex'),
@@ -189,9 +212,9 @@ test('removing the next_satellite_pass tool restores every prior action argument
 });
 
 test('removing the analyst record layers restores every prior action argument byte for byte', () => {
-  // Local ADS-B landed after the analyst record layers; drop it first.
+  // Cyber HUD and Local ADS-B landed after the analyst record layers; drop them first.
   const legacy = withoutAnalystRecordLayers(
-    withoutLocalAdsb(structuredClone(VANTAGE_ACTION_SCHEMAS)),
+    withoutLocalAdsb(withoutCyberHud(structuredClone(VANTAGE_ACTION_SCHEMAS))),
   );
   assert.equal(
     createHash('sha256').update(JSON.stringify(legacy)).digest('hex'),
@@ -200,10 +223,20 @@ test('removing the analyst record layers restores every prior action argument by
 });
 
 test('removing the local-adsb enum value restores every prior action argument byte for byte', () => {
-  const legacy = withoutLocalAdsb(structuredClone(VANTAGE_ACTION_SCHEMAS));
+  const legacy = withoutLocalAdsb(
+    withoutCyberHud(structuredClone(VANTAGE_ACTION_SCHEMAS)),
+  );
   assert.equal(
     createHash('sha256').update(JSON.stringify(legacy)).digest('hex'),
     'd5667652308a2d12ef966fe4c3ae0c1cdb2665418a5788690093596720521146',
+  );
+});
+
+test('removing the Cyber HUD layout and sonar tool restores every prior action argument byte for byte', () => {
+  const legacy = withoutCyberHud(structuredClone(VANTAGE_ACTION_SCHEMAS));
+  assert.equal(
+    createHash('sha256').update(JSON.stringify(legacy)).digest('hex'),
+    '4bb58d6258481a00d01e6c59a3f0c95c54716b9501b7aa46f07720b4259be592',
   );
 });
 

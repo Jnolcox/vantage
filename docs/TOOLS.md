@@ -64,8 +64,27 @@ answer as `unavailable` rather than as an empty result; `createRouteService`
 plans routes through `/api/route`. These are the app's own routes, so the
 tools inherit their limits: the Google routes keep their per-IP throttle (a
 `429` becomes `retry_later` with its wait), refuse proxied requests, and never
-expose the key. A new tool adds the services it reads to `createToolServices`,
-so every surface composes the same set.
+expose the key. The `weather`, `regional`, `terrain`, `summary` and
+`features` services are the application request services from
+`src/services/requests.js`, the same ones the HUD and cockpit use.
+`situation_brief` runs each section whose services are supplied and marks the
+others unavailable. A new tool adds the services it reads to
+`createToolServices`, so every surface composes the same set.
+
+`get_map_features` reads `/api/overpass`, which reaches only the Overpass
+instances an operator lists in `VANTAGE_OVERPASS_UPSTREAMS`. With none, the
+request services' one `/api/overpass/status` probe says so and the tool
+answers `unavailable` ("No Overpass instance configured") instead of an empty
+list; no query is sent.
+
+`get_hud_caption` and `get_regional_brief` spend provider quota: the caption
+posts to `/api/openai/hud-summary` (OpenAI, under the per-IP
+`VANTAGE_RATELIMIT_OPENAI_PER_MIN` throttle, answering `unavailable` when no
+OpenAI key is configured) and the brief reads `/api/regional-brief` (place,
+weather and news lookups, 30 requests a minute per client). Each runs only when
+a client calls it. The HUD's Live/Local context toggle does not apply to them:
+it governs only the HUD's own periodic lookups in the page. The caption sends
+the HUD's summary context (place and section labels, never coordinates).
 
 ## The `area` argument
 
@@ -125,20 +144,29 @@ process, on a tool call only, with the `vantage-mcp-tools` User-Agent from
 
 ## Tools
 
-| Tool                  | Reads         | Returns                                                                        |
-| --------------------- | ------------- | ------------------------------------------------------------------------------ |
-| `get_earthquakes`     | `earthquakes` | USGS M2.5+ events in the last 24 hours, strongest first                        |
-| `get_active_fires`    | `fires`       | NASA FIRMS detections in an area, highest radiative power first                |
-| `get_recent_launches` | `launches`    | Launch Library 2 launches in the last 30 days, newest first                    |
-| `aircraft_in_area`    | `aircraft`    | Aircraft in an area, nearest first; `military: true` reads the `military` feed |
-| `find_aircraft`       | `aircraft`    | Aircraft anywhere by callsign, ICAO address or registration                    |
-| `get_aircraft_track`  | `aircraft`    | Recent positions of one aircraft, thinned to 200 points                        |
-| `get_aircraft_info`   | `aircraft`    | Aircraft type and registration, and flight route, from adsbdb                  |
-| `next_satellite_pass` | `satellites`  | Next pass over a point (default the ISS), with naked-eye visibility            |
-| `satellites_overhead` | `satellites`  | Satellites in a CelesTrak group above a point now, highest first               |
-| `find_cctv_cameras`   | `cctv`        | Public cameras in an area, nearest first                                       |
-| `get_cctv_snapshot`   | `cctv`        | The current image from one camera, returned as image content                   |
-| `find_radio_stations` | `radio`       | Radio Browser stations by area and/or search terms, with stream URLs           |
-| `search_places`       | `placeSearch` | Points of interest matching a query within an area (Google Places)             |
-| `places_nearby`       | `placeSearch` | Notable places around a point (Google Places)                                  |
-| `plan_route`          | `routing`     | Walking, driving or cycling route over OpenStreetMap, with a simplified path   |
+| Tool                          | Reads                | Returns                                                                        |
+| ----------------------------- | -------------------- | ------------------------------------------------------------------------------ |
+| `get_earthquakes`             | `earthquakes`        | USGS M2.5+ events in the last 24 hours, strongest first                        |
+| `get_active_fires`            | `fires`              | NASA FIRMS detections in an area, highest radiative power first                |
+| `get_recent_launches`         | `launches`           | Launch Library 2 launches in the last 30 days, newest first                    |
+| `aircraft_in_area`            | `aircraft`           | Aircraft in an area, nearest first; `military: true` reads the `military` feed |
+| `find_aircraft`               | `aircraft`           | Aircraft anywhere by callsign, ICAO address or registration                    |
+| `get_aircraft_track`          | `aircraft`           | Recent positions of one aircraft, thinned to 200 points                        |
+| `get_aircraft_info`           | `aircraft`           | Aircraft type and registration, and flight route, from adsbdb                  |
+| `next_satellite_pass`         | `satellites`         | Next pass over a point (default the ISS), with naked-eye visibility            |
+| `satellites_overhead`         | `satellites`         | Satellites in a CelesTrak group above a point now, highest first               |
+| `find_cctv_cameras`           | `cctv`               | Public cameras in an area, nearest first                                       |
+| `get_cctv_snapshot`           | `cctv`               | The current image from one camera, returned as image content                   |
+| `find_radio_stations`         | `radio`              | Radio Browser stations by area and/or search terms, with stream URLs           |
+| `search_places`               | `placeSearch`        | Points of interest matching a query within an area (Google Places)             |
+| `places_nearby`               | `placeSearch`        | Notable places around a point (Google Places)                                  |
+| `plan_route`                  | `routing`            | Walking, driving or cycling route over OpenStreetMap, with a simplified path   |
+| `get_weather`                 | `weather`            | Current conditions at a place or point                                         |
+| `get_regional_brief`          | `regional`           | What and where a location is, its weather and recent headlines                 |
+| `get_cyclones`                | `cyclones`           | Active NHC/CPHC tropical cyclones, optionally in an area                       |
+| `get_fire_perimeters`         | `perimeters`         | Mapped WFIGS wildfire perimeters in an area, largest first                     |
+| `get_terrain_height`          | `terrain`            | Ground, geoid and ellipsoid heights at up to 20 points                         |
+| `find_military_installations` | `installations`      | OpenStreetMap military sites in an area of at most 10° per side                |
+| `get_map_features`            | `features`           | Administrative areas, named places or monuments at a location (needs Overpass) |
+| `situation_brief`             | `weather`            | Weather, earthquakes, fires, aircraft and cyclones for an area, by section     |
+| `get_hud_caption`             | `weather`, `summary` | The app's heads-up display caption for an area                                 |

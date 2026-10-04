@@ -479,6 +479,8 @@
   "src/layers/bikeshare/queries.js",
   "src/layers/bikeshare/index.js",
   "src/layers/bikeshare/model.js",
+  "src/sources/gbfsStations.js",
+  "src/sources/gbfsStations.test.mjs",
   "src/layers/bikeshare/selection.js",
   "src/data/traffic.js",
   "src/data/bikeshare.js",

@@ -481,7 +481,12 @@ test('the HUD caption summarizes the brief through the summary service', async (
     streetLabels: [],
     nearbyPlaceLabels: [],
     enabledLayerLabels: ['Weather'],
+    enabledLayers: [
+      { id: 'weather', name: 'Weather', feedState: 'nominal', source: null },
+    ],
+    feedProvenance: { overall: 'nominal' },
   });
+  assert.equal(result.data.feed_state, 'nominal');
   const failing = {
     summarize: async () => ({
       ok: false,
@@ -595,4 +600,74 @@ test('military awareness gathers contacts around a point and marks failures', as
     }),
     /radius_km/,
   );
+});
+
+test('the HUD caption context carries each section feed state', async () => {
+  const sent = [];
+  const caption = 'Austin aircraft feed UNAVAILABLE';
+  const summary = {
+    async summarize(context) {
+      sent.push(context);
+      return { ok: true, status: 200, data: { summary: caption } };
+    },
+  };
+  const aircraft = {
+    getSnapshot: async () => ({
+      records: [],
+      complete: true,
+      source: 'Test feed',
+      freshness: 'stale',
+    }),
+  };
+  const cyclones = {
+    getSnapshot: async () => {
+      throw new Error('upstream down');
+    },
+  };
+  const catalog = catalogWith({ weather, summary, places, aircraft, cyclones });
+  const result = await catalog.call('get_hud_caption', {
+    area: { place: 'Austin' },
+  });
+  assert.deepEqual(
+    sent[0].enabledLayers.map((layer) => [
+      layer.id,
+      layer.feedState,
+      layer.source,
+    ]),
+    [
+      ['weather', 'nominal', null],
+      ['aircraft', 'stale', 'Test feed'],
+      ['cyclones', 'unavailable', null],
+    ],
+  );
+  assert.deepEqual(sent[0].enabledLayerLabels, [
+    'Weather',
+    'Aircraft',
+    'Tropical cyclones',
+  ]);
+  assert.deepEqual(sent[0].feedProvenance, { overall: 'unavailable' });
+  assert.equal(result.data.feed_state, 'unavailable');
+  assert.equal(result.data.caption_source, 'model');
+});
+
+test('the HUD caption replaces a caption that hides a non-nominal feed', async () => {
+  const summary = {
+    summarize: async () => ({
+      ok: true,
+      status: 200,
+      data: { summary: 'Clear skies over Austin today' },
+    }),
+  };
+  const cyclones = {
+    getSnapshot: async () => {
+      throw new Error('upstream down');
+    },
+  };
+  const result = await catalogWith({ weather, summary, places, cyclones }).call(
+    'get_hud_caption',
+    { area: { place: 'Austin' } },
+  );
+  assert.equal(result.summary, 'Austin, Texas UNAVAILABLE TROPICAL CYCLONES');
+  assert.equal(result.data.caption_source, 'app');
+  assert.equal(result.data.feed_state, 'unavailable');
 });

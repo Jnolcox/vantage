@@ -478,8 +478,10 @@ aircraft and cyclone sections and marks failed ones unavailable,
 `military_awareness`, which does the same for military aircraft, other
 aircraft and mapped installations within 250 km of a point, and
 `get_hud_caption`, which posts the HUD's label-only summary context to
-`/api/openai/hud-summary`. The caption and regional brief spend provider quota
-under those routes' throttles, on a tool call only; the HUD's Live/Local
+`/api/openai/hud-summary` with each section's feed state taken from its result
+and, as the HUD does, replaces a caption that hides a non-nominal state with
+the app's own line naming it. The caption and regional brief spend provider
+quota under those routes' throttles, on a tool call only; the HUD's Live/Local
 toggle governs only the page's own periodic lookups.
 Live-source failures become tool errors with the matching code. Tools take a
 shared `area` argument (place name, bounding box, or point and radius) and cap

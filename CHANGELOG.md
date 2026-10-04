@@ -268,8 +268,10 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   `vantage/tools/mcp`. The server opens no port; the app does not import the
   tools. `get_map_features` answers `unavailable` when no
   `VANTAGE_OVERPASS_UPSTREAMS` instance is configured, and the HUD caption
-  sends the HUD's own label-only summary context (ported from upstream, Sameh
-  Khamis).
+  sends the HUD's own label-only summary context, with each section's feed
+  state taken from its result; as in the HUD, a caption that hides a
+  non-nominal state is replaced by the app's own line naming it (ported from
+  upstream, Sameh Khamis).
 
 ### Changed
 

@@ -1,6 +1,10 @@
 /** Composite queries that combine other tools' answers for one area. */
 
-import { isHudSummaryUnconfigured } from '../../hudSummaryResponse.js';
+import { feedProvenanceEnvelope } from '../../data/layerSnapshot.js';
+import {
+  hudSummaryMatchesProvenance,
+  isHudSummaryUnconfigured,
+} from '../../hudSummaryResponse.js';
 import { defineTool, ToolError } from '../catalog.js';
 import {
   AREA_SCHEMA,
@@ -20,6 +24,8 @@ import { getActiveFires, getEarthquakes } from './hazards.js';
 const SECTION_LIMIT = 5;
 const AWARENESS_LIMIT = 10;
 const AWARENESS_RADIUS_KM = 250;
+// Sections a fallback caption names, as the HUD's provenance tag does.
+const MAX_FLAGGED_SECTIONS = 2;
 
 /** Brief sections: the tool each one reuses and the services it needs. */
 const SECTIONS = [
@@ -79,6 +85,21 @@ const AWARENESS_SECTIONS = [
     args: (area) => ({ area: area.argument, limit: AWARENESS_LIMIT }),
   },
 ];
+
+/** A section's feed state for the caption, from what its result reported. */
+function sectionFeedState(section) {
+  if (section.unavailable) return 'unavailable';
+  const data = section.data || {};
+  return data.freshness === 'stale' || data.stale === true
+    ? 'stale'
+    : 'nominal';
+}
+
+/** The feed a section's result names, when it names one. */
+function sectionSource(section) {
+  const source = section.data?.source;
+  return typeof source === 'string' && source ? source : null;
+}
 
 /** The resolved area, plus the argument sections receive in its place. */
 function sectionArea(resolved) {
@@ -162,6 +183,21 @@ export const situationBrief = defineTool({
   },
 });
 
+/**
+ * The deterministic caption the HUD falls back to when the model's caption
+ * hides a non-nominal feed: the place, the overall state and up to two
+ * sections behind it, as `hudTelemetryProvenanceTag` names them.
+ */
+function provenanceCaption(label, overall, layers) {
+  const flagged = layers
+    .filter((layer) => layer.feedState !== 'nominal')
+    .slice(0, MAX_FLAGGED_SECTIONS)
+    .map((layer) => layer.name.toUpperCase());
+  return [label, overall.toUpperCase(), flagged.join('/')]
+    .filter(Boolean)
+    .join(' ');
+}
+
 export const getHudCaption = defineTool({
   name: 'get_hud_caption',
   title: 'Heads-up display caption',
@@ -178,15 +214,33 @@ export const getHudCaption = defineTool({
   async run(args, context) {
     const { area, brief } = await buildBrief(args, context);
     // The HUD's own summary context (src/hudSummaryResponse.js): labels only,
-    // no coordinates, with each section that answered as an enabled layer.
+    // no coordinates, with each section as an enabled layer carrying the
+    // feed state its result reported, failures included.
+    const layers = SECTIONS.filter(({ key }) => brief[key]).map(
+      ({ key, label }) => ({
+        id: key,
+        name: label,
+        enabled: true,
+        feedState: sectionFeedState(brief[key]),
+        source: sectionSource(brief[key]),
+      }),
+    );
+    const feedProvenance = {
+      overall: feedProvenanceEnvelope(layers).overall,
+    };
     const response = await context.services.summary.summarize(
       {
         placeLabels: [area.label],
         streetLabels: [],
         nearbyPlaceLabels: [],
-        enabledLayerLabels: SECTIONS.filter(
-          ({ key }) => brief[key] && !brief[key].unavailable,
-        ).map(({ label }) => label),
+        enabledLayerLabels: layers.map((layer) => layer.name),
+        enabledLayers: layers.map(({ id, name, feedState, source }) => ({
+          id,
+          name,
+          feedState,
+          source,
+        })),
+        feedProvenance,
       },
       { signal: context.signal },
     );
@@ -198,9 +252,21 @@ export const getHudCaption = defineTool({
     const caption = response?.data?.summary;
     if (!response?.ok || typeof caption !== 'string' || !caption)
       throw new ToolError('unavailable', 'The caption service did not answer');
+    // As in the HUD, a caption that hides a non-nominal feed is not shown;
+    // the app's own line naming the state replaces it, so the paid answer
+    // is not thrown away and a client has no reason to ask again.
+    const written = hudSummaryMatchesProvenance(caption, feedProvenance);
+    const shown = written
+      ? caption
+      : provenanceCaption(area.label, feedProvenance.overall, layers);
     return {
-      summary: caption,
-      data: { area: area.label, caption },
+      summary: shown,
+      data: {
+        area: area.label,
+        caption: shown,
+        caption_source: written ? 'model' : 'app',
+        feed_state: feedProvenance.overall,
+      },
     };
   },
 });

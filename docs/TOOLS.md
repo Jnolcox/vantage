@@ -84,7 +84,13 @@ OpenAI key is configured) and the brief reads `/api/regional-brief` (place,
 weather and news lookups, 30 requests a minute per client). Each runs only when
 a client calls it. The HUD's Live/Local context toggle does not apply to them:
 it governs only the HUD's own periodic lookups in the page. The caption sends
-the HUD's summary context (place and section labels, never coordinates).
+the HUD's summary context (place and section labels, never coordinates), with
+each section as a layer whose feed state comes from its own result (`stale`
+when the result says so, `unavailable` when it failed) and the overall state
+from `feedProvenanceEnvelope`. As in the HUD, a caption that does not name a
+non-nominal overall state is not shown as live: the tool answers with the
+app's own line instead (the place, the state and up to two sections behind it,
+`caption_source: "app"`), so the paid answer is not wasted on a refusal.
 
 ## The `area` argument
 

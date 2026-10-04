@@ -257,8 +257,8 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   serves earthquake, active-fire, launch, aircraft (in an area, by
   identifier, tracks, type and route) and satellite (next pass over a point,
   those overhead now), public camera (find cameras, a camera's current
-  image) and radio station queries over stdio to clients such as Claude Code,
-  reading from a running app at
+  image), radio station, place search and routing queries over stdio to
+  clients such as Claude Code, reading from a running app at
   `http://127.0.0.1:4173` (`--api-base` selects another). Tools are defined
   once in `vantage/tools`, read the services `vantage/tools/services` builds
   from the layers' source factories, and are exposed through the protocol

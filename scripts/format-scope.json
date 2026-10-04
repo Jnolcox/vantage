@@ -978,5 +978,6 @@
   "src/tools/services.test.mjs",
   "src/tools/queries/aviation.test.mjs",
   "src/tools/queries/space.test.mjs",
-  "src/tools/queries/media.test.mjs"
+  "src/tools/queries/media.test.mjs",
+  "src/tools/queries/places.test.mjs"
 ]

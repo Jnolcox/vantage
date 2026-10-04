@@ -464,7 +464,11 @@ adsb.lol and adsbdb routes) and satellites (`next_satellite_pass`, computed by
 `satellites_overhead`), public cameras (`find_cctv_cameras`, and
 `get_cctv_snapshot`, which returns the frame from `/api/cctv/frame` as MCP
 image content, JPEG, PNG or WebP up to 3 MB) and radio stations
-(`find_radio_stations`, which returns stream URLs and reports no clicks).
+(`find_radio_stations`, which returns stream URLs and reports no clicks), place
+search (`search_places`, `places_nearby` over `/api/google/text-search` and
+`/api/google/nearby-places`, answering `unavailable` when no Google key is
+configured, and `retry_later` on the routes' per-IP `429`) and routing
+(`plan_route` over `/api/route`, with a place name or coordinates at each end).
 Live-source failures become tool errors with the matching code. Tools take a
 shared `area` argument (place name, bounding box, or point and radius) and cap
 lists at 25 rows by default. Nothing under `src/` outside `src/tools/` imports

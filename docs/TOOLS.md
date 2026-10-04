@@ -58,7 +58,13 @@ factories the layers already use, such as `createUsgsEarthquakeSource`,
 `resolve(name, { signal })`. Sources request relative `/api/...` paths through
 an injected `fetchImpl`, so the same tool code runs wherever an application
 routes those paths. `createGeocodePlaceService` resolves place names through
-`/api/geocode`. A new tool adds the services it reads to `createToolServices`,
+`/api/geocode`; `createPlaceSearchService` searches `/api/google/*` and reports
+when no search key is configured, which `search_places` and `places_nearby`
+answer as `unavailable` rather than as an empty result; `createRouteService`
+plans routes through `/api/route`. These are the app's own routes, so the
+tools inherit their limits: the Google routes keep their per-IP throttle (a
+`429` becomes `retry_later` with its wait), refuse proxied requests, and never
+expose the key. A new tool adds the services it reads to `createToolServices`,
 so every surface composes the same set.
 
 ## The `area` argument
@@ -133,3 +139,6 @@ process, on a tool call only, with the `vantage-mcp-tools` User-Agent from
 | `find_cctv_cameras`   | `cctv`        | Public cameras in an area, nearest first                                       |
 | `get_cctv_snapshot`   | `cctv`        | The current image from one camera, returned as image content                   |
 | `find_radio_stations` | `radio`       | Radio Browser stations by area and/or search terms, with stream URLs           |
+| `search_places`       | `placeSearch` | Points of interest matching a query within an area (Google Places)             |
+| `places_nearby`       | `placeSearch` | Notable places around a point (Google Places)                                  |
+| `plan_route`          | `routing`     | Walking, driving or cycling route over OpenStreetMap, with a simplified path   |

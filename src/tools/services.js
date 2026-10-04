@@ -1,6 +1,6 @@
 /**
  * The default services Core's tools read: the layers' portable source
- * factories and the place services. `fetchImpl` must resolve the sources'
+ * factories and the place, place-search and routing services. `fetchImpl` must resolve the sources'
  * relative `/api/...` paths; in a browser the page's own fetch does, and
  * elsewhere a caller supplies a resolving fetch.
  */
@@ -15,7 +15,11 @@ import {
   createAdsbLolSource,
   createOpenSkySource,
 } from '../sources/live/standalone.js';
-import { createGeocodePlaceService } from './places.js';
+import {
+  createGeocodePlaceService,
+  createPlaceSearchService,
+  createRouteService,
+} from './places.js';
 
 /** Construct every service Core's tools read. */
 export function createToolServices({ fetchImpl }) {
@@ -30,6 +34,8 @@ export function createToolServices({ fetchImpl }) {
     satellites: createSatelliteSource({ fetchImpl }),
     cctv: createCctvSource({ fetchImpl }),
     radio: createRadioSource({ fetchImpl }),
+    placeSearch: createPlaceSearchService({ fetchImpl }),
+    routing: createRouteService({ fetchImpl }),
     places: createGeocodePlaceService({ fetchImpl }),
   };
 }

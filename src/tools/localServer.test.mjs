@@ -12,6 +12,7 @@ import {
   admitApiRequest,
   admitRequestHost,
 } from '../../server/standalone/api-request-guard.js';
+import { googlePlacesContextProxy } from '../../server/providers/places/google.js';
 import { clientUserAgent } from '../sources/projectIdentity.js';
 import {
   describeRequest,
@@ -173,6 +174,9 @@ test('the stdio server answers newline-delimited requests using only its data so
       'find_cctv_cameras',
       'get_cctv_snapshot',
       'find_radio_stations',
+      'search_places',
+      'places_nearby',
+      'plan_route',
     ],
   );
   assert.equal(
@@ -246,4 +250,41 @@ test('a failed tool call is logged with its error code, not its message', async 
     'tools/call get_earthquakes',
     '   tools/call get_earthquakes failed: invalid_arguments',
   ]);
+});
+
+test('search_places through the real keyless Google route reports that no key is configured', async (t) => {
+  const routes = new Map();
+  googlePlacesContextProxy({ resolveApiKey: () => '' }).configureServer({
+    middlewares: { use: (path, handler) => routes.set(path, handler) },
+  });
+  const app = createServer((req, res) => {
+    const verdict = admitApiRequest({
+      hostHeader: req.headers.host,
+      origin: req.headers.origin,
+      fetchSite: req.headers['sec-fetch-site'],
+      url: req.url,
+      headers: req.headers,
+    });
+    const route = [...routes.keys()].find((path) => req.url.startsWith(path));
+    if (!verdict.ok || !route) return res.writeHead(403).end();
+    req.url = req.url.slice(route.length);
+    return routes.get(route)(req, res);
+  });
+  await new Promise((resolve) => app.listen(0, '127.0.0.1', resolve));
+  t.after(() => app.close());
+  const server = createLocalMcpServer({
+    apiBase: `http://127.0.0.1:${app.address().port}`,
+  });
+  const response = await server.handle({
+    jsonrpc: '2.0',
+    id: 1,
+    method: 'tools/call',
+    params: {
+      name: 'search_places',
+      arguments: { query: 'tea', area: { bbox: [-0.2, 51.4, 0, 51.6] } },
+    },
+  });
+  assert.equal(response.result.isError, true);
+  assert.equal(response.result.structuredContent.error, 'unavailable');
+  assert.match(response.result.content[0].text, /needs a Google Places key/);
 });

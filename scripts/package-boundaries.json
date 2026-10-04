@@ -10,7 +10,8 @@
       "src/data/localGeojsonCore.js",
       "src/data/localGeojsonLod.js",
       "src/data/inputOwnership.js",
-      "src/data/infrastructureOverlayEntry.js"
+      "src/data/infrastructureOverlayEntry.js",
+      "src/sources/infrastructureData.js"
     ],
     "external": ["cesium"]
   },
@@ -2074,7 +2075,8 @@
       "src/data/adminBoundaries.js",
       "src/data/local_data/natural_earth/states_provinces.json",
       "src/data/local_data/natural_earth/countries.json",
-      "src/data/local_data/us_census_counties/counties.json"
+      "src/data/local_data/us_census_counties/counties.json",
+      "src/sources/infrastructureData.js"
     ],
     "external": [
       "hls.js",
@@ -2564,7 +2566,8 @@
       "src/data/adminBoundaries.js",
       "src/data/local_data/natural_earth/states_provinces.json",
       "src/data/local_data/natural_earth/countries.json",
-      "src/data/local_data/us_census_counties/counties.json"
+      "src/data/local_data/us_census_counties/counties.json",
+      "src/sources/infrastructureData.js"
     ],
     "external": [
       "hls.js",

@@ -20,6 +20,8 @@
   "src/tooling/packageBoundaries.test.mjs",
   "src/data/infrastructure.js",
   "src/data/infrastructure.test.mjs",
+  "src/sources/infrastructureData.js",
+  "src/sources/infrastructureData.test.mjs",
   "src/data/localGeojsonCore.js",
   "src/data/localGeojsonLod.js",
   "src/data/inputOwnership.js",

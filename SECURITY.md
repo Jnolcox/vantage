@@ -70,7 +70,7 @@ The data proxies under `server/providers/` are written so the browser cannot tur
 - **Response-size caps and timeouts** on proxied responses.
 - **Sanitized errors** — internal error details are not echoed back to clients.
 - **Coalesced OAuth refresh** and cached successful responses only (OpenSky).
-- **Opt-in, redacted debug logging.** The voice debug log (`.vantage-logs/`, gitignored) is written only when the server runs with `VANTAGE_REALTIME_DEBUG_LOG=1`, and strips API keys, bearer tokens, client secrets, and image data URLs before writing. When enabled it records full voice transcripts.
+- **Opt-in, redacted debug logging.** The voice debug log (`.vantage-logs/`, gitignored) is written only when the server runs with `VANTAGE_REALTIME_DEBUG_LOG=1`, and strips API keys, bearer tokens, client secrets, and image data URLs before writing. Each line's `loggedAt` is the server's own time; a posted record cannot supply it. When enabled it records full voice transcripts.
 
 ## Network exposure — the operator threat model
 
@@ -104,7 +104,8 @@ controls that keep it that way:
   third-party origin the page may load from or connect to, with the
   directives it needs and why; everything else is `'self'` and goes through
   `/api`. The dev and preview servers send it as a header (with
-  `frame-ancestors 'none'` and `X-Frame-Options: DENY`), and `vite build`
+  `frame-ancestors 'none'`, `X-Frame-Options: DENY` and
+  `X-Content-Type-Options: nosniff`), and `vite build`
   writes it into `dist/index.html` as a meta tag. `script-src` allows
   `'unsafe-eval'` only because the Knockout copy inside Cesium's widgets
   compiles its bindings with `new Function`, and `blob:` only because the

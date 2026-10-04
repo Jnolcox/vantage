@@ -399,6 +399,11 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   never opens Provider Settings. The `/api` guard already refused foreign and
   opaque Origins and cross-site `Sec-Fetch-Site` on every route (adapted from
   upstream, James Sumpter, Sameh Khamis).
+- The dev and preview servers send `X-Content-Type-Options: nosniff` with
+  their other security headers, and the opt-in voice debug log
+  (`VANTAGE_REALTIME_DEBUG_LOG=1`) writes the server's own `loggedAt` after
+  the posted record, so a record can no longer replace it (adapted from
+  upstream, Sameh Khamis, from findings by Sunil).
 - Cockpit enters on the matching map style and its vision carousel is one
   fixed, duplicate-free sequence: Normal, CRT, NVG, FLIR, Anime, Noir and Snow.
   Normal is a real unfiltered option, and both Exit Cockpit and Reset restore

@@ -217,6 +217,7 @@ export const REFERRER_POLICY = 'strict-origin-when-cross-origin';
 export function securityHeaders({ reportOnly = false } = {}) {
   return {
     'X-Frame-Options': 'DENY',
+    'X-Content-Type-Options': 'nosniff',
     'Referrer-Policy': REFERRER_POLICY,
     [reportOnly
       ? 'Content-Security-Policy-Report-Only'

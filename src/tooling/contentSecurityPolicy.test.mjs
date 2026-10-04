@@ -238,11 +238,12 @@ test('the meta policy for built HTML omits header-only directives', () => {
   );
 });
 
-test('dev and preview servers send the policy, framing and referrer headers', () => {
+test('dev and preview servers send the policy, framing, nosniff and referrer headers', () => {
   const config = createBrowserViteConfig();
   for (const headers of [config.server.headers, config.preview.headers]) {
     assert.equal(headers['Content-Security-Policy'], contentSecurityPolicy());
     assert.equal(headers['X-Frame-Options'], 'DENY');
+    assert.equal(headers['X-Content-Type-Options'], 'nosniff');
     assert.equal(headers['Referrer-Policy'], REFERRER_POLICY);
   }
   assert.equal(
@@ -259,6 +260,7 @@ test('report-only mode reports instead of blocking but still refuses framing', (
     contentSecurityPolicy(),
   );
   assert.equal(headers['Content-Security-Policy'], "frame-ancestors 'none'");
+  assert.equal(headers['X-Content-Type-Options'], 'nosniff');
 });
 
 test('the referrer policy keeps the origin for Google keys and YouTube', () => {

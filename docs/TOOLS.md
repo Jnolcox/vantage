@@ -153,13 +153,13 @@ process, on a tool call only, with the `vantage-mcp-tools` User-Agent from
 | `find_aircraft`               | `aircraft`           | Aircraft anywhere by callsign, ICAO address or registration                                 |
 | `get_aircraft_track`          | `aircraft`           | Recent positions of one aircraft, thinned to 200 points                                     |
 | `get_aircraft_info`           | `aircraft`           | Aircraft type and registration, and flight route, from adsbdb                               |
-| `next_satellite_pass`         | `satellites`         | Next pass over a point (default the ISS), with naked-eye visibility                         |
-| `satellites_overhead`         | `satellites`         | Satellites in a CelesTrak group above a point now, highest first                            |
+| `next_satellite_pass`         | `satellites`         | Next pass over a place or point (default the ISS), with naked-eye visibility                |
+| `satellites_overhead`         | `satellites`         | Satellites in a CelesTrak group above a place or point now, highest first                   |
 | `find_cctv_cameras`           | `cctv`               | Public cameras in an area, nearest first                                                    |
 | `get_cctv_snapshot`           | `cctv`               | The current image from one camera, returned as image content                                |
 | `find_radio_stations`         | `radio`              | Radio Browser stations by area and/or search terms, with stream URLs                        |
 | `search_places`               | `placeSearch`        | Points of interest matching a query within an area (Google Places)                          |
-| `places_nearby`               | `placeSearch`        | Notable places around a point (Google Places)                                               |
+| `places_nearby`               | `placeSearch`        | Notable places around a place or point (Google Places)                                      |
 | `plan_route`                  | `routing`            | Walking, driving or cycling route over OpenStreetMap, with a simplified path                |
 | `get_weather`                 | `weather`            | Current conditions at a place or point                                                      |
 | `get_regional_brief`          | `regional`           | What and where a location is, its weather and recent headlines                              |

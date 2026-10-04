@@ -25,11 +25,11 @@ const css = readStylesheet(new URL('../style.css', import.meta.url));
 
 function realtimeTools() { return VANTAGE_REALTIME_TOOLS; }
 
-test('Realtime schema exposes the authoritative 29-tool inventory', () => {
+test('Realtime schema exposes the authoritative 30-tool inventory', () => {
   const tools = realtimeTools();
-  assert.equal(tools.length, 29);
+  assert.equal(tools.length, 30);
   const names = tools.map((tool) => tool.name);
-  assert.equal(new Set(names).size, 29, 'tool names are unique');
+  assert.equal(new Set(names).size, 30, 'tool names are unique');
   assert.ok(names.includes('set_context_mode'));
   assert.ok(names.includes('control_cockpit'));
   assert.ok(names.includes('select_nearest_aircraft'));
@@ -173,6 +173,7 @@ test('no unchanged Realtime tool definition drifts silently', () => {
   // in the mic-test brief which tools moved — the session cache busts on any
   // schema change.
   const TOUCHED = new Set([
+    'set_cyber_sonar',
     'set_context_mode',
     'control_cockpit',
     'set_panel_open',
@@ -186,21 +187,28 @@ test('no unchanged Realtime tool definition drifts silently', () => {
   ]);
   const unchanged = realtimeTools()
     .filter((tool) => !TOUCHED.has(tool.name))
-    .sort((a, b) => a.name.localeCompare(b.name));
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map((tool) => structuredClone(tool));
+  // Cyber adds one HUD choice (the sonar tool is in TOUCHED); retain the
+  // existing pin for every legacy field.
+  const hudLayout = unchanged.find((tool) => tool.name === 'set_hud').parameters
+    .properties.layout;
+  assert.deepEqual(hudLayout.enum, ['tactical', 'operator', 'minimal', 'cyber']);
+  hudLayout.enum = hudLayout.enum.filter((layout) => layout !== 'cyber');
   assert.equal(unchanged.length, 19);
   const digest = createHash('sha256')
     .update(JSON.stringify(unchanged))
     .digest('hex')
     .slice(0, 16);
-  // ALPR, Fire Perimeters, Wind, the observed-weather layers and Cyclone
-  // advisories intentionally extend the layer enums; the ISS wording correction,
-  // the new satellite-pass tool and the analyst satellite/infrastructure layers
-  // are excluded above. Retain the complete pin.
-  assert.equal(digest, 'e6966726204f247a', 'an unchanged Realtime tool definition drifted');
+  // ALPR, Fire Perimeters, Wind, the observed-weather layers, Cyclone
+  // advisories and Local ADS-B intentionally extend the layer enums; the ISS
+  // wording correction, the new satellite-pass tool and the analyst
+  // satellite/infrastructure layers are excluded above. Retain the complete pin.
+  assert.equal(digest, 'cc13bd03043d0385', 'an unchanged Realtime tool definition drifted');
 });
 
 test('Radio volume and mission speed share the Sharpen slider visual language', () => {
-  for (const id of ['cockpit-radio-volume', 'context-radio-mini-volume', 'radio-volume']) {
+  for (const id of ['cockpit-radio-volume', 'context-radio-mini-volume', 'radio-volume', 'sdr-volume']) {
     assert.match(
       html,
       new RegExp(`id="${id}"[^>]*class="vantage-quantitative-slider"[^>]*type="range"`),
@@ -270,7 +278,10 @@ test('Radio is nested inside Context with separate disclosure and power controls
   assert.match(radioBindings, /this\.radio\.cancelTuning\(\)/);
   assert.match(radioBindings, /this\.radio\.getTunerStations\(750\)/);
   assert.match(radioBindings, /radioTunerPointerPosition\(/);
-  assert.doesNotMatch(css, /#right-context-rail\s*>\s*#radio-panel/);
+  // Only the Cyber skin promotes Radio to a peer panel. Other themes retain
+  // the embedded Context layout; theme round-trip behavior has separate tests.
+  const baseCss = css.replace(readFileSync(new URL('./ui/styles/cyber.css', import.meta.url), 'utf8'), '');
+  assert.doesNotMatch(baseCss, /#right-context-rail\s*>\s*#radio-panel/);
   assert.match(css, /#global-context-panel #radio-panel\.collapsed/);
   assert.doesNotMatch(css, /\.context-radio-dock\.active:hover \.context-radio-mini/);
   assert.doesNotMatch(css, /\.context-radio-dock\.active:focus-within \.context-radio-mini/);

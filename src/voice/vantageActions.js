@@ -250,6 +250,12 @@ const LAYER_ALIASES = new Map([
   ['hurricanes', 'weather-cyclones'],
   ['hurricane tracks', 'weather-cyclones'],
   ['tropical storms', 'weather-cyclones'],
+  ['local-adsb', 'local-adsb'],
+  ['local adsb', 'local-adsb'],
+  ['local ads-b', 'local-adsb'],
+  ['my receiver', 'local-adsb'],
+  ['my antenna', 'local-adsb'],
+  ['my sdr', 'local-adsb'],
 ]);
 
 const CITY_ALIASES = new Map([
@@ -703,7 +709,7 @@ export function createVantageActionRunner({
       const style = normalizeStyle(args.style);
       if (!style)
         throw new Error(`Unknown visual style: ${args.style || 'missing'}`);
-      styleManager.setStyle(style);
+      styleManager.setStyle(style, { userInitiated: true });
       return { ok: true, action: 'set_visual_style', style };
     }
 
@@ -1071,6 +1077,17 @@ export function createVantageActionRunner({
         Object.assign(out, result);
       }
       return { ...out, hud: styleManager.getControlState().hud };
+    }
+
+    if (name === 'set_cyber_sonar') {
+      if (typeof styleManager?.setCyberSonar !== 'function') {
+        return {
+          ok: false,
+          action: 'set_cyber_sonar',
+          error: 'Cyber sonar controls are unavailable.',
+        };
+      }
+      return { action: 'set_cyber_sonar', ...styleManager.setCyberSonar(args) };
     }
 
     if (name === 'set_detection') {

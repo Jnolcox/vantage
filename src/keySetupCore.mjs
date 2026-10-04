@@ -1,7 +1,8 @@
 /**
  * Key setup ("POWER UP") — the pure core.
  *
- * One registry, three pure functions, zero dependencies. The dev server's
+ * One registry and pure functions; its only import is the proxy-header check
+ * shared with the other local gates (localRequestGate.mjs). The dev server's
  * /api/setup endpoints (vite.config.js) and the in-app panel (keySetup.js)
  * are both thin shells over this module, so what a key is called, what it
  * unlocks, and how a .env line is written each live in exactly one place.
@@ -10,6 +11,8 @@
  * pass environments in and write text out, which is also what makes every
  * behavior below unit-testable.
  */
+
+import { hasProxySignals } from './localRequestGate.mjs';
 
 /** Longest accepted key/token value. Real provider keys are all far shorter. */
 export const KEY_SETUP_VALUE_LIMIT = 512;
@@ -195,6 +198,28 @@ export function parseWindowsUserSid(stdout) {
 }
 
 /**
+ * Whether the launcher has sharing on. Every sharing signal the launcher
+ * recognizes (scripts/pinokio-preflight.mjs) counts, so the two sets cannot
+ * drift apart. One DELIBERATE divergence: preflight is a boot check that
+ * treats an empty PINOKIO_SHARE_VAR as sharing-on (fail closed before Start),
+ * but here an empty/unset value is the NORMAL git-clone and Pinokio state —
+ * treating it as sharing would disable Provider Settings for every ordinary
+ * launch. So a bare/sentinel value is not sharing; only a real tunnel var is.
+ * This is defense in depth regardless: the loopback and Host checks
+ * independently refuse LAN/tunnel traffic, and under Pinokio the launcher
+ * refuses to boot at all when sharing is genuinely on.
+ */
+export function isSharingEnabled(env = {}) {
+  const shareVar = String(env.PINOKIO_SHARE_VAR ?? '').trim();
+  return (
+    ['PINOKIO_SHARE_CLOUDFLARE', 'PINOKIO_SHARE_LOCAL'].some((name) =>
+      /^(1|true)$/i.test(String(env[name] || '').trim()),
+    ) ||
+    (shareVar !== '' && !PINOKIO_SHARING_DISABLED_SENTINELS.has(shareVar))
+  );
+}
+
+/**
  * The admission gate for the Provider Settings endpoints — pure, exported so
  * every refusal below is pinned by a unit assertion rather than a review note.
  *
@@ -229,43 +254,14 @@ export function admitKeySetupRequest({
   // on this machine, whatever its socket says. Refuse them outright as defense
   // in depth — the shipped tunnel (Pinokio) is force-closed at boot, so these
   // only appear when someone has deliberately fronted the dev server.
-  const PROXY_SIGNALS = [
-    'forwarded',
-    'via',
-    'x-forwarded-for',
-    'x-forwarded-host',
-    'x-forwarded-port',
-    'x-forwarded-proto',
-    'x-real-ip',
-    'cf-connecting-ip',
-    'cf-ray',
-  ];
-  if (
-    PROXY_SIGNALS.some((name) => String(proxyHeaders[name] || '').trim() !== '')
-  ) {
+  if (hasProxySignals(proxyHeaders)) {
     return {
       ok: false,
       status: 403,
       error: 'Provider Settings does not answer proxied requests',
     };
   }
-  // Every sharing signal the launcher recognizes (scripts/pinokio-preflight.mjs)
-  // also disables this surface — so the gate's set is complete, not a subset the
-  // two files could drift apart on. One DELIBERATE divergence: preflight is a
-  // boot check that treats an empty PINOKIO_SHARE_VAR as sharing-on (fail closed
-  // before Start), but here an empty/unset value is the NORMAL git-clone and
-  // Pinokio state — treating it as sharing would disable Provider Settings for
-  // every ordinary launch. So a bare/sentinel value is not sharing; only a real
-  // tunnel var is. This is defense in depth regardless: the loopback+Host checks
-  // below independently refuse LAN/tunnel traffic, and under Pinokio the launcher
-  // refuses to boot at all when sharing is genuinely on.
-  const shareVar = String(env.PINOKIO_SHARE_VAR ?? '').trim();
-  const sharingEnabled =
-    ['PINOKIO_SHARE_CLOUDFLARE', 'PINOKIO_SHARE_LOCAL'].some((name) =>
-      /^(1|true)$/i.test(String(env[name] || '').trim()),
-    ) ||
-    (shareVar !== '' && !PINOKIO_SHARING_DISABLED_SENTINELS.has(shareVar));
-  if (sharingEnabled) {
+  if (isSharingEnabled(env)) {
     return {
       ok: false,
       status: 403,

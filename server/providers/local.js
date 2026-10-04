@@ -13,6 +13,7 @@ import { cctvProxy } from './cctv.js';
 import { defaultSourceRoot } from './common/source-root.js';
 import { radioBrowserProxy } from './radio.js';
 import { gbfsProxy } from './gbfs.js';
+import { localReceiversProxy } from './local-receivers.js';
 import { transitProxy } from './transit.js';
 import { adsbLolProxy } from './aircraft/adsb-lol.js';
 import { aisLiveProxy } from './vessels/ais-live.js';
@@ -24,6 +25,7 @@ import { firePerimetersProxy } from './firePerimeters.js';
 import { windProxy } from './wind.js';
 import { weatherProxy } from './weather.js';
 import { cycloneProxy } from './cyclones.js';
+import { tileProxy } from './tiles.js';
 
 /** Construct the local provider plugins in their established order. */
 function localProviderPlugins() {
@@ -43,6 +45,7 @@ function localProviderPlugins() {
     cctvProxy({ sourceRoot: defaultSourceRoot }),
     radioBrowserProxy(),
     gbfsProxy(),
+    localReceiversProxy(),
     transitProxy(),
     adsbLolProxy(),
     aisLiveProxy(),
@@ -53,6 +56,7 @@ function localProviderPlugins() {
     windProxy(),
     weatherProxy(),
     cycloneProxy(),
+    tileProxy(),
     keySetupEndpoint(),
   ];
 }

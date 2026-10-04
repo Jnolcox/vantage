@@ -54,6 +54,7 @@ const LINKS_AND_ATTRIBUTION = [
   'data.calgary.ca',
   'data-nifc.opendata.arcgis.com',
   'data.texas.gov',
+  'deldot.gov',
   'deflock.org',
   'developer.entur.org',
   'developer.tomtom.com',
@@ -65,6 +66,8 @@ const LINKS_AND_ATTRIBUTION = [
   // through /api/fire-perimeters/inciweb.
   'inciweb.wildfire.gov',
   'ion.cesium.com',
+  // Recent Imagery credit: the HLS product page.
+  'lpdaac.usgs.gov',
   'its.txdot.gov',
   // Observed-weather credits: NOAA nowCOAST and its disclaimer and lightning
   // product notes. Imagery is fetched by the server through /api/weather.
@@ -73,7 +76,13 @@ const LINKS_AND_ATTRIBUTION = [
   'oceanservice.noaa.gov',
   'open-meteo.com',
   'opendatacommons.org',
+  // Vector tile credits. OpenFreeMap tiles are fetched by the server through
+  // /api/tiles/openfreemap.
+  'openfreemap.org',
+  'openmaptiles.org',
   'opensky-network.org',
+  // Military area names credit (bundled Overture/OSM names pack).
+  'overturemaps.org',
   'platform.openai.com',
   'policies.google.com',
   // Wind credits: NOAA Open Data on AWS and ECMWF Open Data. Forecast files
@@ -89,6 +98,8 @@ const LINKS_AND_ATTRIBUTION = [
   'wiki.openstreetmap.org',
   'www.adsbdb.com',
   'www.capmetro.org',
+  // US county outlines credit (bundled US Census Bureau cartographic data).
+  'www.census.gov',
   'www.digitraffic.fi',
   'www.drivebc.ca',
   'www.ecmwf.int',
@@ -227,11 +238,12 @@ test('the meta policy for built HTML omits header-only directives', () => {
   );
 });
 
-test('dev and preview servers send the policy, framing and referrer headers', () => {
+test('dev and preview servers send the policy, framing, nosniff and referrer headers', () => {
   const config = createBrowserViteConfig();
   for (const headers of [config.server.headers, config.preview.headers]) {
     assert.equal(headers['Content-Security-Policy'], contentSecurityPolicy());
     assert.equal(headers['X-Frame-Options'], 'DENY');
+    assert.equal(headers['X-Content-Type-Options'], 'nosniff');
     assert.equal(headers['Referrer-Policy'], REFERRER_POLICY);
   }
   assert.equal(
@@ -248,6 +260,7 @@ test('report-only mode reports instead of blocking but still refuses framing', (
     contentSecurityPolicy(),
   );
   assert.equal(headers['Content-Security-Policy'], "frame-ancestors 'none'");
+  assert.equal(headers['X-Content-Type-Options'], 'nosniff');
 });
 
 test('the referrer policy keeps the origin for Google keys and YouTube', () => {
@@ -276,6 +289,37 @@ test('event pack evidence posters are fetchable under the policy', () => {
   const connectSources = contentSecurityPolicyDirectives()['connect-src'];
   for (const origin of posterOrigins)
     assert.ok(connectSources.includes(origin), origin);
+});
+
+test('the frames and scripts the event media builds are allowed, and no more', async () => {
+  const { embeddedMediaFrameUrl, resolveEmbeddedMediaSource } =
+    await import('../../src/data/bhoteKoshiEmbeddedMedia.js');
+  const directives = contentSecurityPolicyDirectives();
+  const frames = directives['frame-src'];
+  for (const link of [
+    'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    'https://youtu.be/dQw4w9WgXcQ',
+    'https://www.facebook.com/facebook/videos/10153231379946729/',
+  ]) {
+    const source = resolveEmbeddedMediaSource(link);
+    assert.ok(source, link);
+    const origin = new URL(embeddedMediaFrameUrl(source, {})).origin;
+    assert.ok(frames.includes(origin), `${link} -> ${origin}`);
+  }
+  // YouTube plays from the privacy-enhanced host only; X posts load in X's
+  // own frames.
+  assert.equal(frames.includes('https://www.youtube.com'), false);
+  assert.ok(frames.includes('https://platform.twitter.com'));
+  // The player API, the Facebook SDK and X's widget script are the only
+  // remote script origins, and never a wildcard or a bare scheme.
+  assert.deepEqual(
+    directives['script-src'].filter((source) => /^https?:/.test(source)),
+    [
+      'https://www.youtube.com',
+      'https://connect.facebook.net',
+      'https://platform.twitter.com',
+    ],
+  );
 });
 
 test('built Cesium workers may load their blob: worker bundle', () => {

@@ -1,4 +1,5 @@
 import { readStylesheet } from '../testSupport/readStylesheet.mjs';
+import { displayPanelScroller } from './displayPanelScroll.js';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
@@ -6,6 +7,58 @@ import {
   layoutRightPanelRail,
   measurePanelNaturalHeight,
 } from './panelRails.js';
+
+test('Display uses an inner scroll body only in Cyber', () => {
+  const body = { scrollTop: 95 };
+  const panel = {
+    ownerDocument: { documentElement: { dataset: { uiTheme: 'cyber' } } },
+    querySelector: () => body,
+  };
+  assert.equal(displayPanelScroller(panel), body);
+  panel.ownerDocument.documentElement.dataset.uiTheme = 'tactical';
+  assert.equal(displayPanelScroller(panel), panel);
+  assert.equal(displayPanelScroller(null), null);
+});
+
+test('Cyber restores one expanded owner, keeps launchers, and restores other theme preferences', () => {
+  for (const mobile of [false, true]) {
+    const f = fixture('right', {
+      mobile,
+      hud: { visible: true, variant: 'cyber' },
+    });
+    f.expand(f.first, 250);
+    f.expand(f.second, 250);
+    f.options.preferredPanelId = f.second.id;
+    f.run();
+    assert.equal(f.first.classList.contains('cyber-accordion-collapsed'), true);
+    assert.equal(f.second.classList.contains('collapsed'), false);
+    assert.equal(f.first.getAttribute('aria-hidden'), undefined);
+    f.run();
+    assert.equal(
+      f.first.classList.contains('collapsed'),
+      true,
+      'layout does not reopen a peer',
+    );
+    f.options.hud.variant = 'operator';
+    f.run();
+    assert.equal(f.first.classList.contains('collapsed'), false);
+    assert.equal(
+      f.first.classList.contains('cyber-accordion-collapsed'),
+      false,
+    );
+    assert.equal(f.second.classList.contains('collapsed'), false);
+  }
+});
+
+test('Cyber restored accordion prefers keyboard focus when no explicit owner exists', () => {
+  const f = fixture('right', { hud: { visible: true, variant: 'cyber' } });
+  f.expand(f.first, 250);
+  f.expand(f.second, 250);
+  f.options.documentRef.activeElement = f.second;
+  f.run();
+  assert.equal(f.first.classList.contains('collapsed'), true);
+  assert.equal(f.second.classList.contains('collapsed'), false);
+});
 
 function element(
   id,
@@ -592,4 +645,48 @@ test('clean view and recording hide every panel the right rail hosts', () => {
     assert.match(rule[2], /visibility:\s*hidden\s*!important/);
     assert.match(rule[2], /pointer-events:\s*none\s*!important/);
   }
+});
+
+test('right layout ignores a hidden panel: no lane, no gap, no auto-collapse', () => {
+  const f = fixture('right');
+  const imagery = element('recent-imagery-panel', { height: 0 });
+  imagery.hidden = true;
+  imagery.scrollHeight = 0;
+  imagery.rect.height = 0;
+  f.stack.children.push(imagery);
+  imagery.parentElement = f.stack;
+  // A tall panel expands into focus mode: the hidden sibling is not among the
+  // later panels that focus mode collapses, and it counts for nothing.
+  f.expand(f.first, 900);
+  f.run();
+  assert.equal(f.stack.dataset.layoutMode, 'focus');
+  assert.equal(imagery.classList.contains('collapsed'), false);
+  assert.equal(imagery.classList.contains('layout-auto-collapsed'), false);
+  assert.equal(f.stack.dataset.expandedCount, '1');
+  assert.equal(
+    imagery.style.getPropertyValue('--right-panel-allocated-height'),
+    '',
+  );
+  assert.equal(imagery.getAttribute('aria-hidden'), undefined);
+  const alone = parseFloat(
+    f.first.style.getPropertyValue('--right-panel-allocated-height'),
+  );
+  // Shown (and expanded) it joins the allocation like any other panel.
+  imagery.hidden = false;
+  imagery.scrollHeight = 300;
+  imagery.rect.height = 300;
+  const retriesBefore = f.retries();
+  f.run();
+  assert.ok(
+    f.collapsed.includes('recent-imagery-panel'),
+    'focus mode collapses the later panel and asks for another pass',
+  );
+  assert.equal(f.retries(), retriesBefore + 1);
+  f.run();
+  assert.equal(f.stack.dataset.expandedCount, '1');
+  assert.ok(
+    parseFloat(
+      f.first.style.getPropertyValue('--right-panel-allocated-height'),
+    ) <= alone,
+  );
 });

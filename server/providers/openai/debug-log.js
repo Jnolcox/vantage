@@ -17,10 +17,10 @@ const REALTIME_DEBUG_LOG_MAX_BYTES = 8 * 1024 * 1024;
 const REALTIME_DEBUG_LOG_MAX_FILE_BYTES = 32 * 1024 * 1024;
 
 /**
- * Per-IP write ceiling. Always on, unlike the opt-in limiter the cost-bearing
- * OpenAI routes share: throttling those by default would change what a user
- * spends, while this sink spends disk and event-loop time. A voice session
- * writes far below this, so the cap needs no configuration to stay invisible.
+ * Per-IP write ceiling. Always on and separate from the configurable limiter
+ * the cost-bearing OpenAI routes share: this sink spends disk and event-loop
+ * time, not provider quota. A voice session writes far below this, so the cap
+ * needs no configuration to stay invisible.
  */
 const REALTIME_DEBUG_LOG_MAX_PER_MIN = 120;
 
@@ -112,10 +112,11 @@ function createDebugLogHandler({ sourceRoot = defaultSourceRoot } = {}) {
     try {
       const body = await readRequestBody(req, REALTIME_DEBUG_LOG_MAX_BYTES);
       const record = JSON.parse(body || '{}');
+      // The server's own timestamp comes last, so a record cannot supply one.
       await append(
         `${JSON.stringify({
-          loggedAt: new Date().toISOString(),
           ...record,
+          loggedAt: new Date().toISOString(),
         })}\n`,
       );
       res.statusCode = 204;

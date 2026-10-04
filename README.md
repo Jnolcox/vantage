@@ -71,6 +71,13 @@ non-commercial use, or a **Google Maps key** for the direct, metered route and
 in-app place search. Provider terms and quotas apply. Add keys through the
 app's **POWER UP** panel; [Keys & Costs](#-api-keys) explains the options.
 
+> **Already installed?** Update to the latest version. Vantage 1.0.0 queries
+> public OpenStreetMap Overpass servers, which now refuse it, so Traffic,
+> Mapped Installations and ALPR stay empty until you update. Updated installs
+> read OpenStreetMap vector tiles through the local server instead; set
+> `VANTAGE_OVERPASS_UPSTREAMS` only if you run or pay for your own Overpass
+> instance.
+
 ### Path 1 — Pinokio, no terminal
 
 1. Install or update [Pinokio](https://desktop.pinokio.co/) to **8.2 or later**.
@@ -257,7 +264,7 @@ Fifteen layers and map sources. **Thirteen have a keyless path.** Some offer add
 | 🛰️ **Satellites**           | 838-object catalog, color-coded by class with a live legend — the **DENSE** chip drops in the whole Starlink shell                                                                                                                                                                                                                                                                  | CelesTrak                               | 🟢                                                                                                  |
 | 🌍 **Earthquakes**          | Global seismic activity, last 24h                                                                                                                                                                                                                                                                                                                                                   | USGS                                    | 🟢                                                                                                  |
 | 🚗 **Traffic**              | Simulated vehicles on OSM roads. With TomTom, live flow speeds drive the simulation and congestion colors below ~8 km; individual vehicle positions are not live observations                                                                                                                                                                                                       | TomTom + OSM                            | 🟢 simulation · 🟡 live flow speeds                                                                 |
-| 📹 **CCTV Mesh**            | ~3,600 public cameras projected _into_ the 3D space — Austin · Texas (TxDOT) · California (Caltrans) · London (TfL) · Ontario (511) · Finland (Fintraffic) · British Columbia (DriveBC) · Estonia (Tallinn, Tarktee) · New South Wales (Live Traffic NSW) · Calgary. Positions are published; poses are estimated priors **you calibrate by dragging a gizmo on the camera itself** | City APIs                               | 🟢                                                                                                  |
+| 📹 **CCTV Mesh**            | ~3,600 public cameras projected _into_ the 3D space — Austin · Texas (TxDOT) · California (Caltrans) · London (TfL) · Ontario (511) · Finland (Fintraffic) · British Columbia (DriveBC) · Estonia (Tallinn, Tarktee) · Delaware (DelDOT live video) · New South Wales (Live Traffic NSW) · Calgary. Positions are published; poses are estimated priors **you calibrate by dragging a gizmo on the camera itself** | City APIs                               | 🟢                                                                                                  |
 | 📻 **Radio**                | Geolocated world radio with an **analog tuner** — drag the needle across up to 750 stations and the globe flies to each broadcaster                                                                                                                                                                                                                                                 | Radio Browser / broadcasters            | 🟢                                                                                                  |
 | 🚌 **Transit**              | Live buses, trams, metros, trains and ferries with delayed playback between reports, selected-vehicle trails, and mode-coloured DETECT labels — Boston, Austin, Minneapolis, Helsinki, the Netherlands, Norway, South East Queensland                                                                                                                                               | Operator GTFS-Realtime feeds            | 🟢                                                                                                  |
 | 🚲 **Bikeshare**            | Live station availability                                                                                                                                                                                                                                                                                                                                                           | GBFS                                    | 🟢                                                                                                  |
@@ -416,6 +423,25 @@ OpenSky can run fully anonymous (`OPENSKY_AUTH_MODE=anon`), or import OAuth cred
 
 </details>
 
+<details>
+<summary>Live video cameras (HLS)</summary>
+
+CCTV sources with `"feedType": "hls"` and a registered HTTP(S) `.m3u8`
+URL play through a lazily loaded hls.js decoder shared by the monitor plane
+and panel. DelDOT uses its official HTTPS HLS catalog links; disable that
+pack with `VANTAGE_CCTV_DELDOT_ENABLED=0`. The server allows two concurrent
+sessions. Each retains at most 12
+segments and 24 MiB in memory; individual downloads are capped at 4 MiB with a
+ten second deadline. There are no segment files or ffmpeg processes.
+Redirects, off-origin references, encrypted playlists and non-MPEG-TS segments
+are refused. Each decoder has its own client lease (at most eight per
+session), including native HLS. Closing it releases only that lease; abandoned
+leases expire after 15 seconds without access. The last release stops upstream
+work. Failed live video uses the existing still/Street View/synthetic
+fallback, which is not live video. RTMP-only sources are not supported.
+
+</details>
+
 ### 💸 What it actually costs
 
 Honest numbers, roughly, as of mid-2026 — always check the provider pricing pages:
@@ -441,7 +467,7 @@ Everything above is the deliberately cheap baseline — enough to get a real tas
 
 ### 🔒 Sharing an instance
 
-By default nobody else can reach your server — it binds to `127.0.0.1`. To share on your LAN, opt in explicitly (`VANTAGE_HOST=0.0.0.0 npm run dev`, or `VANTAGE_HOST=0.0.0.0 ./scripts/dev-fresh.sh` on macOS/Linux; `HOST` still works as the old name) — but know that ⚠️ **a LAN-visible server brokers your configured API keys to anyone who can reach it.** In that mode the per-IP throttles (`VANTAGE_RATELIMIT_OPENAI_PER_MIN`, `VANTAGE_RATELIMIT_GOOGLE_PER_MIN` — see `.env.example`) switch on at 30 and 60 requests a minute unless you set them, and only local names, IP addresses, this machine's hostname and `VANTAGE_ALLOWED_HOSTS` are accepted as the `Host`. Before anything else, **configure provider quotas, usage limits, and billing alerts**: app-level throttles are not billing caps, and a budget alert alone does not stop spending. Full threat model in [SECURITY.md](SECURITY.md).
+By default nobody else can reach your server — it binds to `127.0.0.1`. To share on your LAN, opt in explicitly (`VANTAGE_HOST=0.0.0.0 npm run dev`, or `VANTAGE_HOST=0.0.0.0 ./scripts/dev-fresh.sh` on macOS/Linux; `HOST` still works as the old name) — but know that ⚠️ **a LAN-visible server brokers your configured API keys to anyone who can reach it.** The per-IP throttles (`VANTAGE_RATELIMIT_OPENAI_PER_MIN`, `VANTAGE_RATELIMIT_GOOGLE_PER_MIN` — see `.env.example`) cap the paid proxies at 30 and 60 requests a minute in every mode unless you set them, and only local names, IP addresses, this machine's hostname and the exact names in `VANTAGE_ALLOWED_HOSTS` are accepted as the `Host` (list a TLS-proxy name such as `vantage.local` there; if that proxy adds `X-Forwarded-*` headers, also set `VANTAGE_TRUST_PROXY=1`, since the routes that spend provider quota refuse proxied requests by default). Before anything else, **configure provider quotas, usage limits, and billing alerts**: app-level throttles are not billing caps, and a budget alert alone does not stop spending. Full threat model in [SECURITY.md](SECURITY.md).
 
 Provider Settings is disabled when the server is shared, so remote users cannot
 access the key-entry panel.
@@ -470,9 +496,10 @@ a separately reviewed authentication proxy if remote access is required.
   browser may reach; anything else is blocked. The referrer policy is
   `strict-origin-when-cross-origin`, so other sites see only
   `http://localhost:<port>/`, never the path or your share-link state.
-- **Other websites cannot drive your server.** Every `/api` route refuses a
-  foreign `Host` (DNS rebinding), a foreign `Origin`, and requests the browser
-  marks cross-site, so a page you visit cannot spend your keys.
+- **Other websites cannot drive your server.** Every route refuses a foreign
+  `Host` (DNS rebinding), and every `/api` route also refuses a foreign
+  `Origin` and requests the browser marks cross-site, so a page you visit
+  cannot spend your keys.
 - **Voice debug log is opt-in.** Nothing is written to `.vantage-logs/` unless you
   start the server with `VANTAGE_REALTIME_DEBUG_LOG=1` (in `.env`, or in
   `pinokio/ENVIRONMENT` under Pinokio). When enabled, the log stays local,
@@ -502,7 +529,7 @@ address and the Vantage User-Agent, not your browser).
 | `maps.googleapis.com` (Geocoding) | Browser | HUD **Context: Live**, every 15 s and after each move, with a Google key | View-target latitude/longitude |
 | `places.googleapis.com` | Server | Same HUD trigger, with a Google key | Latitude/longitude and radius |
 | `api.openai.com` (Responses) | Server | Same HUD trigger, with an OpenAI key | Place, street and nearby-place labels; enabled layer names with each one's feed state (live, stale, fallback…) and source name |
-| `nominatim.openstreetmap.org`, `api.open-meteo.com`, `news.google.com`, `api.gdeltproject.org` | Server | Cockpit mode: regional brief and weather, refreshed as the contact moves | Latitude/longitude; locality name for news |
+| `api.open-meteo.com`, `news.google.com`, `api.gdeltproject.org` | Server | Cockpit mode: regional brief and weather, refreshed as the contact moves (the region name comes from bundled Natural Earth data, with no lookup) | Latitude/longitude; locality name for news |
 | Layer feeds you have switched on | Server | Polling while the layer is on | See below |
 
 Set DISPLAY ▸ HUD ▸ **Context** to **Local** to stop the three HUD rows; the
@@ -512,7 +539,13 @@ summary line then uses on-device data only.
 noted): OpenSky (`opensky-network.org`, `auth.opensky-network.org`) and
 `api.adsb.lol` (rounded latitude/longitude of the view for the fallback,
 selected aircraft hex for tracks); `api.adsbdb.com` (selected hex or
-callsign); `stream.aisstream.io` (bounding box from your settings);
+callsign; for Local ADS-B also the hex of aircraft about to draw as 3D models.
+Your receiver hears only aircraft within its range, so these lookups hint at
+where it is; clear **LOOK UP TYPE & ROUTE · ADSBDB** on the Local RTL-SDR card
+to stop them); the decoder feeds you list in `VANTAGE_LOCAL_RECEIVER_FEEDS`
+for Local ADS-B (loopback, private, `localhost` or `*.local` addresses only:
+about once a second while the layer is on, plus one read when the page opens
+so the Radio card can list them; nothing when unset); `stream.aisstream.io` (bounding box from your settings);
 `celestrak.org`; `ll.thespacedevs.com`; `firms.modaps.eosdis.nasa.gov`;
 `services3.arcgis.com` (NIFC WFIGS fire perimeters, every 5 minutes) and
 `inciweb.wildfire.gov` (its incident catalog, at most hourly) for Fire
@@ -527,13 +560,18 @@ bounding box you are looking at, from the server's IP address;
 (NOAA tropical GIS) for Cyclone advisories, at most every 5 minutes (fixed
 queries, nothing about your view);
 `earthquake.usgs.gov` (fetched by the browser); `api.tomtom.com` (tile
-coordinates in view); Overpass mirrors `overpass-api.de`,
-`lz4.overpass-api.de`, `overpass.kumi.systems`, `overpass.private.coffee`
-(bounding-box queries of the view); registered GTFS-realtime and GBFS feeds
+coordinates in view); `tiles.openfreemap.org` (OpenFreeMap vector tiles for
+Traffic roads and Mapped Installations, through `/api/tiles/openfreemap`: tile
+coordinates in view); `tiles.dontgetflocked.com` (the hourly US/Canada
+OpenStreetMap ALPR extract for Mapped ALPR Cameras, through `/api/tiles/alpr`:
+tile coordinates in view); no public Overpass instance, only those you name
+in `VANTAGE_OVERPASS_UPSTREAMS`, if any (bounding-box queries of the view for
+area and footprint annotations, installation context and ALPR outside the US
+and Canada); registered GTFS-realtime and GBFS feeds
 (`src/data/transitFeeds.js`, the GBFS catalog); the CCTV catalogs and
 snapshot hosts registered in `server/providers/cctv/` (TfL, Caltrans, Austin,
 Ontario 511, Fintraffic, DriveBC, TxDOT, Tallinn, Tarktee, Warendorf, NSW,
-Calgary); the Radio Browser directory (`*.api.radio-browser.info`).
+Calgary, and the DelDOT camera list `tmc.deldot.gov`); the Radio Browser directory (`*.api.radio-browser.info`).
 
 **Only when you act**
 
@@ -544,13 +582,22 @@ Calgary); the Radio Browser directory (`*.api.radio-browser.info`).
 | `routing.openstreetmap.de` | Server | Directions | Route coordinates |
 | `inciweb.wildfire.gov` | Server, then browser | Selecting a fire perimeter checks the matched InciWeb incident page; clicking its **InciWeb** link opens that page in a new tab | Server: the InciWeb incident number. Browser: your IP address, no referrer (`noopener,noreferrer`) |
 | `www.nhc.noaa.gov` | Browser | Clicking **Official advisory ↗** on a Cyclone advisories card opens the NHC advisory in a new tab; the Data attribution credit links the NHC home page | Your IP address, no referrer (`noopener,noreferrer`) |
+| `video.deldot.gov` | Server | Opening a DelDOT live camera; segments are pulled while a viewer holds the stream and stop within 15 s of the last one closing | That camera's registered playlist and segment paths; nothing about your view |
 | `maps.googleapis.com` (Street View Static) | Server | CCTV fallback frame for a registered camera with no live image | That camera's registered location |
 | `api.openai.com` | Server, then browser | Starting voice | Server mints a short-lived secret; the browser then streams microphone audio, map context and tool results, and — with **VIEW** on — screenshots of local-scale views |
+| A USB RTL-SDR (WebUSB) | Browser | **CONNECT** on the Radio panel's Local RTL-SDR card; the browser asks which device | Nothing leaves the machine: samples, audio and decoded aircraft stay in the page |
+| Your browser's location service | Browser | **LOCATE** on the Local RTL-SDR card (the browser asks first) | Whatever that browser's geolocation provider uses; the resulting position stays in the page and is used only to decode positions |
 | The station's stream host | Browser | Pressing play on Radio | Your IP address and origin; `radio-browser` hears about the play only with `VANTAGE_RADIO_REPORT_CLICKS=1` |
 | `www.youtube-nocookie.com`, `www.youtube.com`; `www.facebook.com`, `connect.facebook.net`; `platform.twitter.com` | Browser | Pressing **LOAD** or **ALWAYS ALLOW** on an embedded witness clip | Your IP address, origin and that provider's cookies |
 | `i.ytimg.com` | Browser | Opening the Bhote Koshi event | Your IP address and origin, no cookies (the event's YouTube thumbnail posters) |
+| `cmr.earthdata.nasa.gov`, `wvs.earthdata.nasa.gov`, `gibs.earthdata.nasa.gov` (NASA) | Browser | Recent Imagery: choosing a box (SELECT BOX, USE VIEW, around a pin) or pressing **SEARCH** for a kept or shared box; then thumbnails and tiles for the days shown, and **EXPORT**. Enabling the layer alone contacts nothing | The box (its corner coordinates) and the dates asked about, with your IP address and origin |
+| `earthquake.usgs.gov` | MCP stdio tools, on a tool call | An MCP client you registered with `npm run mcp` calls `get_earthquakes`; the other tools read the app's own `/api` routes, which contact the providers above as the layers do | The fixed USGS feed request, with your IP address and the `vantage-mcp-tools` User-Agent |
 
-Nothing else leaves the machine: no analytics, crash reporting, geolocation
+The local MCP server (`npm run mcp`, see [docs/TOOLS.md](docs/TOOLS.md)) opens
+no port: the MCP client that launches it talks to it over stdin and stdout,
+and it reaches only the app's loopback `/api`, as any local process can.
+
+Nothing else leaves the machine: no analytics, crash reporting, geolocation (beyond LOCATE above)
 or IP lookups. API keys stay on the server except `GOOGLE_MAPS_API_KEY` and
 `CESIUM_ION_TOKEN`, which the browser needs and which a production `vite
 build` writes into `dist/` (the build warns; restrict both keys by referrer).

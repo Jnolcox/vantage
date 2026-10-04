@@ -39,6 +39,7 @@ export function createBrowserViteConfig({
   port = 4173,
   allowedHosts = [],
   cspReportOnly = false,
+  command,
 } = {}) {
   return {
     plugins: [
@@ -49,15 +50,28 @@ export function createBrowserViteConfig({
       ...plugins,
     ],
     ...(publicDir === undefined ? {} : { publicDir }),
+    // A production build must not clean the dependency cache a running dev
+    // server is still serving optimized module URLs from.
+    ...(command === 'build' ? { cacheDir: 'node_modules/.vite-build' } : {}),
+    optimizeDeps: {
+      // First reached through the SDR worker or a dynamic import. Pre-bundle
+      // them at startup so first use cannot invalidate already-transformed
+      // URLs with Vite's "Outdated Optimize Dep" 504 response.
+      include: [
+        '@jtarrio/signals/demod/demodulator.js',
+        '@jtarrio/signals/demod/modes.js',
+        '@jtarrio/webrtlsdr/rtlsdr.js',
+        'egm96-universal',
+      ],
+    },
     server: {
       host: host || '127.0.0.1',
       port: parseInt(port, 10) || 4173,
-      // Always an explicit list, even when bound to every interface: Vite
-      // accepts IP literals on its own, and `true` would switch off the Host
-      // check that stops DNS rebinding.
-      allowedHosts: [
-        ...new Set(['localhost', '127.0.0.1', '.local', ...allowedHosts]),
-      ],
+      // Always an explicit list of exact names, even when bound to every
+      // interface: Vite accepts IP literals on its own, `true` would switch
+      // off the Host check that stops DNS rebinding, and a suffix entry such
+      // as `.local` would trust every name under it.
+      allowedHosts: [...new Set(['localhost', '127.0.0.1', ...allowedHosts])],
       // No cross-origin reads: Vite's default would let any localhost page
       // read served modules, which carry the browser keys defined below.
       cors: false,

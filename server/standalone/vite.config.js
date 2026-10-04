@@ -7,26 +7,23 @@ import { apiNotFoundPlugin } from './api-not-found.js';
 import { apiRequestGuardPlugin } from './api-request-guard.js';
 import { moveLegacyDirectories } from './legacy-directories.js';
 import {
-  applyLanRateLimitDefaults,
   extraAllowedHosts,
+  lanExposureWarning,
   resolveBindHost,
 } from './network.js';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 
 /** Load this checkout's configuration and attach its local provider middleware. */
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ command, mode }) => {
   moveLegacyDirectories(root);
   const loaded = loadEnv(mode, root, '');
   for (const [key, value] of Object.entries(loaded)) {
     if (process.env[key] === undefined) process.env[key] = value;
   }
   const host = resolveBindHost(process.env);
-  const throttles = applyLanRateLimitDefaults(process.env, host);
-  if (throttles.length)
-    console.warn(
-      `[vantage] Network-exposed bind (${host}): defaulting ${throttles.join(', ')} per client IP.`,
-    );
+  const exposure = lanExposureWarning(process.env, host);
+  if (exposure) console.warn(exposure);
   return createBrowserViteConfig({
     plugins: [
       apiRequestGuardPlugin(),
@@ -43,5 +40,6 @@ export default defineConfig(({ mode }) => {
       String(readVantageEnv('CSP') ?? '')
         .trim()
         .toLowerCase() === 'report-only',
+    command,
   });
 });

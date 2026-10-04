@@ -333,6 +333,17 @@ test('the gate refuses proxied requests even from a loopback socket with local h
   assert.equal(admitKeySetupRequest({ ...base, proxyHeaders: { 'x-forwarded-for': '' } }).ok, true);
 });
 
+test('VANTAGE_TRUST_PROXY never lets a proxied request reach Provider Settings', async () => {
+  const { admitKeySetupRequest } = await import('./keySetupCore.mjs');
+  const verdict = admitKeySetupRequest({
+    method: 'POST', remoteAddress: '127.0.0.1', hostHeader: 'localhost:4173',
+    origin: 'http://localhost:4173', contentType: 'application/json',
+    proxyHeaders: { 'x-forwarded-for': '192.168.1.30' },
+    env: { VANTAGE_TRUST_PROXY: '1' },
+  });
+  assert.deepEqual(verdict, { ok: false, status: 403, error: 'Provider Settings does not answer proxied requests' });
+});
+
 test('validation rejects dotenv metacharacters that would round-trip wrong', () => {
   for (const bad of ['abc#def', 'ab"cd', "ab'cd", 'ab$cd', 'ab\\cd', 'ab`cd']) {
     assert.equal(validateKeySetupUpdates({ OPENAI_API_KEY: bad }).ok, false, `${JSON.stringify(bad)} refused`);
@@ -362,4 +373,18 @@ test('server Google key remains supported without appearing in setup or its miss
   assert.deepEqual(complete, keySetupStatus({ ...allVisibleConfigured, GOOGLE_MAPS_SERVER_API_KEY: secret }));
   assert.ok(!JSON.stringify(status).includes('GOOGLE_MAPS_SERVER_API_KEY'));
   assert.ok(!JSON.stringify(status).includes(secret));
+});
+
+test('isSharingEnabled reports the launcher tunnel flags and a real share var as sharing', async () => {
+  const { isSharingEnabled } = await import('./keySetupCore.mjs');
+  assert.equal(isSharingEnabled({ PINOKIO_SHARE_CLOUDFLARE: 'true' }), true);
+  assert.equal(isSharingEnabled({ PINOKIO_SHARE_LOCAL: '1' }), true);
+  assert.equal(isSharingEnabled({ PINOKIO_SHARE_VAR: 'MY_TUNNEL_TOKEN' }), true);
+});
+
+test('isSharingEnabled treats unset, empty and sentinel values as sharing off', async () => {
+  const { isSharingEnabled } = await import('./keySetupCore.mjs');
+  assert.equal(isSharingEnabled(), false);
+  assert.equal(isSharingEnabled({ PINOKIO_SHARE_LOCAL: '0', PINOKIO_SHARE_VAR: '' }), false);
+  assert.equal(isSharingEnabled({ PINOKIO_SHARE_VAR: '__vantage_sharing_disabled__' }), false);
 });

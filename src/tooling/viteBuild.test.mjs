@@ -18,11 +18,7 @@ test('explicit build inputs preserve browser-only defines, plugin order and loop
   assert.equal(config.plugins[4], plugin);
   assert.equal(config.server.host, '127.0.0.1');
   assert.equal(config.server.port, 4173);
-  assert.deepEqual(config.server.allowedHosts, [
-    'localhost',
-    '127.0.0.1',
-    '.local',
-  ]);
+  assert.deepEqual(config.server.allowedHosts, ['localhost', '127.0.0.1']);
   assert.ok(config.server.fs.deny.includes('**/ENVIRONMENT'));
   assert.ok(config.server.fs.deny.includes('.env.*'));
   assert.equal(config.server.cors, false);
@@ -40,9 +36,9 @@ test('explicit build inputs preserve browser-only defines, plugin order and loop
     createBrowserViteConfig({
       host: '0.0.0.0',
       port: '4800',
-      allowedHosts: ['studio', 'localhost'],
+      allowedHosts: ['studio', 'vantage.local', 'localhost'],
     }).server.allowedHosts,
-    ['localhost', '127.0.0.1', '.local', 'studio'],
+    ['localhost', '127.0.0.1', 'studio', 'vantage.local'],
   );
   assert.equal(
     createBrowserViteConfig({ host: '::', port: '4800' }).server.port,

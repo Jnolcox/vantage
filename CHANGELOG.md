@@ -149,8 +149,156 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   loaded records (2,000 per layer) and that satellite distance is ground
   distance (ported from upstream, Matt Van Horn, Bilawal Sidhu).
 
+- Registered CCTV sources with `"feedType": "hls"` and an HTTP(S) `.m3u8`
+  URL are served live through `/api/cctv/media/<id>`: a bounded in-memory
+  puller rewrites the agency playlist to same-origin `seg_N.ts` segments.
+  At most two sessions run at once, each keeping 12 segments / 24 MiB; every
+  download is capped (256 KiB playlists, 4 MiB segments, 10 s deadline),
+  redirects and off-origin, encrypted or non-MPEG-TS playlists are refused,
+  and nothing is written to disk. Each viewer holds its own lease, released
+  by `DELETE` or after 15 s without access; the last release stops upstream
+  work. Requests carry the Vantage CCTV User-Agent (ported from upstream,
+  Daniel Slay, Bilawal Sidhu).
+- Live HLS CCTV cameras play as moving video on the monitor plane and in
+  the CCTV panel from one shared decoder. hls.js (1.7.3) is downloaded only
+  when a live camera becomes active, never at page load; the panel repaints
+  the shared video at most 640 px wide and 15 fps and stops while collapsed
+  or hidden. Switching camera or turning CCTV off destroys the decoder and
+  releases the server lease; a feed that fails falls back to the labelled
+  still frame (ported from upstream, Daniel Slay, Bilawal Sidhu).
+- CCTV Mesh adds Delaware: DelDOT live video cameras, keyless, 300 by
+  default (nearest Wilmington, Dover and Georgetown). The
+  `tmc.deldot.gov` catalog is read with the other CCTV catalogs and only
+  official `https://video.deldot.gov/live/…/playlist.m3u8` links are
+  registered; video is pulled through the same-origin HLS route only while
+  a DelDOT camera is open. `VANTAGE_CCTV_DELDOT_ENABLED=0` disables the
+  pack and `VANTAGE_CCTV_DELDOT_MAX_SOURCES` changes the cap (ported from
+  upstream, Daniel Slay, Bilawal Sidhu).
+- Recent Imagery layer in the Cameras group, off by default: select a box
+  (drag, the current view, or around a pin; up to 1,000 km a side) and a
+  RECENT IMAGERY panel in the right rail lists the last 30 days of NASA HLS
+  Sentinel-2 / Landsat 8/9 (30 m) imagery over it, plus the VIIRS daily
+  overview (250 m) when switched on, with thumbnails and scene cloud. IMAGE
+  shows one day, VS BASEMAP swipes it against the map and A / B swipes two
+  days; SWAP trades the sides, either image exports as a PNG, and box, pins,
+  mode and split travel in share links (token `1`). While imagery is shown on
+  Google 3D the map switches to Esri and comes back when it is cleared.
+  Nothing is requested when the layer is enabled: NASA CMR, Worldview
+  Snapshots and GIBS (one `gibs.earthdata.nasa.gov` origin) are contacted
+  browser-direct only after the operator chooses a box, and a box kept from
+  an earlier session or a share link waits for **SEARCH**. NASA receives the
+  box and the browser's IP address; the three origins are in the CSP and the
+  network inventory, and the NASA acknowledgement is in Data attribution
+  (ported from upstream, Bilawal Sidhu, manjunath22466).
+- Same-origin `/api/tiles` vector tile proxy. The server forwards only
+  allow-listed OpenFreeMap (`/api/tiles/openfreemap/...`) and hourly
+  OpenStreetMap ALPR extract (`/api/tiles/alpr/...`) paths to their one host,
+  with the Vantage `openfreemap-proxy` / `alpr-tiles-proxy` User-Agent,
+  a 256 KB TileJSON and 4 MB tile cap, a 10 s deadline, at most eight upstream
+  requests at once, a bounded in-memory (48 MB) and on-disk (256 MB,
+  `.vantage-cache/tiles`) LRU cache that also remembers tiles the upstream has
+  no data for, and stale answers when the upstream fails. TileJSON is
+  rewritten so every tile URL points back at the proxy, so the browser never
+  contacts a third-party tile host.
+- Area annotations outline countries, states and provinces (Natural Earth,
+  including the UK constituent countries) and US counties (US Census Bureau)
+  from bundled public-domain boundary packs, with no lookup service. County
+  names are disambiguated across countries by aliases, qualifiers and the
+  camera's position; multi-part outlines (Hawaii's islands, Berlin inside
+  Brandenburg) draw every part with its holes. The packs load only on the
+  first annotation that needs them. Annotation captions are drawn by the
+  screen-space callouts instead of Cesium labels (ported from upstream,
+  Bilawal Sidhu).
+- Local RTL-SDR card in the Radio panel: connect a USB RTL-SDR in desktop
+  Chrome or Edge through WebUSB and listen to broadcast FM (tune, seek,
+  volume) or receive 1090 MHz ADS-B. Gain is AUTO or a manual R820T step,
+  remembered per mode (`vantage:sdr:gain:v1`; ADS-B defaults to 28.0 dB), and
+  an explicitly chosen device is remembered per mode
+  (`vantage:sdr:device:v1`); CHANGE DEVICE reopens the WebUSB picker. Local
+  FM and internet radio never play together. Nothing opens until CONNECT, and
+  the RTL-SDR driver (`@jtarrio/webrtlsdr`, with `@jtarrio/signals`, both
+  Apache-2.0, see `THIRD_PARTY_NOTICES.md`) is downloaded only then (ported
+  from upstream, Bilawal Sidhu, building on work by Sameh Khamis and Mazeyar
+  Moeini Feizabadi).
+- Local ADS-B layer (`local-adsb`, off by default, never in share links):
+  aircraft heard by your own receivers draw in magenta beside public Flights,
+  with class silhouettes, 3D models under the DISPLAY rail's 3D setting, a
+  selected-aircraft trail, real-time motion and a position sanity filter. The
+  click card names the bands and inputs that heard each aircraft. Voice
+  `set_layer_visibility` accepts `local-adsb` ("my receiver", "my antenna")
+  (ported from upstream, Bilawal Sidhu).
+- Local decoder feeds for Local ADS-B: list the `aircraft.json` of
+  dump1090-fa, readsb, tar1090 or skyaware978 (1090 MHz and 978 MHz UAT) in
+  `VANTAGE_LOCAL_RECEIVER_FEEDS` (`band=url`, comma-separated; upstream's
+  `LOCAL_RECEIVER_FEEDS` is read as a fallback).
+  `GET /api/local-receivers/aircraft` reads them with the Vantage User-Agent,
+  a 2 s timeout, no redirects, a 2 MB cap and a 1 s shared cache, and reports each
+  feed `live`, `stale`, `unreachable` or `invalid`. Only loopback, RFC1918,
+  `localhost` and `*.local` hosts are accepted, through one shared tap address
+  rule (`src/data/tapAddress.js`); names are resolved, checked and pinned on
+  every read. Unset, the route fetches nothing. See `docs/LOCAL-RECEIVERS.md`
+  (ported from upstream, Bilawal Sidhu and Tom-Neverwinter).
+- **LOOK UP TYPE & ROUTE · ADSBDB** on the Local RTL-SDR card (on by
+  default, kept per browser in `vantage:local-adsb:lookups:v1`). Local
+  aircraft are looked up on adsbdb only while it is on; because a receiver
+  hears only aircraft in its range, those lookups hint at its location, and
+  clearing it keeps every local aircraft on the device.
+- Cyber HUD layout (Display > HUD > Layout, or "switch to cyber layout" by
+  voice), opt-in: coordinated red/slate map and cockpit panel styling with a
+  one-panel-at-a-time right rail. Its contact sonar sweeps native points,
+  billboards and labels on the GPU, with Display controls for rings, range,
+  power, opacity and sector, and a `set_cyber_sonar` voice action that reports
+  configured settings separately from the active effect. Unsupported shaders
+  keep native contact rendering; leaving Cyber restores the standard shell and
+  contacts. The sonar scene hook loads and runs only while Cyber is selected,
+  so other layouts pay nothing for it (ported from upstream, manjunath22466
+  and Sameh Khamis; sonar style inspired by kk376).
+- Tools for language-model clients and a local MCP server. `npm run mcp`
+  serves earthquake, active-fire, launch, aircraft (in an area, by
+  identifier, tracks, type and route) and satellite (next pass over a point,
+  those overhead now), public camera (find cameras, a camera's current
+  image), radio station, place search and routing queries over stdio to
+  clients such as Claude Code, reading from a running app at
+  `http://127.0.0.1:4173` (`--api-base` selects another). Tools are defined
+  once in `vantage/tools`, read the services `vantage/tools/services` builds
+  from the layers' source factories, and are exposed through the protocol
+  adapter in `vantage/tools/mcp`. The server opens no port; the app does not
+  import the tools (ported from upstream, Sameh Khamis).
+
 ### Changed
 
+- Performance: each bundled data pack ships once. The region, marine,
+  admin-boundary, county, military-name and neighborhood packs were emitted
+  twice by the production build, as the JSON the browser fetches and as an
+  unused JavaScript copy; `dist/` drops from 55.2 MB to 42.4 MB and the main
+  chunk is unchanged. Under Node the loader reads the JSON file directly
+  (reporting that Node 24.14 or newer is needed on a runtime too old to do
+  so), and a test keeps app code from importing a pack as a module (ported
+  from upstream, Sameh Khamis).
+- The Host check now covers every route, not only `/api`: plugin middleware
+  runs before Vite's own check, so a non-`/api` route answered any Host,
+  including a DNS-rebinding name. The guard applies the same allowed names to
+  every path on the dev and preview servers. The built-in `.local` suffix is
+  gone, and suffix (`.lan`) and wildcard (`*.lan`) entries in
+  `VANTAGE_ALLOWED_HOSTS` are ignored, so every trusted name is listed
+  exactly. LAN mode still adds this machine's hostname; a TLS-proxy name such
+  as `vantage.local` must now be listed in `VANTAGE_ALLOWED_HOSTS` (adapted
+  from upstream, Sameh Khamis, Puspo Aditya).
+- The per-IP throttles on the cost-bearing proxies are on for every bind,
+  not only in LAN mode: the OpenAI endpoints (`/api/realtime/token`,
+  `/api/openai/hud-summary`) allow 30 requests a minute per client IP and the
+  Google Places endpoints (`/api/google/nearby-places`,
+  `/api/google/text-search`) 60. `VANTAGE_RATELIMIT_OPENAI_PER_MIN` and
+  `VANTAGE_RATELIMIT_GOOGLE_PER_MIN` still override them and exactly `0`
+  disables them; an unreadable value falls back to the default instead of to
+  unlimited, and a positive fraction counts as 1. The Pinokio build's Google
+  cap drops from 120 to the same 60. The provider export
+  `makeOptInRateLimiter(value)` is now `makeCostRateLimiter(value, default)`
+  (adapted from upstream, daikaginza, Sameh Khamis).
+- `cesium` is pinned to exactly 1.138.0 (was `^1.124.0`). The Cyber sonar GPU
+  path rewrites Cesium's native contact shaders and is validated against that
+  release only; a test fails when the installed or declared version differs,
+  so an engine upgrade is a deliberate change that revalidates the adapter.
 - A selected AIS vessel's detail card sits a little further from the
   contact and may move beside it, not only above or below, to clear solid
   panels; ambient vessel cards keep their vertical-only placement (ported
@@ -189,9 +337,118 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
 - Clean view and recording mode hide the right rail and every panel it
   hosts, rather than a fixed list of panel ids, so panels added to the rail
   later are covered too (ported from upstream, Bilawal Sidhu).
+- The Nepal scene's before/after swipe and its switch to Esri imagery now
+  come from shared modules: `src/ui/imagerySplit.js` owns the divider (drag,
+  keyboard, ARIA, the scene split) and `src/maps/imageryComparison.js` leases
+  the map, switching to Esri and handing the previous map back only if
+  nobody changed it meanwhile. One owner holds the lease at a time. The
+  scene looks and behaves as before (ported from upstream, Bilawal Sidhu,
+  manjunath22466).
+- `MapSourceController.subscribe()` reports every settled map switch, silent
+  switches, fallbacks and recoveries included, and `getSwitchOrigin()` says
+  whether the current map was chosen from outside (`manual`) or by the
+  controller's own fallback (`automatic`), so a layer draped on the active
+  map can follow it (ported from upstream, Bilawal Sidhu, manjunath22466).
+- OpenStreetMap-derived displays share one attribution. Data attribution
+  lists a single "Map and place data © OpenStreetMap contributors (ODbL)"
+  entry instead of one per layer, and a short linked "© OpenStreetMap" credit
+  stays on the map while any OSM-derived data is shown (datacenters, dams,
+  Directions and voice routes, the Warendorf webcam and the Nepal locator),
+  until the last of them leaves. The credit row keeps its full width above
+  the command dock (ported from upstream, Bilawal Sidhu).
+- Street Traffic roads come from OpenStreetMap vector tiles (OpenFreeMap,
+  through the same-origin `/api/tiles` proxy) instead of Overpass queries, and
+  the layer row chooses the road source: TomTom, OSM or Hybrid (also
+  `?trafficRoads=`, saved with the layer state). With a TomTom key the default
+  is Hybrid: TomTom roads with live flow, plus OpenStreetMap roads TomTom does
+  not cover, simulated. Without a key every choice draws OpenStreetMap roads.
+  OSM mode matches TomTom flow onto OpenStreetMap roads, by travel direction,
+  for congestion colors, speeds and closures. Roads start loading on enable,
+  paint incrementally, keep their dots across camera moves and arriving tiles,
+  follow the reticle footprint at oblique angles with detailed near tiles and
+  coarse distant roads, sit on the rendered surface behind buildings, and
+  admit only public motor roads (no paths, parking, private access, service
+  ways or tunnels). Road failures name OpenFreeMap with their HTTP status or
+  timeout, separately from TomTom (ported from upstream, Bilawal Sidhu).
+- Mapped Installations draws military areas from OpenStreetMap vector tiles
+  (OpenFreeMap, through `/api/tiles`) and names them from a bundled worldwide
+  Overture/OpenStreetMap name index (36,466 names, loaded only when the layer
+  needs it); wide views show bounded, decluttered named points that hand over
+  to the matching polygons up close. Titles go through the shared world-overlay
+  host and the datacenter/dam card arbitration; selecting an installation
+  replaces its title with one card and drapes a translucent fill over its
+  footprint. Polygons appear while names load, cancelled views cannot publish
+  late names, and footprints keep visible fragments without joining separate
+  parcels across zooms. Contacts lists mapped installations within a true
+  100 km surface radius of the tracked subject, including in Cockpit (ported
+  from upstream, Bilawal Sidhu).
+- Mapped ALPR Cameras reads an hourly OpenStreetMap extract for the US and
+  Canada (community-hosted vector tiles, through the same-origin `/api/tiles`
+  proxy) instead of an Overpass query per view. Whole-city views load z9–z12
+  tiles, nearby badges sit on the rendered surface, map-source changes
+  reposition markers without replacing them, and the row tells unsupported
+  coverage apart from an empty result and asks for a closer view before
+  exceeding its tile budget. Views outside the extract still query Overpass
+  through the server. The source line credits "© OpenStreetMap contributors"
+  and the inline credit no longer reflows the credit row (ported from
+  upstream, Bilawal Sidhu).
+- Public OpenStreetMap Overpass instances are no longer used. Overpass is
+  queried only at instances the operator names in the new
+  `VANTAGE_OVERPASS_UPSTREAMS` (comma-separated; the upstream project's
+  `OVERPASS_UPSTREAMS` is also read), with the Vantage User-Agent, per-instance
+  cooldowns that honour `Retry-After`, and credentials in the URL sent as
+  Basic auth. Without one, `/api/overpass` and `/api/military-installations`
+  answer at once that detailed queries are not configured and send nothing;
+  `/api/overpass/status` lets the page check once. Footprint and neighborhood
+  outlines that only Overpass could supply keep their pins and say "Detailed
+  outline unavailable"; countries, states, counties and physical regions still
+  outline from bundled data. The cockpit regional brief names the region from
+  bundled Natural Earth polygons instead of a Nominatim reverse lookup;
+  Nominatim remains only as the last-resort place search. Configured Overpass
+  area queries keep relation member geometry (ported from upstream, Bilawal
+  Sidhu).
 
 ### Fixed
 
+- A stalled OpenSky global snapshot no longer holds `/api/opensky` for over
+  a minute. Each attempt gets 10 seconds, a timed-out or failed attempt is
+  retried once, and a second failure is answered from the stale cache or the
+  regional fallback; the OAuth token request gets the same limit (ported from
+  upstream, Sameh Khamis).
+- The routes that spend provider quota or write the voice debug log
+  (`/api/realtime/token`, `/api/realtime/debug-log`, `/api/openai/*`,
+  `/api/google/text-search`, `/api/google/nearby-places`) refuse requests
+  that carry reverse-proxy or CDN forwarding headers. A TLS proxy you run for
+  LAN voice can be let through with the new `VANTAGE_TRUST_PROXY=1`, which
+  never opens Provider Settings. The `/api` guard already refused foreign and
+  opaque Origins and cross-site `Sec-Fetch-Site` on every route (adapted from
+  upstream, James Sumpter, Sameh Khamis).
+- The dev and preview servers send `X-Content-Type-Options: nosniff` with
+  their other security headers, and the opt-in voice debug log
+  (`VANTAGE_REALTIME_DEBUG_LOG=1`) writes the server's own `loggedAt` after
+  the posted record, so a record can no longer replace it (adapted from
+  upstream, Sameh Khamis, from findings by Sunil).
+- Cockpit enters on the matching map style and its vision carousel is one
+  fixed, duplicate-free sequence: Normal, CRT, NVG, FLIR, Anime, Noir and Snow.
+  Normal is a real unfiltered option, and both Exit Cockpit and Reset restore
+  the captured map style. Cyber's compact right-rail and Cockpit utility
+  buttons center their glyphs and share one inset and edge alignment (ported
+  from upstream, Manjunath).
+- Cyber HUD: voice help/error popups and the Location/Visual Presets pins are
+  no longer clipped by their decorative frames, and the lower-left telemetry
+  card leaves room for the attribution's full logo row. New panels can opt into
+  a shared surface (`src/ui/styles/panel-surfaces.css`,
+  `docs/panel-surfaces.md`) for theme tokens, rail input and a fixed header over
+  a bounded scroll body, without changing disclosure or visibility policies; no
+  existing panel uses it yet.
+  An explicit switch from Cyber to another HUD layout restores the visual preset
+  used before Cyber; scene and share-link state still win. On desktop the
+  Cyber side rails sit higher so the left stack clears the lower coordinate
+  card; Cockpit keeps its own visor layout (ported from upstream, Manjunath).
+- The Cyber HUD's voice-control styling (scan scope, mic orbit, speaker
+  states and their reduced-motion fallback) applies again: its selectors still
+  named the pre-rename `#gev-voice-*` / `.gev-*` ids, so none matched the
+  `vantage-*` elements the voice control renders.
 - The right panel rail (Display, CCTV, Context) settles within two layout
   passes instead of flipping in and out of focus mode as panel heights
   change. Each pass measures natural heights under a synchronous
@@ -276,6 +533,18 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   admin-boundary fallback answers `region-timeout` after 3 s instead of holding
   the reply; the lookup keeps running and fills the cache (ported from
   upstream, Bilawal Sidhu).
+- Keyless terrain tiles retry HTTP 429 and transient gateway failures (502,
+  503, 504) with a bounded, shared backoff that honours `Retry-After`, instead
+  of leaving holes in the Re:Earth terrain after a burst of tile requests. One
+  console line is logged per cooldown window, not per tile (ported from
+  upstream, Bilawal Sidhu).
+- Search arrivals (location bar and voice) end above the rendered surface. A
+  precise place without a detailed outline used to be framed from a sea-level
+  target, leaving Camp Mabry about 1 m above the mesh and a Denver coordinate
+  underground. Search now waits briefly for the ground-floor elevation before
+  framing, and after landing the camera is lifted to 120 m clearance once the
+  surface streams in; a new flight, a gesture or teardown cancels the check
+  (ported from upstream, Bilawal Sidhu and Milan Khanal).
 
 ## [1.0.0] - 2026-10-02
 

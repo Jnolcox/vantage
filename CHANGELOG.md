@@ -209,6 +209,40 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   first annotation that needs them. Annotation captions are drawn by the
   screen-space callouts instead of Cesium labels (ported from upstream,
   Bilawal Sidhu).
+- Local RTL-SDR card in the Radio panel: connect a USB RTL-SDR in desktop
+  Chrome or Edge through WebUSB and listen to broadcast FM (tune, seek,
+  volume) or receive 1090 MHz ADS-B. Gain is AUTO or a manual R820T step,
+  remembered per mode (`vantage:sdr:gain:v1`; ADS-B defaults to 28.0 dB), and
+  an explicitly chosen device is remembered per mode
+  (`vantage:sdr:device:v1`); CHANGE DEVICE reopens the WebUSB picker. Local
+  FM and internet radio never play together. Nothing opens until CONNECT, and
+  the RTL-SDR driver (`@jtarrio/webrtlsdr`, with `@jtarrio/signals`, both
+  Apache-2.0, see `THIRD_PARTY_NOTICES.md`) is downloaded only then (ported
+  from upstream, Bilawal Sidhu, building on work by Sameh Khamis and Mazeyar
+  Moeini Feizabadi).
+- Local ADS-B layer (`local-adsb`, off by default, never in share links):
+  aircraft heard by your own receivers draw in magenta beside public Flights,
+  with class silhouettes, 3D models under the DISPLAY rail's 3D setting, a
+  selected-aircraft trail, real-time motion and a position sanity filter. The
+  click card names the bands and inputs that heard each aircraft. Voice
+  `set_layer_visibility` accepts `local-adsb` ("my receiver", "my antenna")
+  (ported from upstream, Bilawal Sidhu).
+- Local decoder feeds for Local ADS-B: list the `aircraft.json` of
+  dump1090-fa, readsb, tar1090 or skyaware978 (1090 MHz and 978 MHz UAT) in
+  `VANTAGE_LOCAL_RECEIVER_FEEDS` (`band=url`, comma-separated; upstream's
+  `LOCAL_RECEIVER_FEEDS` is read as a fallback).
+  `GET /api/local-receivers/aircraft` reads them with the Vantage User-Agent,
+  a 2 s timeout, no redirects, a 2 MB cap and a 1 s shared cache, and reports each
+  feed `live`, `stale`, `unreachable` or `invalid`. Only loopback, RFC1918,
+  `localhost` and `*.local` hosts are accepted, through one shared tap address
+  rule (`src/data/tapAddress.js`); names are resolved, checked and pinned on
+  every read. Unset, the route fetches nothing. See `docs/LOCAL-RECEIVERS.md`
+  (ported from upstream, Bilawal Sidhu and Tom-Neverwinter).
+- **LOOK UP TYPE & ROUTE · ADSBDB** on the Local RTL-SDR card (on by
+  default, kept per browser in `vantage:local-adsb:lookups:v1`). Local
+  aircraft are looked up on adsbdb only while it is on; because a receiver
+  hears only aircraft in its range, those lookups hint at its location, and
+  clearing it keeps every local aircraft on the device.
 
 ### Changed
 

@@ -192,15 +192,15 @@ test('no unchanged Realtime tool definition drifts silently', () => {
     .update(JSON.stringify(unchanged))
     .digest('hex')
     .slice(0, 16);
-  // ALPR, Fire Perimeters, Wind, the observed-weather layers and Cyclone
-  // advisories intentionally extend the layer enums; the ISS wording correction,
-  // the new satellite-pass tool and the analyst satellite/infrastructure layers
-  // are excluded above. Retain the complete pin.
-  assert.equal(digest, 'e6966726204f247a', 'an unchanged Realtime tool definition drifted');
+  // ALPR, Fire Perimeters, Wind, the observed-weather layers, Cyclone
+  // advisories and Local ADS-B intentionally extend the layer enums; the ISS
+  // wording correction, the new satellite-pass tool and the analyst
+  // satellite/infrastructure layers are excluded above. Retain the complete pin.
+  assert.equal(digest, 'cc13bd03043d0385', 'an unchanged Realtime tool definition drifted');
 });
 
 test('Radio volume and mission speed share the Sharpen slider visual language', () => {
-  for (const id of ['cockpit-radio-volume', 'context-radio-mini-volume', 'radio-volume']) {
+  for (const id of ['cockpit-radio-volume', 'context-radio-mini-volume', 'radio-volume', 'sdr-volume']) {
     assert.match(
       html,
       new RegExp(`id="${id}"[^>]*class="vantage-quantitative-slider"[^>]*type="range"`),

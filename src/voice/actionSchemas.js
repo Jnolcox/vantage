@@ -144,6 +144,7 @@ const schemas = [
             'weather-satellite',
             'weather-lightning',
             'weather-cyclones',
+            'local-adsb',
           ],
         },
         enabled: {

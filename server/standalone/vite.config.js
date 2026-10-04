@@ -15,7 +15,7 @@ import {
 const root = fileURLToPath(new URL('../../', import.meta.url));
 
 /** Load this checkout's configuration and attach its local provider middleware. */
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ command, mode }) => {
   moveLegacyDirectories(root);
   const loaded = loadEnv(mode, root, '');
   for (const [key, value] of Object.entries(loaded)) {
@@ -43,5 +43,6 @@ export default defineConfig(({ mode }) => {
       String(readVantageEnv('CSP') ?? '')
         .trim()
         .toLowerCase() === 'report-only',
+    command,
   });
 });

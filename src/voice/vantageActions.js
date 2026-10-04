@@ -250,6 +250,12 @@ const LAYER_ALIASES = new Map([
   ['hurricanes', 'weather-cyclones'],
   ['hurricane tracks', 'weather-cyclones'],
   ['tropical storms', 'weather-cyclones'],
+  ['local-adsb', 'local-adsb'],
+  ['local adsb', 'local-adsb'],
+  ['local ads-b', 'local-adsb'],
+  ['my receiver', 'local-adsb'],
+  ['my antenna', 'local-adsb'],
+  ['my sdr', 'local-adsb'],
 ]);
 
 const CITY_ALIASES = new Map([

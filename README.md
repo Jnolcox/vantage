@@ -538,7 +538,13 @@ summary line then uses on-device data only.
 noted): OpenSky (`opensky-network.org`, `auth.opensky-network.org`) and
 `api.adsb.lol` (rounded latitude/longitude of the view for the fallback,
 selected aircraft hex for tracks); `api.adsbdb.com` (selected hex or
-callsign); `stream.aisstream.io` (bounding box from your settings);
+callsign; for Local ADS-B also the hex of aircraft about to draw as 3D models.
+Your receiver hears only aircraft within its range, so these lookups hint at
+where it is; clear **LOOK UP TYPE & ROUTE · ADSBDB** on the Local RTL-SDR card
+to stop them); the decoder feeds you list in `VANTAGE_LOCAL_RECEIVER_FEEDS`
+for Local ADS-B (loopback, private, `localhost` or `*.local` addresses only:
+about once a second while the layer is on, plus one read when the page opens
+so the Radio card can list them; nothing when unset); `stream.aisstream.io` (bounding box from your settings);
 `celestrak.org`; `ll.thespacedevs.com`; `firms.modaps.eosdis.nasa.gov`;
 `services3.arcgis.com` (NIFC WFIGS fire perimeters, every 5 minutes) and
 `inciweb.wildfire.gov` (its incident catalog, at most hourly) for Fire
@@ -578,12 +584,14 @@ Calgary, and the DelDOT camera list `tmc.deldot.gov`); the Radio Browser directo
 | `video.deldot.gov` | Server | Opening a DelDOT live camera; segments are pulled while a viewer holds the stream and stop within 15 s of the last one closing | That camera's registered playlist and segment paths; nothing about your view |
 | `maps.googleapis.com` (Street View Static) | Server | CCTV fallback frame for a registered camera with no live image | That camera's registered location |
 | `api.openai.com` | Server, then browser | Starting voice | Server mints a short-lived secret; the browser then streams microphone audio, map context and tool results, and — with **VIEW** on — screenshots of local-scale views |
+| A USB RTL-SDR (WebUSB) | Browser | **CONNECT** on the Radio panel's Local RTL-SDR card; the browser asks which device | Nothing leaves the machine: samples, audio and decoded aircraft stay in the page |
+| Your browser's location service | Browser | **LOCATE** on the Local RTL-SDR card (the browser asks first) | Whatever that browser's geolocation provider uses; the resulting position stays in the page and is used only to decode positions |
 | The station's stream host | Browser | Pressing play on Radio | Your IP address and origin; `radio-browser` hears about the play only with `VANTAGE_RADIO_REPORT_CLICKS=1` |
 | `www.youtube-nocookie.com`, `www.youtube.com`; `www.facebook.com`, `connect.facebook.net`; `platform.twitter.com` | Browser | Pressing **LOAD** or **ALWAYS ALLOW** on an embedded witness clip | Your IP address, origin and that provider's cookies |
 | `i.ytimg.com` | Browser | Opening the Bhote Koshi event | Your IP address and origin, no cookies (the event's YouTube thumbnail posters) |
 | `cmr.earthdata.nasa.gov`, `wvs.earthdata.nasa.gov`, `gibs.earthdata.nasa.gov` (NASA) | Browser | Recent Imagery: choosing a box (SELECT BOX, USE VIEW, around a pin) or pressing **SEARCH** for a kept or shared box; then thumbnails and tiles for the days shown, and **EXPORT**. Enabling the layer alone contacts nothing | The box (its corner coordinates) and the dates asked about, with your IP address and origin |
 
-Nothing else leaves the machine: no analytics, crash reporting, geolocation
+Nothing else leaves the machine: no analytics, crash reporting, geolocation (beyond LOCATE above)
 or IP lookups. API keys stay on the server except `GOOGLE_MAPS_API_KEY` and
 `CESIUM_ION_TOKEN`, which the browser needs and which a production `vite
 build` writes into `dist/` (the build warns; restrict both keys by referrer).

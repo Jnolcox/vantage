@@ -291,6 +291,37 @@ test('event pack evidence posters are fetchable under the policy', () => {
     assert.ok(connectSources.includes(origin), origin);
 });
 
+test('the frames and scripts the event media builds are allowed, and no more', async () => {
+  const { embeddedMediaFrameUrl, resolveEmbeddedMediaSource } =
+    await import('../../src/data/bhoteKoshiEmbeddedMedia.js');
+  const directives = contentSecurityPolicyDirectives();
+  const frames = directives['frame-src'];
+  for (const link of [
+    'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    'https://youtu.be/dQw4w9WgXcQ',
+    'https://www.facebook.com/facebook/videos/10153231379946729/',
+  ]) {
+    const source = resolveEmbeddedMediaSource(link);
+    assert.ok(source, link);
+    const origin = new URL(embeddedMediaFrameUrl(source, {})).origin;
+    assert.ok(frames.includes(origin), `${link} -> ${origin}`);
+  }
+  // YouTube plays from the privacy-enhanced host only; X posts load in X's
+  // own frames.
+  assert.equal(frames.includes('https://www.youtube.com'), false);
+  assert.ok(frames.includes('https://platform.twitter.com'));
+  // The player API, the Facebook SDK and X's widget script are the only
+  // remote script origins, and never a wildcard or a bare scheme.
+  assert.deepEqual(
+    directives['script-src'].filter((source) => /^https?:/.test(source)),
+    [
+      'https://www.youtube.com',
+      'https://connect.facebook.net',
+      'https://platform.twitter.com',
+    ],
+  );
+});
+
 test('built Cesium workers may load their blob: worker bundle', () => {
   const directives = contentSecurityPolicyDirectives();
   assert.ok(directives['worker-src'].includes('blob:'));

@@ -126,6 +126,14 @@ for (const [name, files, pattern] of [
     /Common voice controls import protocol/,
   ],
   [
+    'application imports tools',
+    {
+      'src/app/demo.js': "import '../tools/index.js';",
+      'src/tools/index.js': '',
+    },
+    /Application imports tools/,
+  ],
+  [
     'dynamic import cannot evade direction',
     { 'src/app/demo.js': "const target = './module.js'; import(target);" },
     /Computed/,

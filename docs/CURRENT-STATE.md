@@ -446,6 +446,23 @@ and snapshot source. The standalone adapter keeps the existing USGS daily feed,
 M2.5+ filtering, static discs, magnitude labels and analyst records. Disabling or
 destroying the layer cancels pending work and ignores late results.
 
+## Tools and the local MCP server
+
+`vantage/tools` (`src/tools/`) defines queries that answer questions from the
+app's data, `vantage/tools/services` builds the services they read from the
+layers' portable source factories, and `vantage/tools/mcp` exposes a composed
+catalog over the Model Context Protocol. `npm run mcp` (`server/mcp/stdio.js`)
+serves Core's tools over stdio to a local MCP client, reading from a running
+app's `/api` routes (default `http://127.0.0.1:4173`, `--api-base` to change).
+It opens no listener. Requests a source sends to another origin directly (the
+USGS earthquake feed) carry `clientUserAgent('mcp-tools')`; requests to the app
+pass the `/api` guard as a local non-browser client. The first queries are
+`get_earthquakes`, `get_active_fires` and `get_recent_launches`. Tools take a
+shared `area` argument (place name, bounding box, or point and radius) and cap
+lists at 25 rows by default. Nothing under `src/` outside `src/tools/` imports
+the tools (`check:boundaries` enforces it), so the page is unchanged. See
+[tools and the MCP server](TOOLS.md).
+
 ## Vessel components and sources
 
 `src/data/aisLiveVessels.js` assembles `createVesselLayer` from the

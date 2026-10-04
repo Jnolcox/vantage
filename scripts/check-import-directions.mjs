@@ -37,6 +37,9 @@ const portableExport = (key) =>
   ) ||
   [
     './director',
+    './tools',
+    './tools/mcp',
+    './tools/services',
     './voice/action-schemas',
     './voice/session',
     './data/lifecycle',
@@ -143,6 +146,12 @@ export function checkImportDirections(root) {
         entry(to)
       )
         report(file, `Reusable module imports standalone setup: ${to}`);
+      if (
+        file.startsWith('src/') &&
+        !file.startsWith('src/tools/') &&
+        to.startsWith('src/tools/')
+      )
+        report(file, `Application imports tools: ${to}`);
       if (source(file) && renderer(to))
         report(file, `Source imports rendering/application: ${to}`);
       if (

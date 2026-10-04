@@ -301,8 +301,8 @@ case "${HOST}" in
     echo "!! OpenSky, AISStream, TomTom, FIRMS, LL2, Google) to ANYONE who can"
     echo "!! reach it on the network. Use only on networks you trust."
     echo "!! Per-IP throttles VANTAGE_RATELIMIT_OPENAI_PER_MIN (default 30)"
-    echo "!! and VANTAGE_RATELIMIT_GOOGLE_PER_MIN (default 60) apply in this mode"
-    echo "!! unless you set them (see .env.example). They are NOT billing caps;"
+    echo "!! and VANTAGE_RATELIMIT_GOOGLE_PER_MIN (default 60) apply unless you"
+    echo "!! change them (see .env.example). They are NOT billing caps;"
     echo "!! set provider-side budget alerts too."
     if [[ -n "${LAN_IP}" ]]; then
       echo "!! LAN URL: http://${LAN_IP}:${PORT}/"

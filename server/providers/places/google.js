@@ -2,7 +2,11 @@ import {
   googleServerApiKey,
   keylessGooglePlacesResponse,
 } from './google-key.js';
-import { makeOptInRateLimiter, clientKey } from '../common/rate-limit.js';
+import {
+  DEFAULT_GOOGLE_PER_MIN,
+  clientKey,
+  makeCostRateLimiter,
+} from '../common/rate-limit.js';
 import {
   projectNearbyPlaces,
   projectTextSearchPlaces,
@@ -10,14 +14,15 @@ import {
 import { readVantageEnv } from '../common/env.js';
 
 // Construct lazily after the standalone environment has loaded.
-// undefined = not built yet; null = unlimited; fn = active limiter
+// undefined = not built yet; null = the explicit 0 opt-out; fn = active limiter
 let _googleRateLimiter;
 
-/** Google cost endpoint (nearby-places). Null = unlimited (default). */
+/** Google cost endpoints (nearby-places + text-search). Null only when set to 0. */
 function googleRateLimiter() {
   if (_googleRateLimiter === undefined)
-    _googleRateLimiter = makeOptInRateLimiter(
+    _googleRateLimiter = makeCostRateLimiter(
       readVantageEnv('RATELIMIT_GOOGLE_PER_MIN'),
+      DEFAULT_GOOGLE_PER_MIN,
     );
   return _googleRateLimiter;
 }
@@ -81,7 +86,7 @@ export function googlePlacesContextProxy({
       }
       const { latitude, longitude } = coordinates;
 
-      // Opt-in per-IP throttle (VANTAGE_RATELIMIT_GOOGLE_PER_MIN). No-op when unset.
+      // Per-IP throttle (VANTAGE_RATELIMIT_GOOGLE_PER_MIN). On by default; 0 disables.
       // Inlined (not the shared helper) so the 429 body keeps this endpoint's
       // `places: []` contract that the client expects on every error response.
       const _grl = googleRateLimiter();
@@ -201,7 +206,7 @@ export function googlePlacesContextProxy({
       }
       const { latitude, longitude } = coordinates;
 
-      // Opt-in per-IP throttle (VANTAGE_RATELIMIT_GOOGLE_PER_MIN). No-op when unset.
+      // Per-IP throttle (VANTAGE_RATELIMIT_GOOGLE_PER_MIN). On by default; 0 disables.
       // Inlined (like nearby-places) so the 429 body keeps the `places: []`
       // contract the client expects on every error response.
       const _grl = googleRateLimiter();

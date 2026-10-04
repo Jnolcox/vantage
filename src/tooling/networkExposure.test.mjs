@@ -2,9 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   DEFAULT_BIND_HOST,
-  applyLanRateLimitDefaults,
   extraAllowedHosts,
   isLoopbackBindHost,
+  lanExposureWarning,
   resolveBindHost,
 } from '../../server/standalone/network.js';
 
@@ -72,28 +72,28 @@ test('a bind address given as a name is accepted as itself', () => {
   assert.deepEqual(extraAllowedHosts({}, '::', 'studio'), ['studio']);
 });
 
-test('a LAN bind turns on the paid-proxy throttles when they are unset', () => {
-  const env = {};
-  assert.deepEqual(applyLanRateLimitDefaults(env, '0.0.0.0'), [
-    'VANTAGE_RATELIMIT_OPENAI_PER_MIN=30',
-    'VANTAGE_RATELIMIT_GOOGLE_PER_MIN=60',
-  ]);
-  assert.equal(env.VANTAGE_RATELIMIT_OPENAI_PER_MIN, '30');
-  assert.equal(env.VANTAGE_RATELIMIT_GOOGLE_PER_MIN, '60');
+test('a loopback bind prints no exposure warning', () => {
+  assert.equal(lanExposureWarning({}, '127.0.0.1'), null);
 });
 
-test('a LAN bind keeps throttles the operator configured, including 0', () => {
+test('a LAN bind warning names the default throttles', () => {
+  assert.equal(
+    lanExposureWarning({}, '0.0.0.0'),
+    '[vantage] Network-exposed bind (0.0.0.0): per-IP throttles VANTAGE_RATELIMIT_OPENAI_PER_MIN=30, VANTAGE_RATELIMIT_GOOGLE_PER_MIN=60 per client IP.',
+  );
+});
+
+test('a LAN bind warning names the throttles the operator configured, including 0', () => {
   const env = {
     VANTAGE_RATELIMIT_OPENAI_PER_MIN: '0',
     VANTAGE_RATELIMIT_GOOGLE_PER_MIN: '5',
   };
-  assert.deepEqual(applyLanRateLimitDefaults(env, '0.0.0.0'), []);
-  assert.equal(env.VANTAGE_RATELIMIT_OPENAI_PER_MIN, '0');
-  assert.equal(env.VANTAGE_RATELIMIT_GOOGLE_PER_MIN, '5');
-});
-
-test('a loopback bind leaves the throttles unlimited', () => {
-  const env = {};
-  assert.deepEqual(applyLanRateLimitDefaults(env, '127.0.0.1'), []);
-  assert.deepEqual(env, {});
+  assert.match(
+    lanExposureWarning(env, '0.0.0.0'),
+    /VANTAGE_RATELIMIT_OPENAI_PER_MIN=0 \(unlimited\), VANTAGE_RATELIMIT_GOOGLE_PER_MIN=5 /,
+  );
+  assert.deepEqual(env, {
+    VANTAGE_RATELIMIT_OPENAI_PER_MIN: '0',
+    VANTAGE_RATELIMIT_GOOGLE_PER_MIN: '5',
+  });
 });

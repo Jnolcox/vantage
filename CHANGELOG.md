@@ -265,6 +265,17 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   exactly. LAN mode still adds this machine's hostname; a TLS-proxy name such
   as `vantage.local` must now be listed in `VANTAGE_ALLOWED_HOSTS` (adapted
   from upstream, Sameh Khamis, Puspo Aditya).
+- The per-IP throttles on the cost-bearing proxies are on for every bind,
+  not only in LAN mode: the OpenAI endpoints (`/api/realtime/token`,
+  `/api/openai/hud-summary`) allow 30 requests a minute per client IP and the
+  Google Places endpoints (`/api/google/nearby-places`,
+  `/api/google/text-search`) 60. `VANTAGE_RATELIMIT_OPENAI_PER_MIN` and
+  `VANTAGE_RATELIMIT_GOOGLE_PER_MIN` still override them and exactly `0`
+  disables them; an unreadable value falls back to the default instead of to
+  unlimited, and a positive fraction counts as 1. The Pinokio build's Google
+  cap drops from 120 to the same 60. The provider export
+  `makeOptInRateLimiter(value)` is now `makeCostRateLimiter(value, default)`
+  (adapted from upstream, daikaginza, Sameh Khamis).
 - `cesium` is pinned to exactly 1.138.0 (was `^1.124.0`). The Cyber sonar GPU
   path rewrites Cesium's native contact shaders and is validated against that
   release only; a test fails when the installed or declared version differs,

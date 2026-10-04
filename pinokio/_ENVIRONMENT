@@ -29,7 +29,7 @@ PINOKIO_SHARE_VAR=__vantage_sharing_disabled__
 
 # App-level guards, not billing caps. Provider-side budgets remain authoritative.
 VANTAGE_RATELIMIT_OPENAI_PER_MIN=30
-VANTAGE_RATELIMIT_GOOGLE_PER_MIN=120
+VANTAGE_RATELIMIT_GOOGLE_PER_MIN=60
 
 # Optional local voice debug log, off by default. When set to 1 it records
 # every Realtime voice event, including full conversation transcripts, to

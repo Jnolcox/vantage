@@ -754,9 +754,22 @@ errors.
 ## Places and CCTV request bounds
 
 With a Google key configured, nearby and text search reject missing, blank,
-non-numeric and out-of-range coordinates before the opt-in limiter and upstream
+non-numeric and out-of-range coordinates before the per-IP limiter and upstream
 request. Text search also requires a nonblank query. Keyless requests retain
 their `configured: false` response.
+
+The cost-bearing proxies are throttled per client IP on every bind without
+configuration: `/api/realtime/token` and `/api/openai/hud-summary` share 30
+requests per minute per IP, `/api/google/nearby-places` and
+`/api/google/text-search` share 60 (`DEFAULT_OPENAI_PER_MIN` and
+`DEFAULT_GOOGLE_PER_MIN` in `server/providers/common/rate-limit.js`; the
+Pinokio build ships the same values). `VANTAGE_RATELIMIT_OPENAI_PER_MIN` and
+`VANTAGE_RATELIMIT_GOOGLE_PER_MIN` override them; exactly `0` disables the
+limiter, a positive fraction counts as 1, and a value that cannot be read as a
+number falls back to the default rather than to unlimited. Over-limit requests
+receive a sanitized `429` with `Retry-After: 5` and never reach the provider.
+The client key is the socket peer address only; a forwarded-for header is not
+trusted, so a proxied deployment shares one bucket per upstream hop.
 
 CCTV media waits at most 15 seconds for upstream response headers and returns
 504 on timeout. Its timer stops when headers arrive, so live bodies can continue
@@ -3905,7 +3918,7 @@ are omitted rather than framing the wrong part of the globe.
   an absent marker exposes Install, a present marker exposes Start, and a
   running server with a captured ready URL exposes Open Vantage.
 - Build gate: `npm run build`
-- Network access: local-only by default (`127.0.0.1`); LAN is an explicit opt-in via `VANTAGE_HOST=0.0.0.0` (launcher prints a key-exposure warning + LAN URL and the throttles default on; see SECURITY.md). Every route checks `Host` against an exact-name list, every `/api` route also checks `Origin` and `Sec-Fetch-Site`, the cost-bearing and debug-log routes refuse reverse-proxy forwarding headers unless `VANTAGE_TRUST_PROXY=1`, and the page ships an enforced Content-Security-Policy.
+- Network access: local-only by default (`127.0.0.1`); LAN is an explicit opt-in via `VANTAGE_HOST=0.0.0.0` (launcher prints a key-exposure warning + LAN URL; the per-IP throttles are on in every mode; see SECURITY.md). Every route checks `Host` against an exact-name list, every `/api` route also checks `Origin` and `Sec-Fetch-Site`, the cost-bearing and debug-log routes refuse reverse-proxy forwarding headers unless `VANTAGE_TRUST_PROXY=1`, and the page ships an enforced Content-Security-Policy.
 - OpenSky default mode: OAuth (`OPENSKY_AUTH_MODE=oauth`; `anon` works without credentials)
 - Setup doctor resolves `OPENSKY_AUTH_MODE` from the environment and dotenv files. Explicit `anon` and OAuth mode without a client pair report keyless anonymous access (rate-limited); a complete OAuth pair retains the existing presence-only capability wording. Basic and auto modes report the selected mode without guessing which credentials runtime will accept. The proxy's auth behavior is unchanged.
 - Google key expected in Keychain service `google-maps-api` (or `GOOGLE_MAPS_API_KEY`, or `.env`)
@@ -3933,7 +3946,7 @@ are omitted rather than framing the wrong part of the globe.
 - `/api/route` proxies bounded OSRM route requests for annotation routes, with profile allowlisting, distance caps, response caps, caching, and sanitized "no route found" errors.
 - Track endpoints: `/api/ais-live/track?mmsi=` (server-accumulated ring buffers; sub-route handled before the rows snapshot), `/api/opensky-track?icao24=` (OAuth, 60s cache, sanitized errors, independent OpenSky credit bucket), `/api/adsblol/trace?hex=` (60s cache, 5MB cap, ODbL attribution required in UI).
 - Realtime debug logs redact API keys, bearer tokens, client secrets, and image data URLs before writing to disk; request bodies are size-capped.
-- `/api/realtime/debug-log` enforces an always-on 120-per-client/400-global one-minute limiter (not the opt-in `VANTAGE_RATELIMIT_OPENAI_PER_MIN` bucket the cost-bearing OpenAI routes share), appends asynchronously through a serialized queue, and rotates `realtime-conversations.jsonl` at 32 MB keeping one prior generation, so the sink is bounded at twice that regardless of session length. A malformed record answers 400 and a failed write 500, both with a fixed message.
+- `/api/realtime/debug-log` enforces an always-on 120-per-client/400-global one-minute limiter (not the `VANTAGE_RATELIMIT_OPENAI_PER_MIN` bucket the cost-bearing OpenAI routes share), appends asynchronously through a serialized queue, and rotates `realtime-conversations.jsonl` at 32 MB keeping one prior generation, so the sink is bounded at twice that regardless of session length. A malformed record answers 400 and a failed write 500, both with a fixed message.
 
 ## UI/UX Runtime Defaults
 

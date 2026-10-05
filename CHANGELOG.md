@@ -332,9 +332,11 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   for MCP clients that connect by URL, off by default: set
   `VANTAGE_MCP_HTTP=1` to serve them. The route carries no token, so while it
   is on any program on this machine can run the tools, including those that
-  spend provider quota; it answers only requests from this machine that name
-  a loopback host and, when a browser sends an `Origin`, come from a loopback
-  origin. With the setting off, `/mcp` answers a JSON `404` naming it. A
+  spend provider quota; it answers only direct local requests: a loopback
+  connection (whatever address the server binds) naming a loopback host on the
+  port it reached, an `Origin` (when sent) from that same host, no proxy
+  forwarding headers (`VANTAGE_TRUST_PROXY` does not apply), launcher sharing
+  off, and a JSON `Content-Type` on `POST`. With the setting off, `/mcp` answers a JSON `404` naming it. A
   client that disconnects cancels its tool call (ported from upstream, Sameh
   Khamis).
 

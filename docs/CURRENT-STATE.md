@@ -457,7 +457,10 @@ app's `/api` routes (default `http://127.0.0.1:4173`, `--api-base` to change).
 It opens no listener. With `VANTAGE_MCP_HTTP=1` the development and preview
 servers also serve the tools over HTTP at `/mcp` (`server/mcp/plugin.js`,
 installed after the providers and before the `/api` fallback), accepting only
-local requests with loopback hosts and origins; without it `/mcp` answers a
+direct local requests: a loopback socket, a loopback host on the port reached,
+an `Origin` (when sent) from that same host, no proxy forwarding headers
+(`VANTAGE_TRUST_PROXY` never applies), launcher sharing off and, on `POST`, a
+JSON `Content-Type`; without it `/mcp` answers a
 JSON `404` naming the setting. A client that disconnects cancels its call.
 Requests a source sends to another origin directly (the
 USGS earthquake feed, NASA's CMR catalog and Worldview Snapshots) carry `clientUserAgent('mcp-tools')`; requests to the app

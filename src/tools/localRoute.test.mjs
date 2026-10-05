@@ -97,28 +97,76 @@ test('by default /mcp answers a JSON 404 naming the setting and runs no tool', a
   assert.deepEqual(created, []);
 });
 
-test('only loopback connections with loopback hosts and origins are local', () => {
-  const local = { remoteAddress: '127.0.0.1', host: 'localhost:4173' };
+test('only direct loopback connections to this server are local', () => {
+  const local = {
+    remoteAddress: '127.0.0.1',
+    localPort: 4173,
+    host: 'localhost:4173',
+  };
   assert.equal(isLocalMcpRequest(local), true);
   assert.equal(
     isLocalMcpRequest({ ...local, remoteAddress: '::1', host: '[::1]:4173' }),
     true,
   );
   assert.equal(
+    isLocalMcpRequest({ ...local, remoteAddress: '::ffff:127.0.0.1' }),
+    true,
+  );
+  assert.equal(
     isLocalMcpRequest({ ...local, origin: 'http://localhost:4173' }),
     true,
   );
+  assert.equal(
+    isLocalMcpRequest({
+      ...local,
+      headers: { 'sec-fetch-site': 'same-origin' },
+    }),
+    true,
+  );
+  assert.equal(
+    isLocalMcpRequest({ ...local, env: { PINOKIO_SHARE_LOCAL: 'false' } }),
+    true,
+  );
   for (const request of [
+    // A LAN peer, whatever address the server binds.
     { ...local, remoteAddress: '192.168.1.20' },
     { ...local, remoteAddress: undefined },
     { ...local, host: 'attacker.example:4173' },
     { ...local, host: 'localhost.attacker.example' },
+    { ...local, host: 'user@localhost:4173' },
     { ...local, host: '' },
+    // Another local port, as the Host or as the page's origin.
+    { ...local, host: 'localhost:9000' },
+    { ...local, localPort: 80 },
+    { ...local, localPort: undefined },
+    { ...local, origin: 'http://127.0.0.1:5173' },
+    { ...local, origin: 'http://localhost:5173' },
     { ...local, origin: 'https://attacker.example' },
     { ...local, origin: 'null' },
     { ...local, origin: 'file:///tmp/page.html' },
+    { ...local, headers: { 'sec-fetch-site': 'cross-site' } },
+    { ...local, headers: { 'sec-fetch-site': 'same-site' } },
+    // Proxied or shared: not from this machine, whatever the socket says.
+    { ...local, headers: { 'x-forwarded-for': '203.0.113.9' } },
+    { ...local, headers: { forwarded: 'for=203.0.113.9' } },
+    { ...local, headers: { 'cf-connecting-ip': '203.0.113.9' } },
+    { ...local, env: { PINOKIO_SHARE_LOCAL: 'true' } },
+    { ...local, env: { PINOKIO_SHARE_VAR: 'VANTAGE_SHARE_URL' } },
   ])
     assert.equal(isLocalMcpRequest(request), false, JSON.stringify(request));
+});
+
+test('VANTAGE_TRUST_PROXY never lets a proxied request reach /mcp', () => {
+  assert.equal(
+    isLocalMcpRequest({
+      remoteAddress: '127.0.0.1',
+      localPort: 4173,
+      host: 'localhost:4173',
+      headers: { 'x-forwarded-for': '203.0.113.9' },
+      env: { VANTAGE_TRUST_PROXY: '1' },
+    }),
+    false,
+  );
 });
 
 test('with the setting on, /mcp answers local MCP requests and refuses others', async (t) => {
@@ -171,7 +219,43 @@ test('with the setting on, /mcp answers local MCP requests and refuses others', 
     (await post({}, { Host: `localhost.attacker.example:${port}` })).status,
     403,
   );
+  // A Host naming another local port, a page on another port, and a request
+  // a proxy forwarded are all refused, and no server is made for them.
+  assert.equal((await post({}, { Host: `localhost:${port + 1}` })).status, 403);
+  assert.equal(
+    (await post({}, { Origin: `http://localhost:${port + 1}` })).status,
+    403,
+  );
+  assert.equal(
+    (await post({}, { 'X-Forwarded-For': '203.0.113.9' })).status,
+    403,
+  );
+  assert.deepEqual(created, [`http://localhost:${port}`]);
   assert.equal((await send(port, 'GET')).status, 405);
+});
+
+test('a POST without a JSON Content-Type is refused before its body is read', async (t) => {
+  let calls = 0;
+  const port = await listen(
+    t,
+    localMcpPlugin({
+      enabled: true,
+      createServer: (options) => {
+        calls += 1;
+        return pingServer(options);
+      },
+    }),
+  );
+  for (const type of ['text/plain', 'application/x-www-form-urlencoded']) {
+    const response = await send(
+      port,
+      'POST',
+      { jsonrpc: '2.0', id: 1, method: 'ping' },
+      { 'Content-Type': type },
+    );
+    assert.equal(response.status, 415, type);
+  }
+  assert.equal(calls, 0);
 });
 
 test('an oversized /mcp body is drained so its 413 is delivered', async (t) => {

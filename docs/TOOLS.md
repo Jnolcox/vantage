@@ -310,9 +310,13 @@ without an opt-in setting; it runs only when you register it with a client.
 The `/mcp` route is different: it is a listener, and it carries no token or
 secret, so it is off unless `VANTAGE_MCP_HTTP=1`. While it is on, any program
 on this machine can run the tools, including those that spend provider quota.
-The route accepts only requests from this machine that name a loopback host
-and, when a browser sends an `Origin`, come from a loopback origin, behind the
-server-wide `Host` check. This is local transport safety, not authentication.
+The route accepts only requests from this machine (a loopback socket, even
+when the server binds a LAN address) that name a loopback host on the port
+they reached and, when a browser sends an `Origin`, come from that same host.
+It refuses requests a proxy forwarded, even with `VANTAGE_TRUST_PROXY=1`,
+refuses all requests while launcher sharing is on, and accepts only a JSON
+`Content-Type` on `POST`, so a web page cannot post to it cross-site. These
+checks sit behind the server-wide `Host` check. This is local transport safety, not authentication.
 A client that disconnects cancels its tool call.
 
 A few sources fetch a public feed directly instead of through `/api`

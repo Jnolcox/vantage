@@ -6,26 +6,33 @@ import {
 } from './content-security-policy.js';
 import cesium from 'vite-plugin-cesium';
 
+const BROWSER_KEY_SETTINGS = Object.freeze({
+  googleApiKey: 'GOOGLE_MAPS_API_KEY',
+  cesiumToken: 'CESIUM_ION_TOKEN',
+});
+
 /**
- * Warn when a production build embeds browser keys: dist/*.js then carries
- * them in clear text for anyone the files are served to. Names only, never
- * values.
+ * Warn when a production build embeds browser keys: `output` then carries
+ * them in clear text for anyone the files are served to. `names` are the
+ * settings the keys came from, and `advice` says what to do about it. Names
+ * only, never values.
  */
-export function exposedKeyBuildWarning({ googleApiKey, cesiumToken } = {}) {
-  const exposed = Object.entries({
-    GOOGLE_MAPS_API_KEY: googleApiKey,
-    CESIUM_ION_TOKEN: cesiumToken,
-  })
+export function exposedKeyBuildWarning({
+  googleApiKey,
+  cesiumToken,
+  output = 'dist/',
+  names = BROWSER_KEY_SETTINGS,
+  advice = 'Restrict each key to your site (HTTP referrer or URL restrictions) before hosting the build anywhere others can load it.',
+} = {}) {
+  const exposed = Object.entries({ googleApiKey, cesiumToken })
     .filter(([, value]) => String(value ?? '').trim() !== '')
-    .map(([name]) => name);
+    .map(([key]) => names[key]);
   return {
     name: 'vantage-exposed-key-warning',
     apply: 'build',
     buildStart() {
       if (!exposed.length) return;
-      this.warn(
-        `dist/ will contain ${exposed.join(' and ')}. Restrict each key to your site (HTTP referrer or URL restrictions) before hosting the build anywhere others can load it.`,
-      );
+      this.warn(`${output} will contain ${exposed.join(' and ')}. ${advice}`);
     },
   };
 }

@@ -998,5 +998,8 @@
   "src/tools/localRoute.test.mjs",
   "src/app/embed.test.mjs",
   "src/ui/styles/embed.css",
-  "src/tools/queries/panelRequest.test.mjs"
+  "src/tools/queries/panelRequest.test.mjs",
+  "build/panel.js",
+  "scripts/build-panel.mjs",
+  "src/tooling/panelBuild.test.mjs"
 ]

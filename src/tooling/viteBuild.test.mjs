@@ -74,12 +74,14 @@ test('root config retains existing named exports and standalone provider order',
   assert.equal(config.plugins[4].name, 'vantage-api-request-guard');
   assert.equal(config.plugins[4].enforce, 'pre');
   assert.deepEqual(
-    config.plugins.slice(5, -2).map((plugin) => plugin.name),
+    config.plugins.slice(5, -3).map((plugin) => plugin.name),
     providers.localProviderPlugins().map((plugin) => plugin.name),
   );
-  assert.equal(config.plugins.at(-3).name, 'vantage-key-setup');
+  assert.equal(config.plugins.at(-4).name, 'vantage-key-setup');
   // The local MCP route follows every provider and precedes the API fallback.
-  assert.equal(config.plugins.at(-2).name, 'local-mcp');
+  assert.equal(config.plugins.at(-3).name, 'local-mcp');
+  // The panel build is served behind the guard's Host check.
+  assert.equal(config.plugins.at(-2).name, 'vantage-panel-build');
   assert.equal(config.plugins.at(-1).name, 'api-not-found');
 });
 

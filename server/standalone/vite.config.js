@@ -1,6 +1,7 @@
 import { fileURLToPath } from 'node:url';
 import { defineConfig, loadEnv } from 'vite';
 import { parseEmbedFrameAncestors } from '../../build/content-security-policy.js';
+import { panelBuildPlugin } from '../../build/panel.js';
 import { createBrowserViteConfig } from '../../build/vite.js';
 import { isMcpHttpEnabled, localMcpPlugin } from '../mcp/plugin.js';
 import { localProviderPlugins } from '../providers/local.js';
@@ -33,6 +34,8 @@ export default defineConfig(({ command, mode }) => {
       ...localProviderPlugins({ realtime: { tools: standaloneVoiceTools() } }),
       // Off unless VANTAGE_MCP_HTTP=1; when off, /mcp answers a JSON 404.
       localMcpPlugin({ enabled: isMcpHttpEnabled(process.env) }),
+      // The MCP Apps panel build at /panel/, behind the guard's Host check.
+      panelBuildPlugin(),
       apiNotFoundPlugin(),
     ],
     googleApiKey: process.env.GOOGLE_MAPS_API_KEY,

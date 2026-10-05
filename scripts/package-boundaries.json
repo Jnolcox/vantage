@@ -31,7 +31,8 @@
     "modules": [
       "build/vite.js",
       "build/application-html.js",
-      "build/content-security-policy.js"
+      "build/content-security-policy.js",
+      "build/panel.js"
     ],
     "external": ["vite-plugin-cesium"]
   },

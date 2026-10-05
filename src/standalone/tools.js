@@ -8,7 +8,11 @@ export function createStandaloneTools(options) {
     sceneDataPacks: {
       sources: {
         assets: createAssetDirectorySource({
-          baseUrl: new URL('/scene-assets/', window.location.href).href,
+          // A panel names the app's address; see src/tools/globePanel.js.
+          baseUrl: new URL(
+            '/scene-assets/',
+            globalThis.VANTAGE_APP_BASE_URL ?? document.baseURI,
+          ).href,
         }),
       },
     },

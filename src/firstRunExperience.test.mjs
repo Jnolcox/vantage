@@ -91,6 +91,16 @@ test('the checkbox writes and clears durable suppression, and a storage reset un
   }), true);
 });
 
+test('an embedded globe never shows the launcher', () => {
+  assert.equal(shouldShowFirstRun({ ...fresh(), location: { search: '?embed=1' } }), false);
+  globalThis.VANTAGE_EMBED_INLINE = true;
+  try {
+    assert.equal(shouldShowFirstRun(fresh()), false);
+  } finally {
+    delete globalThis.VANTAGE_EMBED_INLINE;
+  }
+});
+
 test('welcome params work in both directions and outrank both suppressions', () => {
   const suppressed = memoryStorage(FIRST_RUN_STORAGE_KEY, 'suppressed');
   const dismissed = memoryStorage(FIRST_RUN_SESSION_KEY, 'dismissed');

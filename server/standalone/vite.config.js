@@ -1,6 +1,9 @@
 import { fileURLToPath } from 'node:url';
 import { defineConfig, loadEnv } from 'vite';
+import { parseEmbedFrameAncestors } from '../../build/content-security-policy.js';
+import { panelBuildPlugin } from '../../build/panel.js';
 import { createBrowserViteConfig } from '../../build/vite.js';
+import { isMcpHttpEnabled, localMcpPlugin } from '../mcp/plugin.js';
 import { localProviderPlugins } from '../providers/local.js';
 import { readVantageEnv } from '../providers/common/env.js';
 import { apiNotFoundPlugin } from './api-not-found.js';
@@ -11,6 +14,7 @@ import {
   lanExposureWarning,
   resolveBindHost,
 } from './network.js';
+import { standaloneVoiceTools } from './voiceTools.js';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 
@@ -27,7 +31,11 @@ export default defineConfig(({ command, mode }) => {
   return createBrowserViteConfig({
     plugins: [
       apiRequestGuardPlugin(),
-      ...localProviderPlugins(),
+      ...localProviderPlugins({ realtime: { tools: standaloneVoiceTools() } }),
+      // Off unless VANTAGE_MCP_HTTP=1; when off, /mcp answers a JSON 404.
+      localMcpPlugin({ enabled: isMcpHttpEnabled(process.env) }),
+      // The MCP Apps panel build at /panel/, behind the guard's Host check.
+      panelBuildPlugin(),
       apiNotFoundPlugin(),
     ],
     googleApiKey: process.env.GOOGLE_MAPS_API_KEY,
@@ -40,6 +48,10 @@ export default defineConfig(({ command, mode }) => {
       String(readVantageEnv('CSP') ?? '')
         .trim()
         .toLowerCase() === 'report-only',
+    // Opt-in, new in Vantage: no legacy GEV_ name is read.
+    embedFrameAncestors: parseEmbedFrameAncestors(
+      process.env.VANTAGE_EMBED_FRAME_ANCESTORS,
+    ),
     command,
   });
 });

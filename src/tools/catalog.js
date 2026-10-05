@@ -11,6 +11,8 @@ import { assertSupportedSchema, validateValue } from './schema.js';
 
 const TOOL_NAME = /^[a-z][a-z0-9_]{0,63}$/;
 const KINDS = new Set(['query', 'action']);
+/** Who may call a tool, as MCP Apps names them: the model, the app's panel. */
+const VISIBILITY = new Set(['model', 'app']);
 
 /** Error codes a tool may report. Each is safe to show to a model or person. */
 export const TOOL_ERROR_CODES = Object.freeze([
@@ -60,9 +62,15 @@ export function fromSourceError(error) {
 /**
  * Validate and freeze a tool definition.
  *
- * `run(args, { services, signal })` resolves to `{ summary, data }`: a short
- * sentence for people and a structured object for programs. It may add
- * `images`, each `{ mimeType, data }` with base64 data.
+ * `run(args, { services, signal, tools })` resolves to `{ summary, data }`: a
+ * short sentence for people and a structured object for programs. It may add
+ * `images`, each `{ mimeType, data }` with base64 data. `tools` reaches other
+ * tools through the same catalog: `tools.has(name)` and
+ * `tools.call(name, args)`.
+ *
+ * `ui` is optional MCP Apps metadata: `resourceUri`, the `ui://` view that
+ * shows the tool's results, and `visibility`, who may call it (`model`,
+ * `app`, or both).
  */
 export function defineTool({
   name,
@@ -72,6 +80,7 @@ export function defineTool({
   inputSchema,
   annotations = {},
   requires = [],
+  ui = null,
   run,
 }) {
   if (!TOOL_NAME.test(String(name)))
@@ -90,6 +99,7 @@ export function defineTool({
   )
     throw new TypeError(`${name}.requires must list service names`);
   if (typeof run !== 'function') throw new TypeError(`${name} needs run()`);
+  if (ui !== null) assertToolUi(ui, name);
   return Object.freeze({
     name,
     kind,
@@ -101,8 +111,35 @@ export function defineTool({
       ...annotations,
     }),
     requires: Object.freeze([...requires]),
+    ui: ui
+      ? Object.freeze({
+          ...(ui.resourceUri ? { resourceUri: ui.resourceUri } : {}),
+          ...(ui.visibility
+            ? { visibility: Object.freeze([...ui.visibility]) }
+            : {}),
+        })
+      : null,
     run,
   });
+}
+
+function assertToolUi(ui, name) {
+  if (
+    ui?.resourceUri !== undefined &&
+    !(typeof ui.resourceUri === 'string' && ui.resourceUri.startsWith('ui://'))
+  )
+    throw new TypeError(`${name}.ui.resourceUri must be a ui:// URI`);
+  if (
+    ui?.visibility !== undefined &&
+    !(
+      Array.isArray(ui.visibility) &&
+      ui.visibility.length > 0 &&
+      ui.visibility.every((who) => VISIBILITY.has(who))
+    )
+  )
+    throw new TypeError(`${name}.ui.visibility must list model and/or app`);
+  if (ui?.resourceUri === undefined && ui?.visibility === undefined)
+    throw new TypeError(`${name}.ui needs a resourceUri or a visibility`);
 }
 
 /**
@@ -111,7 +148,8 @@ export function defineTool({
  * - Duplicate names fail unless the later tool is listed in `replace`.
  * - Tools whose required services are missing are left out.
  * - Interceptors wrap every call in order, outermost first, as
- *   `(call, next) => next(call)` where `call` is `{ tool, args, signal }`.
+ *   `(call, next) => next(call)` where `call` is `{ tool, args, signal }`,
+ *   plus `parent`, the calling tool's name, when one tool calls another.
  */
 export function composeCatalog({
   tools,
@@ -135,13 +173,28 @@ export function composeCatalog({
   );
   const index = new Map(available.map((tool) => [tool.name, tool]));
 
+  const invoke = (name, args, signal, parent) => {
+    const tool = index.get(name);
+    if (!tool)
+      return Promise.reject(
+        new ToolError('unsupported', `No tool named ${name} is available`),
+      );
+    return chain({ tool, args, signal, ...(parent ? { parent } : {}) });
+  };
   const execute = async ({ tool, args, signal }) => {
     const problems = validateValue(tool.inputSchema, args);
     if (problems.length)
       throw new ToolError('invalid_arguments', problems.join('; '));
     let result;
     try {
-      result = await tool.run(args, { services, signal });
+      result = await tool.run(args, {
+        services,
+        signal,
+        tools: {
+          has: (name) => index.has(name),
+          call: (name, nested = {}) => invoke(name, nested, signal, tool.name),
+        },
+      });
     } catch (error) {
       throw fromSourceError(error);
     }
@@ -171,13 +224,7 @@ export function composeCatalog({
     get: (name) => index.get(name),
     /** Validate arguments and run a tool through the interceptors. */
     async call(name, args = {}, { signal } = {}) {
-      const tool = index.get(name);
-      if (!tool)
-        throw new ToolError(
-          'unsupported',
-          `No tool named ${name} is available`,
-        );
-      return chain({ tool, args, signal });
+      return invoke(name, args, signal);
     },
   });
 }

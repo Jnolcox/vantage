@@ -1,30 +1,38 @@
 import { applicationHtmlPlugin } from './application-html.js';
 import {
   contentSecurityPolicyHtmlPlugin,
+  embedFramingPlugin,
   securityHeaders,
 } from './content-security-policy.js';
 import cesium from 'vite-plugin-cesium';
 
+const BROWSER_KEY_SETTINGS = Object.freeze({
+  googleApiKey: 'GOOGLE_MAPS_API_KEY',
+  cesiumToken: 'CESIUM_ION_TOKEN',
+});
+
 /**
- * Warn when a production build embeds browser keys: dist/*.js then carries
- * them in clear text for anyone the files are served to. Names only, never
- * values.
+ * Warn when a production build embeds browser keys: `output` then carries
+ * them in clear text for anyone the files are served to. `names` are the
+ * settings the keys came from, and `advice` says what to do about it. Names
+ * only, never values.
  */
-export function exposedKeyBuildWarning({ googleApiKey, cesiumToken } = {}) {
-  const exposed = Object.entries({
-    GOOGLE_MAPS_API_KEY: googleApiKey,
-    CESIUM_ION_TOKEN: cesiumToken,
-  })
+export function exposedKeyBuildWarning({
+  googleApiKey,
+  cesiumToken,
+  output = 'dist/',
+  names = BROWSER_KEY_SETTINGS,
+  advice = 'Restrict each key to your site (HTTP referrer or URL restrictions) before hosting the build anywhere others can load it.',
+} = {}) {
+  const exposed = Object.entries({ googleApiKey, cesiumToken })
     .filter(([, value]) => String(value ?? '').trim() !== '')
-    .map(([name]) => name);
+    .map(([key]) => names[key]);
   return {
     name: 'vantage-exposed-key-warning',
     apply: 'build',
     buildStart() {
       if (!exposed.length) return;
-      this.warn(
-        `dist/ will contain ${exposed.join(' and ')}. Restrict each key to your site (HTTP referrer or URL restrictions) before hosting the build anywhere others can load it.`,
-      );
+      this.warn(`${output} will contain ${exposed.join(' and ')}. ${advice}`);
     },
   };
 }
@@ -35,12 +43,23 @@ export function createBrowserViteConfig({
   publicDir,
   googleApiKey,
   cesiumToken,
+  // True only when the server answers /api/google/tiles-token. Vantage ships
+  // no such endpoint (see SECURITY.md), so the client never asks for one.
+  googleTileTokens = false,
   host = '127.0.0.1',
   port = 4173,
   allowedHosts = [],
   cspReportOnly = false,
+  embedFrameAncestors = [],
   command,
 } = {}) {
+  // With origins allowed to frame embed mode, the headers depend on the
+  // request and embedFramingPlugin sends them all; otherwise they are the
+  // same for every response.
+  const framesEmbeds = embedFrameAncestors.length > 0;
+  const headers = framesEmbeds
+    ? {}
+    : securityHeaders({ reportOnly: cspReportOnly });
   return {
     plugins: [
       cesium(),
@@ -48,6 +67,14 @@ export function createBrowserViteConfig({
       contentSecurityPolicyHtmlPlugin({ reportOnly: cspReportOnly }),
       exposedKeyBuildWarning({ googleApiKey, cesiumToken }),
       ...plugins,
+      ...(framesEmbeds
+        ? [
+            embedFramingPlugin({
+              frameAncestors: embedFrameAncestors,
+              reportOnly: cspReportOnly,
+            }),
+          ]
+        : []),
     ],
     ...(publicDir === undefined ? {} : { publicDir }),
     // A production build must not clean the dependency cache a running dev
@@ -92,15 +119,18 @@ export function createBrowserViteConfig({
       },
       // The policy limits where the page can send data, and keeps the
       // document containing Provider Settings out of other sites' frames.
-      headers: securityHeaders({ reportOnly: cspReportOnly }),
+      headers,
     },
     preview: {
       cors: false,
-      headers: securityHeaders({ reportOnly: cspReportOnly }),
+      headers,
     },
     define: {
       'import.meta.env.GOOGLE_MAPS_API_KEY': JSON.stringify(googleApiKey),
       'import.meta.env.CESIUM_ION_TOKEN': JSON.stringify(cesiumToken),
+      'import.meta.env.VANTAGE_GOOGLE_TILE_TOKENS': JSON.stringify(
+        googleTileTokens === true,
+      ),
     },
     build: { chunkSizeWarningLimit: 1500 },
   };

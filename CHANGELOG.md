@@ -10,8 +10,43 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-10-04
+
+Major release: the provider-named live feed routes `/api/opensky`,
+`/api/opensky-track`, `/api/adsblol/mil`, `/api/adsblol/trace` and
+`/api/ais-live` are removed in favor of `/api/flights`, `/api/military` and
+`/api/vessels` (see Changed), so a `VITE_AIS_LIVE_API_URL` or integration
+pointed at an old route must be updated. It also brings in upstream through
+`e1cc7af`: the shared tool catalog with a local stdio MCP server, an opt-in
+`/mcp` route and the live globe in MCP Apps clients, embed mode, views,
+vessels by area and the consolidated local request gate.
+
 ### Added
 
+- Embed mode: `?embed=1` shows the globe alone, with the HUD, panels, welcome
+  and setup prompts hidden and provider attribution kept. The parent page
+  sends views with `postMessage` (`vantage:view`); the app applies each
+  through its own actions and answers `vantage:view-applied` with every
+  step. Annotations in any link are drawn once it restores. The code loads
+  only for an embed-mode page or an annotated link, so a normal page load
+  pays nothing for it. No page may frame it unless
+  `VANTAGE_EMBED_FRAME_ANCESTORS` lists that page's origin: only explicit
+  `http(s)` origins are accepted (`*`, wildcards and keywords are logged and
+  ignored), those documents keep the full Content-Security-Policy with only
+  `frame-ancestors` changed, and every other document, Provider Settings
+  included, stays unframable. Answers go only to the origin that sent the
+  view. A panel page can instead load the app into itself after setting
+  `VANTAGE_EMBED_INLINE`; such an inline app keeps drawing while its host
+  reports it hidden, and logs a render error in full before it stops drawing
+  (ported from upstream, Sameh Khamis).
+- Google Photorealistic 3D Tiles can load without a browser key using a
+  short-lived bearer token from the app's server, renewed once and retried on
+  a 401 or 403. The client half is dormant in Vantage: the page asks for a
+  token only when the build says the server offers them, and the standalone
+  server deliberately offers none, because Google has no Map Tiles-only OAuth
+  scope and a `cloud-platform` token in the browser would be broader than a
+  restricted key (see `SECURITY.md`). A keyless start makes no extra request
+  (ported from upstream, Sameh Khamis).
 - MODIS NRT (Terra + Aqua, ~1 km) detections join the three VIIRS NRT sources
   in the Active Fires layer. They share the existing `FIRMS_MAP_KEY`, the
   30-minute proxy cache and the trailing-24-hour clamp; MODIS confidence is
@@ -255,12 +290,28 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   and Sameh Khamis; sonar style inspired by kk376).
 - Tools for language-model clients and a local MCP server. `npm run mcp`
   serves earthquake, active-fire, launch, aircraft (in an area, by identifier,
-  tracks, type and route) and satellite (next pass over a place or point,
-  those overhead now), public camera (find cameras, a camera's current image),
-  radio station, place search and routing queries, plus weather, regional
+  tracks, type and route), ship (in an area, by MMSI, IMO or name, tracks;
+  `unavailable` without `AISSTREAM_API_KEY`) and satellite (next pass over a
+  place or point, those overhead now), public camera (find cameras, saying when
+  the capped catalog serves only part of a region; a camera's current image),
+  license plate reader camera (OpenStreetMap extract, US and Canada),
+  radio station, place search, routing, bike-share station (public GBFS systems)
+  and transit vehicle (GTFS-Realtime feeds, with each feed's attribution and
+  license; stale feeds are marked and expired positions dropped, by the transit
+  layer's rules), road traffic flow (TomTom, at most 16 flow tiles per call)
+  queries, plus weather, weather map image (NOAA radar, satellite or lightning
+  over an area), wind (GFS or IFS at a location), recent satellite image
+  (Harmonized Landsat and Sentinel-2, VIIRS fallback; read from NASA directly
+  with the `vantage-mcp-tools` User-Agent), submarine cable (bundled
+  TeleGeography data, read from disk), datacenter and dam (bundled
+  OpenStreetMap data, with the analyst query's fields), Bhote Koshi flood
+  event (evidence trail, flood path and imagery dates, as text and links),
+  regional
   brief, tropical cyclone, fire perimeter, terrain height, military
   installation and map feature queries, a combined situation brief, military
-  awareness around a point and the HUD caption, over stdio to clients such as
+  awareness around a point, the HUD caption and a share link that shows an
+  area in Vantage with chosen layers on (`show_in_vantage`), over stdio to
+  clients such as
   Claude Code, reading from a running app at `http://127.0.0.1:4173`
   (`--api-base` selects another). Tools are defined once in `vantage/tools`,
   read the services `vantage/tools/services` builds from the layers' source
@@ -270,11 +321,105 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   `VANTAGE_OVERPASS_UPSTREAMS` instance is configured, and the HUD caption
   sends the HUD's own label-only summary context, with each section's feed
   state taken from its result; as in the HUD, a caption that hides a
-  non-nominal state is replaced by the app's own line naming it (ported from
-  upstream, Sameh Khamis).
+  non-nominal state is replaced by the app's own line naming it. Answers say
+  when launches or satellite orbits come from a stale proxy copy, when
+  aircraft come from a regional fallback feed, when license plate camera
+  tiles were trimmed or failed, and that radio stations come from a directory
+  of popular stations (ported from upstream, Sameh Khamis).
+- Voice answers world questions from the tool catalog. The voice session
+  lists the catalog's queries after its app actions, and the browser runs a
+  query through the same catalog, loaded on the first query voice calls, so
+  "what is the weather in Tokyo" or "how do I drive from Austin to Dallas"
+  no longer needs a layer on or the map moved. App actions keep their names:
+  `next_satellite_pass` and `analyst_query` stay the actions.
+  `src/tools/surfaces.js` chooses per tool whether MCP, voice or both offer
+  it; voice leaves out tools that answer with images, link to the app, or
+  repeat what its actions answer, which keeps the session's tool list lean;
+  the voice instructions name only tools voice offers and send aircraft,
+  ship and hazard questions to `analyst_query`.
+  MCP leads with what the globe shows: it no longer lists place search,
+  routing, plain weather and wind, the regional brief, the HUD caption,
+  radio, bike share and transit, which assistants already cover or which add
+  little without the globe; voice keeps them (except the HUD caption, which
+  the app shows itself), and tools that combine others still reach them
+  (ported from upstream, Sameh Khamis).
+- Views: `vantage/view` describes what the app shows (camera, data layers,
+  visual style, map imagery and an aircraft, military aircraft or satellite
+  to follow) and writes and reads it in the share-link format the app
+  already restores. It is pure, and share links take their style names from
+  it. `show_in_vantage` now builds its link from a full view: an area framed
+  from above or a camera, plus layers, style, map and something to follow
+  (ported from upstream, Sameh Khamis).
+- Tool answers with something to show include `data.view`: the view with the
+  matching layers on, the area framed from above or a single aircraft or
+  satellite followed, and the link that opens it (null when the app's
+  address is not configured). Area framing lives in `src/tools/views.js`, so
+  links and answers frame alike (ported from upstream, Sameh Khamis).
+- Views carry annotations, the marks `annotate_map` draws, and share links
+  carry them as JSON in the `an` parameter, bounded to 24 marks, 12 route
+  points, 200-character targets, 120-character labels and 6,000 characters
+  in all; decoding keeps only the fields the app draws. A test pins that a
+  link label containing markup is drawn as inert text. A tilted
+  `show_in_vantage` view of an area places the camera behind its center so
+  the area stays in the middle of the frame (ported from upstream, Sameh
+  Khamis).
+- The same tools over HTTP at `/mcp` on the development and preview servers,
+  for MCP clients that connect by URL, off by default: set
+  `VANTAGE_MCP_HTTP=1` to serve them. The route carries no token, so while it
+  is on any program on this machine can run the tools, including those that
+  spend provider quota; it answers only direct local requests: a loopback
+  connection (whatever address the server binds) naming a loopback host on the
+  port it reached, an `Origin` (when sent) from that same host, no proxy
+  forwarding headers (`VANTAGE_TRUST_PROXY` does not apply), launcher sharing
+  off, and a JSON `Content-Type` on `POST`. With the setting off, `/mcp`
+  answers a JSON `404` naming it. A request body must arrive within 30 seconds
+  (`408` otherwise), and a client that disconnects cancels its tool call. Over
+  stdio, a client's `notifications/cancelled` now aborts the named request,
+  which then gets no response (ported from upstream, Sameh Khamis).
+- Vantage inside AI conversations. `show_in_vantage` shows a view as the live
+  globe in clients that display MCP Apps, such as Claude Desktop and the Codex
+  and ChatGPT desktop apps, and as a link everywhere else; it also takes a
+  view another answer returned, and a view may ride in an aircraft's cockpit.
+  The MCP server serves the panel as a `ui://vantage/globe` resource
+  (`resources/list`, `resources/read`), and `vantage/tools/panel` exports it
+  for other MCP servers. The panel runs the app's panel build, written by the
+  opt-in `npm run build:panel` to `dist/panel` and served at `/panel/` behind
+  the `Host` check, and loads it and the app's data through `panel_request`,
+  an app-only tool, so a local server needs no HTTPS or tunnel. Unlike
+  upstream, the panel build is keyless unless
+  `VANTAGE_PANEL_GOOGLE_MAPS_API_KEY` or `VANTAGE_PANEL_CESIUM_ION_TOKEN` is
+  set for that command (it then warns), and the origins the panel declares to
+  its host are derived from the page's own Content-Security-Policy list.
+  `panel_request` needs the key each server puts in its panel page, stays on
+  the app's server without following redirects, reads at most 64 MiB in
+  60 seconds, runs six requests at once per server with 256 waiting, and
+  refuses Provider Settings, credential and model endpoints, `/mcp`,
+  development server routes, LAN receiver data (`/api/local-receivers`),
+  Google place search (`/api/google`) and Overpass (`/api/overpass`) in any
+  letter case, encoding or dot suffix. [docs/MCP_SETUP.md](docs/MCP_SETUP.md)
+  covers Claude Code, Claude Desktop and Codex (ported from upstream, Sameh
+  Khamis).
 
 ### Changed
 
+- The vessel layer and `vessels_in_area` ask for vessels by area: requests
+  carry `lat`, `lon` and `radius_km` for the area in view (none from high
+  enough up), so a server that answers by area can serve only that place.
+  The bundled server keeps every vessel and ignores the area. A camera move
+  asks again only when the last request is a full poll interval old;
+  otherwise the next poll carries the new area, so moving the camera adds no
+  requests (ported from upstream, Sameh Khamis).
+- Live feed routes are named for what they serve, not the provider behind
+  them: `/api/flights` (track `/api/flights/track?icao24=`), `/api/military`
+  (track `/api/military/track?hex=`) and `/api/vessels` (track
+  `/api/vessels/track?mmsi=`). The old `/api/opensky`, `/api/opensky-track`,
+  `/api/adsblol/mil`, `/api/adsblol/trace` and `/api/ais-live` routes are
+  removed; set `VITE_AIS_LIVE_API_URL` to `/api/vessels` if you had it
+  pointed at the old route. Each server names its provider in
+  `X-Feed-Source` (the bundled one still sends OpenSky Network, adsb.lol and
+  AISStream, so attribution is unchanged) and the military feed's cache
+  state and age move to `X-Feed-Cache` and `X-Feed-Age-Ms` (ported from
+  upstream, Sameh Khamis).
 - Performance: each bundled data pack ships once. The region, marine,
   admin-boundary, county, military-name and neighborhood packs were emitted
   twice by the production build, as the JSON the browser fetches and as an
@@ -418,6 +563,10 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
 
 ### Fixed
 
+- Voice: "show me vessels" no longer turns on a visual style or another
+  layer. "Vessels" is easily heard as "visuals"; the instructions now say a
+  vessels request without a style name means the ships layer, and a style
+  needs its name (ported from upstream, Sameh Khamis).
 - A stalled OpenSky global snapshot no longer holds `/api/opensky` for over
   a minute. Each attempt gets 10 seconds, a timed-out or failed attempt is
   retried once, and a second failure is answered from the stale cache or the
@@ -1702,5 +1851,6 @@ represent previously published GitHub Releases.
 
 - Initial project version.
 
-[Unreleased]: https://github.com/Jnolcox/vantage/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/Jnolcox/vantage/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/Jnolcox/vantage/compare/v1.0.0...v2.0.0
 [1.0.0]: https://github.com/Jnolcox/vantage/compare/0dbde1e36c0177b7664b47702d77ba50f11ddadc...v1.0.0

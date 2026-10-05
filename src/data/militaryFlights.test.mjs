@@ -44,9 +44,9 @@ const FULL_INFO = {
   operator: 'United States Air Force',
 };
 
-test('military stats identify adsb.lol as the primary feed, not a fallback', () => {
+test('military stats name the feed until the server names its provider, not a fallback', () => {
   const stats = militaryFlightsLayer.getStats();
-  assert.equal(stats.source, 'adsb.lol');
+  assert.equal(stats.source, 'Military aircraft');
   assert.equal(stats.fallback, false);
 });
 
@@ -239,8 +239,8 @@ test('cached military snapshots retain their observation time and expose stale f
     ac: [{ hex: 'ae01ce', lon: -97, lat: 31, alt_baro: 28000,
       track: 95, gs: 400, seen: 1, seen_pos: 2, flight: 'RCH451' }],
   }, { headers: {
-    'X-ADS-B-Cache': cache,
-    ...(cache === 'MISS' ? {} : { 'X-ADS-B-Cache-Age-Ms': String(now - receivedAt) }),
+    'X-Feed-Cache': cache,
+    ...(cache === 'MISS' ? {} : { 'X-Feed-Age-Ms': String(now - receivedAt) }),
   } }));
   await militaryFlightsLayer.update(viewer);
   assert.equal(history.length, 1);

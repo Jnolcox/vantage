@@ -359,10 +359,10 @@ test('aircraft searches say when a feed that answered is stale', async () => {
 });
 
 test('the real OpenSky source marks an hour-old snapshot stale for searches', async () => {
-  const { createOpenSkySource } =
+  const { createFlightSource } =
     await import('../../sources/live/standalone.js');
   const now = Date.UTC(2026, 0, 1, 12);
-  const opensky = createOpenSkySource({
+  const opensky = createFlightSource({
     now: () => now,
     fetchImpl: async () =>
       Response.json({ time: now / 1000 - 3600, states: [] }),
@@ -373,4 +373,18 @@ test('the real OpenSky source marks an hour-old snapshot stale for searches', as
   }).call('find_aircraft', { callsign: 'UAL1' });
   assert.deepEqual(result.data.stale_feeds, ['civil']);
   assert.match(result.summary, /may be stale\.$/);
+});
+
+test('a regional fallback feed is named in the answer', async () => {
+  const regional = feed([record('abc123', 37.6, -122.3)], {
+    source: 'adsb.lol',
+    coverage: '250nm regional fallback',
+  });
+  const result = await composeCatalog({
+    tools: coreTools,
+    services: { aircraft: regional },
+  }).call('aircraft_in_area', {
+    area: { lat: 37.6, lon: -122.3, radius_km: 20 },
+  });
+  assert.match(result.summary, /\(regional feed: 250nm regional fallback\)\.$/);
 });

@@ -113,6 +113,11 @@ export default createBrowserViteConfig({
 });
 ```
 
+`googleTileTokens` (default `false`) defines
+`import.meta.env.VANTAGE_GOOGLE_TILE_TOKENS`; set it to `true` only for a server
+that answers `/api/google/tiles-token`. The standalone server answers none (see
+`SECURITY.md`), so its page never requests a Google tile token.
+
 Consumers supply compatible Vite and vite-plugin-cesium development dependencies.
 The package's `node` export condition has no browser fallback. The boundary gate
 builds this group for Node, with the declared build dependency external; its

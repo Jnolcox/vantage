@@ -4,6 +4,7 @@ import { initDrawTool } from '../annotations/drawTool.js';
 import { initImageryBoxTool } from '../ui/imageryBoxTool.js';
 import { createRecentImageryPanel } from '../ui/recentImagery.js';
 import { initVantageVoiceCommands } from '../voice/vantageRealtime.js';
+import { isEmbeddedInline, needsViews } from './embedMode.js';
 import { installScopeMask, destroyScopeMask } from '../scopeMask.js';
 import {
   installRenderGovernor,
@@ -119,7 +120,10 @@ export function createApplicationTools({
   // GPU. Holder/data state is untouched, so return is seamless: restore
   // the loop, refresh the one DOM surface we gated, render a frame.
   const syncVisibilitySuspension = () => {
-    const hidden = document.hidden;
+    // A panel's host may report it hidden while it is on screen; the panel
+    // keeps drawing itself (see keepPanelRendering in embed.js). Normal tabs
+    // are not inline and suspend as before.
+    const hidden = document.hidden && !isEmbeddedInline();
     viewer.useDefaultRenderLoop = !hidden;
     cockpitCloudEffects?.setSuspended?.(hidden);
     if (!hidden) {
@@ -177,5 +181,26 @@ export function createApplicationTools({
       delete window.__vantageVoiceCommands;
   });
   debug.voiceCommands = voiceCommands;
+  // Embed mode and links that carry annotations are rare: load the code that
+  // applies views only for them, so a normal page load pays nothing.
+  if (needsViews()) {
+    let removeViews = null;
+    void import('./embed.js')
+      .then(({ installViews }) => {
+        if (signal?.aborted) return;
+        removeViews = installViews({
+          shell: styleManager,
+          viewer,
+          dataManager,
+          run: (name, args) => voiceCommands.runner(name, args, { signal }),
+          signal,
+        });
+      })
+      // A chunk that fails to load leaves the page as it is, without views.
+      .catch((error) =>
+        console.warn('[vantage] embed mode did not load:', error),
+      );
+    defer(() => removeViews?.());
+  }
   return { sceneDirector, annotations, voiceCommands };
 }

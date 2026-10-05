@@ -1,25 +1,32 @@
 # Tools and the MCP server
 
 Tools answer questions from Vantage data for language-model clients. They are
-defined once and exposed through adapters; the Model Context Protocol (MCP) is
-the first.
+defined once and exposed through adapters: the Model Context Protocol (MCP)
+and function calling, which voice uses.
+
+To use them from Claude or Codex, see [MCP setup](MCP_SETUP.md).
 
 ## Layers
 
-| Owner                   | Responsibility                                                                                   |
-| ----------------------- | ------------------------------------------------------------------------------------------------ |
-| `src/tools/`            | Tool definitions, catalog composition, argument validation, shared `area` and result helpers     |
-| `src/tools/queries/`    | Queries, one file per domain, reading only portable source contracts                             |
-| `src/tools/mcp/`        | MCP protocol (JSON-RPC) and a stateless HTTP transport; knows the catalog interface, not queries |
-| `src/tools/services.js` | The default services: the layers' source factories and place services, given a resolving fetch   |
-| `server/mcp/`           | Node composition: points the services at a running app's `/api` routes and serves stdio          |
+| Owner                                                              | Responsibility                                                                                   |
+| ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| `src/tools/`                                                       | Tool definitions, catalog composition, argument validation, shared `area` and result helpers     |
+| `src/tools/queries/`                                               | Queries, one file per domain, reading only portable source contracts                             |
+| `src/tools/mcp/`                                                   | MCP protocol (JSON-RPC) and a stateless HTTP transport; knows the catalog interface, not queries |
+| `src/tools/services.js`                                            | The default services: the layers' source factories and place services, given a resolving fetch   |
+| `server/mcp/`                                                      | Node composition: points the services at a running app's `/api` routes; serves stdio and `/mcp`  |
+| `src/tools/functions.js`                                           | Function-calling adapter: tool records and results for function-calling clients                  |
+| `server/standalone/voiceTools.js`, `src/standalone/toolCatalog.js` | Standalone voice composition: the session's tool list and the browser catalog                    |
 
 Dependencies point downward only. `vantage/tools`, `vantage/tools/mcp` and
 `vantage/tools/services` are portable exports: they reach no application,
 rendering, Node, Cesium or browser-global code, which
-`npm run check:boundaries` enforces. Nothing in the application imports them
-(`scripts/check-import-directions.mjs` reports any `src/` module outside
-`src/tools/` that does), so they add nothing to the page.
+`npm run check:boundaries` enforces. In the application, only voice reaches
+them, and `scripts/check-import-directions.mjs` reports any other `src/`
+module outside `src/tools/` that does: `withToolCatalog` in
+`src/voice/vantageRealtime.js` imports the function-calling adapter, and
+`src/standalone/toolCatalog.js` loads the catalog and its services with
+dynamic imports only, so they stay out of the page's startup graph.
 
 ## Definitions and composition
 
@@ -27,8 +34,8 @@ rendering, Node, Cesium or browser-global code, which
 validates and freezes a tool. `kind` is `query` (answers from data, read-only)
 or `action`. `inputSchema` uses a JSON Schema subset that `src/tools/schema.js`
 checks completely; unsupported keywords are rejected at definition time.
-`run(args, { services, signal })` resolves to `{ summary, data }`: one sentence
-for people and a structured object for programs. A tool may also return
+`run(args, { services, signal, tools })` resolves to `{ summary, data }`: one
+sentence for people and a structured object for programs. A tool may also return
 `images`, each `{ mimeType, data }` with base64 data; the MCP adapter sends
 them as image content. MCP results carry the summary and the data as JSON
 text, plus the data as `structuredContent`, for clients that read only one of
@@ -42,6 +49,28 @@ them.
   whose services are not supplied are left out.
 - **Interceptors**: `(call, next) => next(call)` functions wrap every call,
   outermost first. They can observe, reject or change a call.
+- **Composite tools**: `run` receives `tools`, with `has(name)` and
+  `call(name, args)`, to call other tools through the same catalog, so
+  replaced tools and interceptors apply. Interceptors see such calls with
+  `parent`, the calling tool's name.
+
+### Surfaces
+
+`src/tools/surfaces.js` lists which tools MCP and voice offer. A tool is on
+both unless `TOOL_SURFACES` turns it off; edit an entry to turn a tool on or
+off for one surface. `catalogForSurface(catalog, surface, overrides)` is the
+view a surface exposes: it lists and calls only the tools it offers, while
+composite tools still reach the whole catalog. `toolsForSurface` gives the
+same selection as a list of definitions, such as for the voice session's tool
+list; an override naming an unknown tool or surface throws. Voice leaves out
+tools that answer with images, link to the app, or repeat what its app actions
+answer. MCP leads with what the globe shows: it leaves out `search_places`,
+`places_nearby`, `plan_route`, `get_weather`, `get_wind`, `get_regional_brief`,
+`find_radio_stations`, `get_bike_share` and `get_transit_vehicles`, which
+assistants already cover or which add little without the globe. Neither lists
+`get_hud_caption`: the app shows its caption itself, and assistants write
+their own. Tools off a surface stay reachable from composites, such as
+`situation_brief` using `get_weather`.
 
 Expected failures throw `ToolError` with one of `invalid_arguments`,
 `unavailable`, `unsupported`, `malformed` or `retry_later`. Failures the live
@@ -52,7 +81,7 @@ a wait time. Other errors are reported to clients without details.
 ## Services
 
 `vantage/tools/services` builds the default set with
-`createToolServices({ fetchImpl })`. Services are the portable source
+`createToolServices({ fetchImpl, appUrl })`. Services are the portable source
 factories the layers already use, such as `createUsgsEarthquakeSource`,
 `createFirmsSource` and `createLaunchSource`, plus a `places` service with
 `resolve(name, { signal })`. Sources request relative `/api/...` paths through
@@ -61,15 +90,79 @@ routes those paths. `createGeocodePlaceService` resolves place names through
 `/api/geocode`; `createPlaceSearchService` searches `/api/google/*` and reports
 when no search key is configured, which `search_places` and `places_nearby`
 answer as `unavailable` rather than as an empty result; `createRouteService`
-plans routes through `/api/route`. These are the app's own routes, so the
-tools inherit their limits: the Google routes keep their per-IP throttle (a
-`429` becomes `retry_later` with its wait), refuse proxied requests, and never
-expose the key. The `weather`, `regional`, `terrain`, `summary` and
+plans routes through `/api/route`. The `bikeshare` service is
+`{ systems, getStations }`, the system registry and the GBFS source, which reads
+station documents through `/api/gbfs`; `transit` is the transit layer's source
+over `/api/transit`. `vessels` is the vessel feed source over `/api/vessels`;
+it builds its snapshot URL against the `appUrl` passed to `createToolServices`
+(the MCP server passes its `--api-base`); `vessels_in_area` sends its area as
+`lat`, `lon` and `radius_km`, which the bundled server ignores. Without
+`AISSTREAM_API_KEY` on the server, the route's own reason reaches clients as an
+`unavailable` error.
+`get_bike_share` and `get_transit_vehicles` read at most the three systems or
+feeds nearest the area whose coverage reaches it, and report any that did not
+answer instead of failing the whole answer. `traffic` is the Street Traffic
+layer's source: `get_traffic_flow` reads TomTom flow tiles through
+`/api/tomtom/flow`, which spends the server's TomTom quota, so it reads at most
+the 16 tiles the flow source allows per request, stepping down from zoom 12 to 9
+for a larger area and refusing an area that still needs more. For a radius area
+it measures only the road inside the circle, and when a tile fails to load it
+says its figures are partial (`partial: true`); the flow source reports that per
+request through `fetchFlowDetail`, which the layer does not use. It answers
+`unavailable` when no TomTom key is configured. These are the app's own routes,
+so the tools inherit their limits: the Google routes keep their per-IP throttle
+(a `429` becomes `retry_later` with its wait), refuse proxied requests, and
+never expose the key. The `weather`, `regional`, `terrain`, `summary` and
 `features` services are the application request services from
 `src/services/requests.js`, the same ones the HUD and cockpit use.
-`situation_brief` and `military_awareness` run each section whose services are
-supplied and mark the others unavailable. A new tool adds the services it reads
-to `createToolServices`, so every surface composes the same set.
+`situation_brief` and `military_awareness` run each section the catalog has,
+through the catalog, and mark failed ones unavailable; a composite offered on
+a surface keeps sections that surface does not list. A new tool adds the
+services it reads to `createToolServices`, so every surface composes the same
+set.
+
+`weatherMaps` and `wind` are the Weather and Wind layers' sources over
+`/api/weather` and `/api/wind`. `get_weather_map` asks for one 1024 by 512 image
+of the latest frame, in a 2:1 window snapped to 0.25° that the image route
+accepts, or the product's whole extent when no window can hold the area.
+`get_wind` samples the model grid with the layer's own sampling.
+
+`imagery` searches NASA's CMR catalog for Harmonized Landsat and Sentinel-2
+granules with the Recent Imagery layer's `searchHls`, ranks days with its
+`rankLatest`, and reads the chosen day from NASA Worldview Snapshots
+(`wvsSnapshotUrl`), at most 8 MB per image. These keyless NASA services are read
+directly, not through `/api`.
+
+`cables` is the Submarine Cables layer's bundled TeleGeography source. The
+stdio server's fetch reads those `file:` URLs from `src/data/local_data/` on
+disk and answers 404 for any other `file:` URL, including one that climbs out
+with `..`.
+
+`alpr` is the ALPR layer's hourly OpenStreetMap camera extract, read through the
+app's `/api/tiles/alpr` proxy. `find_alpr_cameras` takes a US or Canadian area of
+at most 3° per side and reports an area outside that coverage rather than an
+empty list; it does not fall back to the layer's Overpass path.
+
+`infrastructure` reads the Datacenters and Dams layers' bundled GeoJSON Lines
+files the same way, parsed with `parseGeojsonLines` and mapped with the
+analyst query's `mapAnalystRecord` from `src/sources/infrastructureData.js`, so
+`find_infrastructure` and `analyst_query` describe a site with the same fields.
+Each file is read once per process, on the first call that needs it.
+
+`events` reads an event pack the app serves at `/events/<id>/event.json`, once per
+pack. `get_bhote_koshi_flood` answers with text and links only: witness posts are
+returned as their source URLs, and no embed or image is loaded, so the page's
+click-to-load consent for witness clips is unaffected.
+
+`app` is `{ baseUrl, fetch, panelKey }`: the `appUrl` passed to
+`createToolServices` (the MCP server's `--api-base`), the fetch that requests
+the app's own paths, and the key the [panel](#the-vantage-panel) page
+carries. `show_in_vantage` builds a version 2 share link on `baseUrl` from a
+[view](#views): an area framed from above with an altitude chosen from the
+area's size, or a camera, plus layers, style, map and something to follow.
+Layer names are limited to the registered layer ids. The tool returns the
+link and the view, which MCP Apps clients show in the panel; the tool itself
+opens nothing.
 
 `get_map_features` reads `/api/overpass`, which reaches only the Overpass
 instances an operator lists in `VANTAGE_OVERPASS_UPSTREAMS`. With none, the
@@ -93,6 +186,170 @@ non-nominal overall state is not shown as live: the tool answers with the app's
 own line instead (the place, the state and up to two sections behind it,
 `caption_source: "app"`), so the paid answer is not wasted on a refusal.
 
+## Views
+
+`vantage/view` (`src/view/index.js`) describes what the app shows,
+independent of how it is shown: a camera (lat, lon, altitude, heading,
+pitch), data layers, visual style, map imagery, and an aircraft, military
+aircraft or satellite to follow. `createView` builds and bounds one,
+`viewToParams` and `viewFromParams` write and read it in the share-link
+format the app restores, and `viewUrl` gives the address that opens it. The
+style names are the ones share links use. Ships cannot be followed from a
+link yet. An aircraft's `follow` may ask for its cockpit view
+(`cockpit: true`); links cannot carry that and open the app following it.
+The module is pure (no DOM, no network), so the app imports it too:
+`src/sharelink.js` takes its style names from it.
+
+A view can also carry `annotations`, the marks the app's `annotate_map`
+action draws (pin, highlight, area, arrow, route, label). Links carry them as
+JSON in the `an` parameter, bounded: at most 24 marks, 12 points per route,
+200-character targets, 120-character labels and 6,000 characters for the
+whole parameter (a longer list stays in the view but is left out of the link).
+`annotationsFromParams` keeps only the fields the app draws and drops
+out-of-range values. The page does not yet draw marks from a link it
+restores. Labels are untrusted text from whoever wrote the link; the
+annotation renderers draw them as text (`textContent` or Cesium labels), never as
+markup.
+
+Tools take a view as `VIEW_ARGUMENTS`: a `view` another answer returned, an
+`area` to frame, or a `camera`, plus `layers`, `style`, `map`, `follow` and
+`annotations`, which change that part of a given view. An area alone is
+framed from above; with a heading or pitch the camera is placed behind its
+center so the area stays in the middle of the frame. Camera lat and lon given
+with an area override its framing. A view that only follows an aircraft is
+framed where a feed reports it now. `resolveViewArguments` turns them into a
+view.
+
+Answers that have something to show include `data.view`: the view that
+shows them, with the matching layers on, an area framed from above, and a
+single aircraft or satellite followed, plus `url` to open it (null when the
+app's address is not configured). `suggestView` in `src/tools/views.js`
+builds one.
+
+### The Vantage panel
+
+`show_in_vantage` names an MCP Apps view (`io.modelcontextprotocol/ui`):
+`_meta.ui.resourceUri` (and the older flat `ui/resourceUri` key) is
+`ui://vantage/globe`, a `text/html;profile=mcp-app` resource from
+`createGlobePanelResource({ runtime, panelKey, connectDomains, resourceDomains })`
+in `src/tools/globePanel.js`, with the panel's script from
+`src/app/globePanelRuntime.js`. `vantage/tools/panel` exports both for other
+MCP servers that compose Core's tools. Clients that display apps render it
+inside the conversation. The panel completes the MCP Apps handshake
+(`ui/initialize`, `ui/notifications/initialized`,
+`ui/notifications/size-changed`), and for each
+`ui/notifications/tool-result` carrying a view it loads the app in inline
+embed mode the first time and posts later views to that same app, so the
+globe changes without reloading. Its "Open in Vantage" button asks the host
+to open the link (`ui/open-link`), and "Expand" asks for fullscreen where
+the host offers it.
+
+Hosts serve panels from their own sites and may refuse other addresses;
+Codex, for one, refuses any address on the user's machine. So the panel
+never requests the app's server itself. It loads everything from the app's
+own paths through `panel_request`, a tool meant for the panel: it is
+marked `_meta.ui.visibility: ["app"]`, and each call must carry the key each
+MCP server makes for its panel page. Any client can read that page, so the
+key keeps the tool from clients that only list it, and is not access control.
+The MCP server requests the path from the app's server and returns the
+response, gzipped when that helps and in 512 KiB parts when large. A path is
+resolved against the app's origin and refused if it leaves it; redirects are
+not followed; a response is read up to 64 MiB; each request has a 60-second
+deadline; six requests run at once per server and up to 256 more wait.
+`panel_request` refuses, in any letter case, encoding or dot suffix,
+Provider Settings (`/api/setup`), credential and model endpoints
+(`/api/realtime`, `/api/openai`), `/mcp`, the development server's internal
+routes (`/@…`, `/__…`), the user's own LAN receiver data
+(`/api/local-receivers`), Google place search (`/api/google`, which spends
+quota and has no search box in the panel) and the operator's Overpass
+instances (`/api/overpass`).
+
+Only map imagery, tiles and terrain load directly, from the origins the
+resource's `csp` lists. The local server derives them from the page's own
+policy (`CSP_ORIGINS` in `build/content-security-policy.js`):
+`connectDomains` from `connect-src` and `resourceDomains` from `img-src`.
+Script, frame and font origins are not declared, and neither is OpenAI:
+voice needs a token from `/api/realtime`, which the panel cannot request.
+
+The panel loads the app's panel build, which `npm run build:panel` writes to
+`dist/panel` and the development server serves at `/panel/`, behind the
+request guard's `Host` check (a path that does not decode answers `400`):
+one app script, one stylesheet, and Cesium's script, which carries its
+workers and starts them from memory (`CESIUM_WORKERS`). Files those workers
+load themselves are embedded in a prelude the panel runs ahead of them,
+since a worker's requests reach the panel page's own site. Rebuild it after
+changing the app. `npm run build` does not produce it, and the app's page
+never loads it.
+
+The panel build is keyless by default: the app's `GOOGLE_MAPS_API_KEY` and
+`CESIUM_ION_TOKEN` never go into it, since it runs in the MCP host's page,
+and it shows the keyless globe. `VANTAGE_PANEL_GOOGLE_MAPS_API_KEY` and
+`VANTAGE_PANEL_CESIUM_ION_TOKEN`, read by `npm run build:panel` only, put
+keys meant for the panel in; restrict them separately to the hosts that
+show it. The build then warns, naming the settings.
+
+Hosts differ in ways the panel works around, all inside the panel only:
+images and stylesheet files arrive as `data:` URLs, since some hosts refuse
+`blob:` images, and only the panel build's own files are kept converted;
+code that needs an https address for the app gets `VANTAGE_APP_BASE_URL`
+(`https://app.vantage.invalid/`, a name that never resolves), since some
+hosts serve the page from their own scheme; the globe keeps drawing from a
+timer when the host reports the panel hidden and stops animation frames;
+and 2D canvases are kept in memory (`willReadFrequently`), since a host that
+treats the panel as off screen may drop their GPU contents and show the
+overlays as black over the globe.
+
+Tools declare a UI resource with `defineTool({ ui: { resourceUri } })`, and
+an app-only tool with `ui: { visibility: ['app'] }`, which `tools/call`
+answers without the JSON text copy meant for models;
+`createMcpServer({ resources })` serves `resources/list` and
+`resources/read`.
+
+### Embed mode
+
+`?embed=1` shows only the globe: clean view, with the HUD, panels, welcome
+and setup prompts hidden; provider attribution stays. A page that frames it
+changes the view by posting `{ type: 'vantage:view', id, view }` to the
+frame. The app applies it through its own actions (style, map, exactly the
+view's layers, annotations, then the followed entity, retried until its
+layer has it, or the camera when nothing is followed or the entity is not
+there yet, since a camera flight would end the follow; then cockpit view
+when asked) and answers
+`{ type: 'vantage:view-applied', id, ok, steps }` to the origin that sent
+the view. It posts `{ type: 'vantage:ready' }` once it can take views. Only
+its parent page can send them, a parent with an opaque origin is ignored,
+and a page that is neither framed nor inline (below) takes none. Views
+apply one at a time; while eight are waiting, further ones are answered
+`ok: false` unapplied.
+Annotations in any link are drawn once the link has been restored, embedded
+or not. See `src/app/embed.js`; the main path loads it
+only for an embed-mode page or a link that carries annotations
+(`src/app/embedMode.js`).
+
+A panel page that loads the app into itself rather than framing it sets
+`globalThis.VANTAGE_EMBED_INLINE = true` first. The app is then embedded
+inline: it takes views from, and answers, its own window. Some panel hosts
+report a panel on screen as hidden, which stops animation frames, so an
+inline app does not suspend rendering when hidden and draws from a timer
+while frames stop arriving (`keepPanelRendering`). After a render error the
+timer stops, as Cesium's own loop does, and the error is logged in full
+(workers report plain objects that Cesium prints as `[object Object]`).
+Normal tabs still suspend rendering when hidden.
+
+No page may frame the app by default: every document keeps
+`X-Frame-Options: DENY` and `frame-ancestors 'none'`.
+`VANTAGE_EMBED_FRAME_ANCESTORS` lets the origins it lists frame embed-mode
+documents (`/?embed=1` or `/index.html?embed=1`) only, on the development
+and preview servers; a static host serving `dist/` must send its own
+`frame-ancestors` header, since the page's meta policy cannot carry one.
+It takes explicit `http(s)` origins such as `https://example.com`,
+separated by spaces or commas; `*`, wildcards,
+keywords such as `'self'`, other schemes and paths are logged and ignored.
+Those documents get the full Content-Security-Policy with `frame-ancestors`
+naming the origins and no `X-Frame-Options`, in report-only mode too. Every
+other document, Provider Settings included, stays unframable
+(`embedFramingPlugin` in `build/content-security-policy.js`).
+
 ## The `area` argument
 
 Location-scoped tools take `area` as exactly one of a `place` name, a `bbox`
@@ -102,14 +359,48 @@ and report `total`, `returned` and `truncated`.
 
 ## MCP
 
-`createMcpServer({ catalog, name, version, instructions, descriptions, decorate })`
-implements `initialize`, `ping`, `tools/list` and `tools/call` for protocol
+`createMcpServer({ catalog, name, version, instructions, descriptions, decorate, resources })`
+implements `initialize`, `ping`, `tools/list`, `tools/call`, and, when it has
+resources, `resources/list` and `resources/read`, for protocol
 revisions 2025-11-25, 2025-06-18 and 2025-03-26. `descriptions` overrides a
 tool's title or description for this surface; `decorate(definition, tool)`
 merges extra fields into each listed definition. `createMcpHttpHandler(server)`
 returns a `Request`-to-`Response` handler for stateless Streamable HTTP: one
 JSON-RPC message per POST, answered with JSON. The host owns routing and any
-access control in front of it; Vantage mounts no HTTP endpoint for it.
+access control in front of it; Vantage mounts it at `/mcp` only when
+`VANTAGE_MCP_HTTP=1` (see below).
+
+## Voice
+
+Voice offers the catalog's queries next to its app actions.
+`toFunctionTools(tools, { exclude })` turns tools into
+`{ type: 'function', name, description, parameters }` records, and
+`toFunctionOutput(name, result)` turns a result into
+`{ ok, tool, summary, data }`, counting images in `images_omitted` instead of
+sending them.
+
+The voice session token endpoint takes its tool list as `realtime.tools`.
+`realtimeSessionTools(additional)` appends function tools to the app actions,
+skipping names an action already uses, so `next_satellite_pass` stays the
+action. The standalone server supplies the core queries that
+`src/tools/surfaces.js` offers on voice, which leaves out tools that answer
+with images, link to the app, or repeat what voice's app actions answer
+(aircraft, ships, earthquakes, fires, datacenters, dams, satellite passes and
+satellites overhead, which `analyst_query`, `next_satellite_pass` and
+`next_iss_pass` cover).
+
+In the browser, `initVantageVoiceCommands({ toolCatalog })` takes a function
+that resolves a catalog. App action names go to the action runner; other names
+the catalog has go to `catalog.call` with the call's abort signal. The
+standalone entry composes the catalog with `createToolServices` over the
+page's fetch and loads it the first time voice calls a query; the production
+build emits it as a separate chunk the page does not request at load.
+
+Queries voice runs read the same `/api` routes as MCP, from the page, under
+the same `Host`, `Origin` and `Sec-Fetch-Site` checks and per-IP throttles.
+Place search and the regional brief spend Google and OpenAI quota only when
+the user asks by voice; voice does not offer the HUD caption, which the app
+shows itself.
 
 ## Running locally
 
@@ -124,12 +415,24 @@ claude mcp add vantage -- npm --prefix /path/to/vantage run --silent mcp
 default is `http://127.0.0.1:4173`, the IPv4 loopback address the app binds;
 `localhost` may resolve to `::1` first and miss it.
 
+With `VANTAGE_MCP_HTTP=1` in `.env` (or the environment), the development and
+preview servers also serve the same tools over HTTP at `/mcp`, for clients
+that connect by URL:
+
+```bash
+claude mcp add --transport http vantage http://127.0.0.1:4173/mcp
+```
+
+Without the setting, `/mcp` answers `404` with a JSON error naming it.
+
 The server writes one line per request to stderr, which clients such as
 Claude Desktop copy into their logs: the method, the tool a `tools/call`
 names, and for a failed call its error code (`invalid_arguments`,
 `retry_later`, ...). Arguments, results and error messages, which can repeat
 an argument, are never logged, and a method or tool name that is not a plain
-name is logged as `(unnamed ...)` rather than echoed.
+name is logged as `(unnamed ...)` rather than echoed. A client's
+`notifications/cancelled` aborts the request it names, which then gets no
+response.
 
 ## Network and security
 
@@ -143,38 +446,72 @@ need one go through the app's routes, which keep their keys server-side, their
 per-IP throttles and their "not configured" answers. It is therefore available
 without an opt-in setting; it runs only when you register it with a client.
 
+The `/mcp` route is different: it is a listener, and it carries no token or
+secret, so it is off unless `VANTAGE_MCP_HTTP=1`. While it is on, any program
+on this machine can run the tools, including those that spend provider quota.
+The route accepts only requests from this machine (a loopback socket, even
+when the server binds a LAN address) that name a loopback host on the port
+they reached and, when a browser sends an `Origin`, come from that same host.
+It refuses requests a proxy forwarded, even with `VANTAGE_TRUST_PROXY=1`,
+refuses all requests while launcher sharing is on, and accepts only a JSON
+`Content-Type` on `POST`, so a web page cannot post to it cross-site. These
+checks sit behind the server-wide `Host` check. This is local transport safety, not authentication.
+A request body must arrive within 30 seconds (`408` otherwise) and stay
+under 1 MiB (`413`), and a client that disconnects cancels its tool call.
+
+The panel's `panel_request` also requests the app's own files and data
+routes, for the panel only: it requires the key in the panel's page, and
+refuses the routes listed under [the Vantage panel](#the-vantage-panel) to
+every caller. See [SECURITY.md](../SECURITY.md#mcp-server).
+
 A few sources fetch a public feed directly instead of through `/api`
-(`get_earthquakes` reads the USGS feed). Those requests leave from the stdio
+(`get_earthquakes` reads the USGS feed; `get_recent_imagery` reads NASA's CMR
+catalog and Worldview Snapshots). Those requests leave from the stdio
 process, on a tool call only, with the `vantage-mcp-tools` User-Agent from
 `src/sources/projectIdentity.js`. The README's
 [Network & privacy](../README.md#network--privacy) section lists them.
 
 ## Tools
 
-| Tool                          | Reads                | Returns                                                                                     |
-| ----------------------------- | -------------------- | ------------------------------------------------------------------------------------------- |
-| `get_earthquakes`             | `earthquakes`        | USGS M2.5+ events in the last 24 hours, strongest first                                     |
-| `get_active_fires`            | `fires`              | NASA FIRMS detections in an area, highest radiative power first                             |
-| `get_recent_launches`         | `launches`           | Launch Library 2 launches in the last 30 days, newest first                                 |
-| `aircraft_in_area`            | `aircraft`           | Aircraft in an area, nearest first; `military: true` reads the `military` feed              |
-| `find_aircraft`               | `aircraft`           | Aircraft anywhere by callsign, ICAO address or registration                                 |
-| `get_aircraft_track`          | `aircraft`           | Recent positions of one aircraft, thinned to 200 points                                     |
-| `get_aircraft_info`           | `aircraft`           | Aircraft type and registration, and flight route, from adsbdb                               |
-| `next_satellite_pass`         | `satellites`         | Next pass over a place or point (default the ISS), with naked-eye visibility                |
-| `satellites_overhead`         | `satellites`         | Satellites in a CelesTrak group above a place or point now, highest first                   |
-| `find_cctv_cameras`           | `cctv`               | Public cameras in an area, nearest first                                                    |
-| `get_cctv_snapshot`           | `cctv`               | The current image from one camera, returned as image content                                |
-| `find_radio_stations`         | `radio`              | Radio Browser stations by area and/or search terms, with stream URLs                        |
-| `search_places`               | `placeSearch`        | Points of interest matching a query within an area (Google Places)                          |
-| `places_nearby`               | `placeSearch`        | Notable places around a place or point (Google Places)                                      |
-| `plan_route`                  | `routing`            | Walking, driving or cycling route over OpenStreetMap, with a simplified path                |
-| `get_weather`                 | `weather`            | Current conditions at a place or point                                                      |
-| `get_regional_brief`          | `regional`           | What and where a location is, its weather and recent headlines                              |
-| `get_cyclones`                | `cyclones`           | Active NHC/CPHC tropical cyclones, optionally in an area                                    |
-| `get_fire_perimeters`         | `perimeters`         | Mapped WFIGS wildfire perimeters in an area, largest first                                  |
-| `get_terrain_height`          | `terrain`            | Ground, geoid and ellipsoid heights at up to 20 points                                      |
-| `find_military_installations` | `installations`      | OpenStreetMap military sites in an area of at most 10° per side                             |
-| `get_map_features`            | `features`           | Administrative areas, named places or monuments at a location (needs Overpass)              |
-| `situation_brief`             | `weather`            | Weather, earthquakes, fires, aircraft and cyclones for an area, by section                  |
-| `military_awareness`          | `military`           | Military and other aircraft and military installations within 250 km of a point, by section |
-| `get_hud_caption`             | `weather`, `summary` | The app's heads-up display caption for an area                                              |
+| Tool                          | Reads                | Returns                                                                                                      |
+| ----------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `get_earthquakes`             | `earthquakes`        | USGS M2.5+ events in the last 24 hours, strongest first                                                      |
+| `get_active_fires`            | `fires`              | NASA FIRMS detections in an area, highest radiative power first                                              |
+| `get_recent_launches`         | `launches`           | Launch Library 2 launches in the last 30 days, newest first                                                  |
+| `aircraft_in_area`            | `aircraft`           | Aircraft in an area, nearest first; `military: true` reads the `military` feed                               |
+| `find_aircraft`               | `aircraft`           | Aircraft anywhere by callsign, ICAO address or registration                                                  |
+| `get_aircraft_track`          | `aircraft`           | Recent positions of one aircraft, thinned to 200 points                                                      |
+| `get_aircraft_info`           | `aircraft`           | Aircraft type and registration, and flight route, from adsbdb                                                |
+| `vessels_in_area`             | `vessels`            | Ships reported by AIS in an area, nearest first, optionally by type                                          |
+| `find_vessel`                 | `vessels`            | Ships anywhere by MMSI, IMO number or name                                                                   |
+| `get_vessel_track`            | `vessels`            | Recent positions of one ship, thinned to 200 points                                                          |
+| `next_satellite_pass`         | `satellites`         | Next pass over a place or point (default the ISS), with naked-eye visibility                                 |
+| `satellites_overhead`         | `satellites`         | Satellites in a CelesTrak group above a place or point now, highest first                                    |
+| `find_cctv_cameras`           | `cctv`               | Public cameras in an area, nearest first, noting regions the catalog only partly serves                      |
+| `get_cctv_snapshot`           | `cctv`               | The current image from one camera, returned as image content                                                 |
+| `find_alpr_cameras`           | `alpr`               | OpenStreetMap-mapped license plate readers in a US/Canadian area up to 3°                                    |
+| `find_radio_stations`         | `radio`              | Radio Browser stations by area and/or search terms, with stream URLs                                         |
+| `search_places`               | `placeSearch`        | Points of interest matching a query within an area (Google Places)                                           |
+| `places_nearby`               | `placeSearch`        | Notable places around a place or point (Google Places)                                                       |
+| `plan_route`                  | `routing`            | Walking, driving or cycling route over OpenStreetMap, with a simplified path                                 |
+| `get_bike_share`              | `bikeshare`          | Live GBFS stations in an area, with bikes and docks available                                                |
+| `get_transit_vehicles`        | `transit`            | Live GTFS-Realtime vehicle positions in an area, optionally one route                                        |
+| `get_traffic_flow`            | `traffic`            | TomTom flow in a city-sized area: speed vs free flow, congested and closed road                              |
+| `get_weather`                 | `weather`            | Current conditions at a place or point                                                                       |
+| `get_weather_map`             | `weatherMaps`        | The latest NOAA radar, satellite or lightning map image over an area                                         |
+| `get_wind`                    | `wind`               | GFS or IFS model wind 10 m above ground at a location                                                        |
+| `get_recent_imagery`          | `imagery`            | The most recent clear Landsat/Sentinel-2 image of an area (VIIRS fallback)                                   |
+| `find_submarine_cables`       | `cables`             | TeleGeography cables and landing points by area or name (CC BY-NC-SA 3.0)                                    |
+| `find_infrastructure`         | `infrastructure`     | OpenStreetMap datacenters or dams in an area, nearest first (ODbL)                                           |
+| `get_bhote_koshi_flood`       | `events`             | 2026 Bhote Koshi flood: evidence trail, flood path and imagery dates (CC BY-NC 4.0)                          |
+| `get_regional_brief`          | `regional`           | What and where a location is, its weather and recent headlines                                               |
+| `get_cyclones`                | `cyclones`           | Active NHC/CPHC tropical cyclones, optionally in an area                                                     |
+| `get_fire_perimeters`         | `perimeters`         | Mapped WFIGS wildfire perimeters in an area, largest first                                                   |
+| `get_terrain_height`          | `terrain`            | Ground, geoid and ellipsoid heights at up to 20 points                                                       |
+| `find_military_installations` | `installations`      | OpenStreetMap military sites in an area of at most 10° per side                                              |
+| `get_map_features`            | `features`           | Administrative areas, named places or monuments at a location (needs Overpass)                               |
+| `situation_brief`             | `weather`            | Weather, earthquakes, fires, aircraft, ships and cyclones for an area, by section                            |
+| `military_awareness`          | `military`           | Military and other aircraft and military installations within 250 km of a point, by section                  |
+| `get_hud_caption`             | `weather`, `summary` | The app's heads-up display caption for an area                                                               |
+| `show_in_vantage`             | `app`                | A view in Vantage: the live panel in clients with MCP Apps, and a link everywhere; takes another answer's view or an area or camera, layers, style, map, marks and something to follow |
+| `panel_request`               | `app`                | Panel only: loads a path from the app's server for the Vantage panel                                         |

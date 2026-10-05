@@ -21,6 +21,7 @@ import { openAiRealtimeProxy } from 'vantage/server/providers/openai';
 import { keySetupEndpoint } from 'vantage/server/standalone/key-setup';
 import { realtimeInstructions } from '../../server/providers/openai/instructions.js';
 import { VANTAGE_REALTIME_TOOLS } from '../../server/providers/openai/tools.js';
+import { standaloneVoiceTools } from '../../server/standalone/voiceTools.js';
 
 function install(plugin, preview = false) {
   const routes = new Map();
@@ -193,6 +194,52 @@ test('Realtime handler preserves tools and default instructions, isolates suppli
   }
   assert.notEqual(sent[0].session.instructions, sent[1].session.instructions);
   assert.equal(sent[0].session.instructions, sent[2].session.instructions);
+});
+
+test('Realtime sessions carry supplied tools, and the standalone voice adds the catalog queries', async (t) => {
+  env(t, 'OPENAI_API_KEY', 'fixture-upstream-secret');
+  env(t, 'VANTAGE_RATELIMIT_OPENAI_PER_MIN', undefined);
+  const sent = [];
+  t.mock.method(globalThis, 'fetch', async (url, options) => {
+    sent.push(JSON.parse(options.body));
+    return Response.json({ value: 'fixture-ephemeral' });
+  });
+  const tools = standaloneVoiceTools();
+  const response = await request(
+    install(openAiRealtimeProxy({ realtime: { tools } })).get(
+      '/api/realtime/token',
+    ),
+    { method: 'POST' },
+  );
+  assert.equal(response.status, 200);
+  assert.deepEqual(sent.at(-1).session.tools, tools);
+  const names = tools.map((tool) => tool.name);
+  assert.equal(new Set(names).size, names.length);
+  assert.deepEqual(
+    tools.slice(0, VANTAGE_REALTIME_TOOLS.length),
+    VANTAGE_REALTIME_TOOLS,
+  );
+  assert.ok(names.includes('get_weather'));
+  assert.ok(names.includes('military_awareness'));
+  assert.ok(!names.includes('show_in_vantage'));
+  assert.ok(!names.includes('aircraft_in_area'));
+  assert.ok(!names.includes('get_weather_map'));
+  // The action of the same name answers satellite passes.
+  assert.equal(
+    tools.findLast((tool) => tool.name === 'next_satellite_pass'),
+    VANTAGE_REALTIME_TOOLS.find((tool) => tool.name === 'next_satellite_pass'),
+  );
+});
+
+test('voice leaves out every catalog tool an app action already names', async () => {
+  const { TOOL_SURFACES, coreTools } = await import('../tools/index.js');
+  const actions = new Set(VANTAGE_REALTIME_TOOLS.map((tool) => tool.name));
+  const shared = coreTools
+    .map((tool) => tool.name)
+    .filter((name) => actions.has(name));
+  assert.deepEqual(shared, ['next_satellite_pass']);
+  for (const name of shared)
+    assert.equal(TOOL_SURFACES[name]?.voice, false, name);
 });
 
 test('debug logging resolves each supplied application directory independently', async (t) => {
@@ -511,4 +558,26 @@ test('the debug log rotates instead of growing without bound', async (t) => {
   // Unrotated, these records would be ~75 MB in one file.
   assert.ok(live + previous < 64 * 1024 * 1024);
   assert.ok(!existsSync(`${file}.2`), 'exactly one generation is retained');
+});
+
+test('the voice instructions name only tools the voice session offers', async () => {
+  const { coreTools } = await import('../tools/index.js');
+  const tools = new Set(standaloneVoiceTools().map((tool) => tool.name));
+  const known = new Set([
+    ...coreTools.map((tool) => tool.name),
+    ...VANTAGE_REALTIME_TOOLS.map((tool) => tool.name),
+  ]);
+  const named = new Set(
+    realtimeInstructions().match(/\b[a-z]+(?:_[a-z]+)+\b/g),
+  );
+  const missing = [...named].filter(
+    (name) => known.has(name) && !tools.has(name),
+  );
+  assert.deepEqual(missing, []);
+});
+
+test('the voice instructions send vessels, however heard, to the ships layer', () => {
+  const text = realtimeInstructions();
+  assert.match(text, /"vessels" is easily heard as "visuals"/);
+  assert.match(text, /set_layer_visibility\{layerId:"ais-live-vessels"\}/);
 });

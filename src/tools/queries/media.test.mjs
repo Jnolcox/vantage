@@ -185,7 +185,12 @@ test('radio stations match area and every search term', async () => {
   const jazz = await catalog.call('find_radio_stations', {
     query: 'jazz norwegian',
   });
-  assert.equal(jazz.summary, '1 radio station matching "jazz norwegian".');
+  assert.equal(
+    jazz.summary,
+    '1 radio station matching "jazz norwegian" (from a directory of 3 popular stations).',
+  );
+  assert.equal(jazz.data.directory_size, 3);
+  assert.equal(jazz.data.stale, false);
   assert.equal(jazz.data.rows[0].distance_km, undefined);
   const classicalTexas = await catalog.call('find_radio_stations', {
     query: 'classical texas',
@@ -219,4 +224,105 @@ test('malformed image results are a programming error', async () => {
     composeCatalog({ tools: [bad] }).call('bad_image'),
     /malformed images/,
   );
+});
+
+test('cameras from a trimmed catalog pack are reported as partial', async () => {
+  const catalog = composeCatalog({
+    tools: coreTools,
+    services: {
+      cctv: {
+        getCatalog: async () => ({
+          trimmedPacks: [
+            { pack: 'tfl', available: 900, served: 250 },
+            { pack: 'other', available: 10, served: 5 },
+          ],
+          sources: [
+            {
+              id: 'jam-1',
+              name: 'Strand',
+              lat: 51.51,
+              lon: -0.12,
+              pack: 'tfl',
+            },
+          ],
+        }),
+      },
+    },
+  });
+  const result = await catalog.call('find_cctv_cameras', {
+    area: { lat: 51.51, lon: -0.12, radius_km: 5 },
+  });
+  assert.equal(result.data.complete, false);
+  assert.deepEqual(result.data.catalog_trimmed, [
+    { pack: 'tfl', available: 900, served: 250 },
+  ]);
+  assert.match(
+    result.summary,
+    /\(the catalog serves only some cameras here: 250 of 900 from tfl\)\.$/,
+  );
+});
+
+test('an area the catalog trimmed away entirely is not reported complete', async () => {
+  const catalog = composeCatalog({
+    tools: coreTools,
+    services: {
+      cctv: {
+        getCatalog: async () => ({
+          trimmedPacks: [
+            {
+              pack: 'tfl',
+              available: 900,
+              served: 250,
+              region: { west: -0.6, south: 51.3, east: 0.3, north: 51.7 },
+            },
+          ],
+          // Every served camera is in central London, none in the suburb.
+          sources: [
+            {
+              id: 'jam-1',
+              name: 'Strand',
+              lat: 51.51,
+              lon: -0.12,
+              pack: 'tfl',
+            },
+          ],
+        }),
+      },
+    },
+  });
+  const suburb = await catalog.call('find_cctv_cameras', {
+    area: { lat: 51.4, lon: -0.5, radius_km: 3 },
+  });
+  assert.equal(suburb.data.rows.length, 0);
+  assert.equal(suburb.data.complete, false);
+  assert.match(suburb.summary, /250 of 900 from tfl/);
+  const elsewhere = await catalog.call('find_cctv_cameras', {
+    area: { lat: 40.7, lon: -74, radius_km: 3 },
+  });
+  assert.equal(elsewhere.data.complete, true);
+  assert.equal(
+    elsewhere.summary,
+    'The camera catalog has no cameras in 3 km around 40.700, -74.000.',
+  );
+});
+
+test('a stale or degraded radio directory is reported', async () => {
+  const catalog = composeCatalog({
+    tools: coreTools,
+    services: {
+      radio: {
+        getDirectory: async () => ({
+          stations: [],
+          stale: true,
+          degraded: true,
+        }),
+      },
+    },
+  });
+  const result = await catalog.call('find_radio_stations', { query: 'jazz' });
+  assert.match(
+    result.summary,
+    /the directory may be stale; the directory is incomplete right now\)\.$/,
+  );
+  assert.equal(result.data.degraded, true);
 });

@@ -152,6 +152,18 @@ export const CSP_ORIGINS = Object.freeze([
   },
 ]);
 
+/**
+ * The CSP_ORIGINS that join any of `directives`, in list order. The MCP
+ * Apps panel declares these to its host, so the globe in a conversation
+ * reaches the same providers the page does and no others.
+ */
+export function cspOriginsFor(directives) {
+  const wanted = new Set(directives);
+  return CSP_ORIGINS.filter((entry) =>
+    entry.directives.some((name) => wanted.has(name)),
+  ).map((entry) => entry.origin);
+}
+
 const SELF = "'self'";
 
 /** Fixed directives; origins from CSP_ORIGINS are appended per directive. */
@@ -187,8 +199,12 @@ const BASE_DIRECTIVES = Object.freeze({
 /** Directives a <meta> policy cannot carry. */
 const HEADER_ONLY_DIRECTIVES = new Set(['frame-ancestors']);
 
-/** @returns {Record<string, string[]>} directive name -> sources */
-export function contentSecurityPolicyDirectives() {
+/**
+ * @param {{frameAncestors?: string[]}} [options] Origins that may frame the
+ *   document instead of none; only embed-mode documents get any.
+ * @returns {Record<string, string[]>} directive name -> sources
+ */
+export function contentSecurityPolicyDirectives({ frameAncestors = [] } = {}) {
   const directives = Object.fromEntries(
     Object.entries(BASE_DIRECTIVES).map(([name, sources]) => [
       name,
@@ -197,12 +213,17 @@ export function contentSecurityPolicyDirectives() {
   );
   for (const { origin, directives: names } of CSP_ORIGINS)
     for (const name of names) directives[name].push(origin);
+  if (frameAncestors.length)
+    directives['frame-ancestors'] = [...frameAncestors];
   return directives;
 }
 
 /** Serialize the policy for a response header, or for a <meta> tag. */
-export function contentSecurityPolicy({ meta = false } = {}) {
-  return Object.entries(contentSecurityPolicyDirectives())
+export function contentSecurityPolicy({
+  meta = false,
+  frameAncestors = [],
+} = {}) {
+  return Object.entries(contentSecurityPolicyDirectives({ frameAncestors }))
     .filter(([name]) => !(meta && HEADER_ONLY_DIRECTIVES.has(name)))
     .map(([name, sources]) =>
       sources.length ? `${name} ${sources.join(' ')}` : `${name} 'none'`,
@@ -213,18 +234,124 @@ export function contentSecurityPolicy({ meta = false } = {}) {
 /** Google referrer-restricted keys and YouTube embeds need the origin. */
 export const REFERRER_POLICY = 'strict-origin-when-cross-origin';
 
-/** Response headers for the dev and preview servers. */
-export function securityHeaders({ reportOnly = false } = {}) {
+/**
+ * Response headers for the dev and preview servers. `frameAncestors` lets
+ * those origins frame the document: X-Frame-Options is dropped, since it
+ * cannot name them, and frame-ancestors lists them. Report-only mode still
+ * enforces the framing rule.
+ */
+export function securityHeaders({
+  reportOnly = false,
+  frameAncestors = [],
+} = {}) {
+  const framing = frameAncestors.length
+    ? `frame-ancestors ${frameAncestors.join(' ')}`
+    : "frame-ancestors 'none'";
   return {
-    'X-Frame-Options': 'DENY',
+    ...(frameAncestors.length ? {} : { 'X-Frame-Options': 'DENY' }),
     'X-Content-Type-Options': 'nosniff',
     'Referrer-Policy': REFERRER_POLICY,
     [reportOnly
       ? 'Content-Security-Policy-Report-Only'
-      : 'Content-Security-Policy']: contentSecurityPolicy(),
-    ...(reportOnly
-      ? { 'Content-Security-Policy': "frame-ancestors 'none'" }
-      : {}),
+      : 'Content-Security-Policy']: contentSecurityPolicy({ frameAncestors }),
+    ...(reportOnly ? { 'Content-Security-Policy': framing } : {}),
+  };
+}
+
+/**
+ * The origins `VANTAGE_EMBED_FRAME_ANCESTORS` lets frame embed-mode
+ * documents. Only explicit http(s) origins are accepted, separated by spaces
+ * or commas; anything else (`*`, wildcards, keywords such as 'self', other
+ * schemes, paths) is logged and ignored, so a typo can only narrow framing.
+ * @returns {string[]}
+ */
+export function parseEmbedFrameAncestors(value, { warn = console.warn } = {}) {
+  const origins = [];
+  for (const entry of String(value ?? '').split(/[\s,]+/)) {
+    if (!entry) continue;
+    const origin = explicitOrigin(entry);
+    if (origin) {
+      if (!origins.includes(origin)) origins.push(origin);
+      continue;
+    }
+    warn(
+      `[vantage] VANTAGE_EMBED_FRAME_ANCESTORS: ignoring ${JSON.stringify(entry)}; only explicit http(s) origins such as https://example.com may frame embed mode.`,
+    );
+  }
+  return origins;
+}
+
+/**
+ * A host a CSP source expression can name: DNS labels or an IPv4 address.
+ * The URL parser lets through characters such as ';' and quotes, which would
+ * change the policy they are written into.
+ */
+const CSP_HOST = /^[a-z0-9-]+(?:\.[a-z0-9-]+)*$/;
+
+/** An entry's origin when it is exactly an http(s) origin, else null. */
+function explicitOrigin(entry) {
+  let url;
+  try {
+    url = new URL(entry);
+  } catch {
+    return null;
+  }
+  const exact =
+    (url.protocol === 'https:' || url.protocol === 'http:') &&
+    CSP_HOST.test(url.hostname) &&
+    !url.username &&
+    !url.password &&
+    url.pathname === '/' &&
+    !url.search &&
+    !url.hash &&
+    /^https?:\/\/[^/?#]+\/?$/i.test(entry);
+  return exact ? url.origin : null;
+}
+
+/**
+ * The paths that serve the app's document. Other HTML the dev server can
+ * serve, such as the Provider Settings template, is never framed.
+ */
+const APP_DOCUMENT_PATHS = new Set(['/', '/index.html']);
+
+/** Whether a request is for the app's own document in embed mode. */
+function isEmbedDocumentRequest(url) {
+  let parsed;
+  try {
+    parsed = new URL(url || '/', 'http://localhost');
+  } catch {
+    return false;
+  }
+  return (
+    parsed.searchParams.get('embed') === '1' &&
+    APP_DOCUMENT_PATHS.has(parsed.pathname)
+  );
+}
+
+/**
+ * Serve the security headers per request when embed framing is configured:
+ * embed-mode documents get the full policy with frame-ancestors naming the
+ * configured origins and no X-Frame-Options; every other response, Provider
+ * Settings included, keeps X-Frame-Options DENY and frame-ancestors 'none'.
+ * The server's static headers are left empty in that case (see vite.js), so
+ * nothing written later overrides these.
+ */
+export function embedFramingPlugin({ frameAncestors, reportOnly = false }) {
+  const framed = securityHeaders({ reportOnly, frameAncestors });
+  const unframed = securityHeaders({ reportOnly });
+  const install = (server) => {
+    server.middlewares.use((req, res, next) => {
+      const headers = isEmbedDocumentRequest(req.url) ? framed : unframed;
+      for (const [name, value] of Object.entries(headers))
+        res.setHeader(name, value);
+      next();
+    });
+  };
+  return {
+    name: 'vantage-embed-framing',
+    enforce: 'pre',
+    configureServer: install,
+    configurePreviewServer: install,
   };
 }
 

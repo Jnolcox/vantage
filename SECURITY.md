@@ -18,8 +18,8 @@ The golden rule: **secret-bearing API keys stay on the server side.** The dev/pr
 | Key | Where it lives | How the browser uses it |
 |-----|----------------|--------------------------|
 | `OPENAI_API_KEY` | Server only | Browser fetches a short-lived **ephemeral** Realtime session token from `/api/realtime/token`; the real key never ships |
-| `AISSTREAM_API_KEY` | Server only | Server holds the AISStream websocket; browser polls the same-origin `/api/ais-live` cache |
-| OpenSky OAuth (`OPENSKY_CLIENT_ID/SECRET`) | Server only | Server mints + refreshes the token behind `/api/opensky` |
+| `AISSTREAM_API_KEY` | Server only | Server holds the AISStream websocket; browser polls the same-origin `/api/vessels` cache |
+| OpenSky OAuth (`OPENSKY_CLIENT_ID/SECRET`) | Server only | Server mints + refreshes the token behind `/api/flights` |
 | `GOOGLE_MAPS_SERVER_API_KEY` (optional, #33) | Server only | Server calls Places (`/api/google/nearby-places`, `/api/google/text-search`) and the Street View fallback with this key; falls back to `GOOGLE_MAPS_API_KEY` when unset |
 
 ### Two deliberately client-side keys — restrict them
@@ -29,7 +29,21 @@ These are designed to be used directly in the browser (like a Mapbox public toke
 1. **Google Maps API key** — loads Photorealistic 3D Tiles directly and powers Vantage place search. **Restrict it** (HTTP referrer + API restriction to the required Google APIs) in the Google Cloud Console. An unrestricted key in a public deployment can be abused and billed to you.
 2. **Cesium ion token** (`CESIUM_ION_TOKEN`, optional — for ion-hosted Google Photorealistic 3D Tiles, Bing world imagery, and world terrain) — used as `Cesium.Ion.defaultAccessToken` client-side. Use a public **`assets:read`** token with **URL restrictions** for any hosted deployment. The Community plan has eligibility and usage limits; a public token is not a secret, but it can still consume the account's quota.
 
-> The explicit browser `define` block in `build/vite.js` controls exactly what reaches the client: only these two keys. Everything else stays server-side.
+> The explicit browser `define` block in `build/vite.js` controls exactly what reaches the client: only these two keys, plus the boolean that says whether the server offers Google tile tokens (it does not; see below). Everything else stays server-side.
+
+**Why there is no keyless Google 3D token endpoint.** The client can load
+Google 3D with a short-lived bearer token from the app's server instead of a
+browser key (`src/maps/googleTokens.js`, the `google-token` route in
+`src/maps/google3d.js`), but Vantage deliberately ships no
+`/api/google/tiles-token` endpoint to mint one. Google documents no OAuth scope
+limited to the Map Tiles API: Google Maps Platform APIs that take OAuth require
+`https://www.googleapis.com/auth/cloud-platform`, which authorizes every Google
+Cloud API the service account can reach. Handing such a token to the browser,
+even for an hour, is worse than a referrer- and API-restricted key, so the
+browser key above remains the way to load Google 3D directly. The client half
+stays dormant: the build defines `import.meta.env.VANTAGE_GOOGLE_TILE_TOKENS` as
+`false`, so the page never requests a token and never sends one to Google.
+Revisit only if Google publishes a Map Tiles-only scope.
 
 **Places and Street View never needed to be on that list** (#33): they're called from the server-side proxies in the table above, which use `GOOGLE_MAPS_SERVER_API_KEY` when it's set. Splitting it from the browser-exposed key lets each key's Google Cloud restriction actually match what it does — the browser key referrer-restricted to the APIs the client loads, the server key IP-restricted (never a referrer, since it never leaves your server) to Places + Street View Static — instead of one key that has to be either over-permissioned or broken for one of its two jobs. A single shared `GOOGLE_MAPS_API_KEY` still works if you don't split them; it just has to cover every API both sides use.
 
@@ -80,7 +94,8 @@ The dev server is a **key broker**: every server-side key above is spendable by 
 - **Only expected `Host` names are answered, on every route.** `allowedHosts` is always an explicit list of exact names: `localhost` and `*.localhost`, IP addresses, plus this machine's hostname in LAN mode and the names in `VANTAGE_ALLOWED_HOSTS`. Suffix (`.lan`) and wildcard (`*.lan`) entries are ignored, and there is no built-in `.local` suffix, so a TLS-proxy name such as `vantage.local` must be listed. Plugin middleware runs before Vite's own Host check, so the guard (`server/standalone/api-request-guard.js`) applies the list to every path ahead of all other middleware on the dev and preview servers, which closes DNS rebinding for `/api` and every other route. **Limit:** a listed name is trusted like the app's own address, so list only names you control.
 - **Other websites cannot drive the proxies.** The same guard refuses any `Origin` other than the server's own and any request the browser labels `Sec-Fetch-Site: cross-site` or `same-site` (which covers `<img>` and no-cors loads that carry no `Origin`). CORS is off, `/api/realtime/token` answers only `POST`, and the CCTV Street View fallback frames only registered cameras. Local tools without those headers (curl, the QA scripts) still work.
 - **Proxied requests cannot spend quota by default.** The cost-bearing and log routes (`/api/realtime/token`, `/api/realtime/debug-log`, `/api/openai/*`, `/api/google/text-search`, `/api/google/nearby-places`) refuse any request carrying a reverse-proxy or CDN forwarding header (`Forwarded`, `Via`, `X-Forwarded-*`, `X-Real-IP`, `CF-Connecting-IP`, `CF-Ray`) with `403`. Such a request came through something in front of the server, which on a loopback bind is the only way another machine reaches it. If you run your own TLS proxy for LAN voice and it adds those headers, set `VANTAGE_TRUST_PROXY=1`: it lets proxied requests reach those routes only, still behind the Host, `Origin` and `Sec-Fetch-Site` checks, and the per-IP throttles then count the proxy as one client. It never opens Provider Settings, which refuses proxied requests always.
-- **The local MCP server listens on nothing.** `npm run mcp` (`server/mcp/stdio.js`) speaks MCP over the stdin and stdout of the process an MCP client launches; it opens no port or socket, so no other program, device or website can reach it. It reads the app's `/api` routes on the loopback address (`http://127.0.0.1:4173` by default) and passes the same Host, `Origin` and `Sec-Fetch-Site` checks as curl, so it can do nothing a local process could not already do; it reads no keys, and keyed routes keep their keys, throttles and "not configured" answers. For that reason it needs no opt-in setting. Feeds a source reads directly (the USGS earthquake feed) are fetched by that process on a tool call, with the `vantage-mcp-tools` User-Agent; the README inventory lists them. Its stderr log names methods, tools and failure codes, never arguments or results. See [docs/TOOLS.md](docs/TOOLS.md#network-and-security).
+- **The local MCP server listens on nothing.** `npm run mcp` (`server/mcp/stdio.js`) speaks MCP over the stdin and stdout of the process an MCP client launches; it opens no port or socket, so no other program, device or website can reach it. It reads the app's `/api` routes on the loopback address (`http://127.0.0.1:4173` by default) and passes the same Host, `Origin` and `Sec-Fetch-Site` checks as curl, so it can do nothing a local process could not already do; it reads no keys, and keyed routes keep their keys, throttles and "not configured" answers. For that reason it needs no opt-in setting. Feeds a source reads directly (the USGS earthquake feed, and NASA's CMR catalog and Worldview Snapshots for recent imagery) are fetched by that process on a tool call, with the `vantage-mcp-tools` User-Agent; the README inventory lists them. Its stderr log names methods, tools and failure codes, never arguments or results. See [docs/TOOLS.md](docs/TOOLS.md#network-and-security).
+- **Embed mode is framed only by origins you list.** `?embed=1` shows the globe alone, and the page that frames it can change what it shows by posting views (`vantage:view`: camera, layers, style, map, annotations, an entity to follow); those views run through the app's own actions, so they can turn layers on and look up annotation place names, spending quota as doing that by hand would, but the framing page cannot read keys, responses or Provider Settings, which embed mode hides. Framing is off by default: every document sends `X-Frame-Options: DENY` and `frame-ancestors 'none'`. `VANTAGE_EMBED_FRAME_ANCESTORS` names the origins that may frame embed-mode documents; it accepts only explicit `http(s)` origins and logs and ignores `*`, wildcards, keywords and anything else, so no setting allows every page. Those documents keep the full Content-Security-Policy with only `frame-ancestors` changed; all other documents stay unframable. The app takes views only from its own parent window, ignores a parent with an opaque origin, and answers only that parent's origin. See [docs/TOOLS.md](docs/TOOLS.md#embed-mode).
 - **Local data is never served.** `.vantage-logs/` (voice transcripts when the debug log is on) and `.vantage-cache/` are in the dev server's `fs.deny`, alongside `.env*`, certificates, `.git` and `pinokio/ENVIRONMENT`.
 - **LAN exposure is an explicit opt-in**: `VANTAGE_HOST=0.0.0.0 ./scripts/dev-fresh.sh` (`HOST` is still read as the old name). The launcher prints a prominent warning plus your LAN URL. Understand what opting in means: **every device on that network can drive the proxies and spend your OpenAI / Google / OpenSky / AISStream / TomTom / FIRMS quota** for as long as the server runs. Do this only on networks you trust.
 - **App-level throttles:** `VANTAGE_RATELIMIT_OPENAI_PER_MIN` and `VANTAGE_RATELIMIT_GOOGLE_PER_MIN` cap the cost-bearing endpoints per client IP per minute (over-limit requests receive a sanitized `429`). They are on for every bind, at 30 and 60 unless you set them; exactly `0` means unlimited, a positive fraction counts as 1, and an unreadable value falls back to the default rather than to unlimited. They are **per-IP, process-local, in-memory guards** — they reset on restart and are **not billing caps**.
@@ -95,6 +110,17 @@ The dev server is a **key broker**: every server-side key above is spendable by 
   loopback only. Use a separately reviewed authentication proxy for remote
   access and keep provider-side quotas as the spend backstop.
 
+## MCP server
+
+Vantage's tools are also served to MCP clients: over stdio (`npm run mcp`, above) and, only when you opt in, at `/mcp` on the development and preview servers.
+
+- **`/mcp` is off by default.** Set `VANTAGE_MCP_HTTP=1` to serve it; there is no other name for the setting. While it is off, `/mcp` answers `404` with a JSON error naming the setting and runs nothing.
+- **What it admits when on.** Only direct local requests: a loopback connection (a LAN peer is refused whatever address the server binds) naming a loopback host on the port it reached, a browser `Origin` (when sent) from that same host and no cross-site `Sec-Fetch-Site`, no proxy forwarding headers (`VANTAGE_TRUST_PROXY` does not apply), and launcher sharing off. A `POST` must carry `Content-Type: application/json`, so a web page cannot post to it cross-site as a simple request. The server-wide `Host` check runs first.
+- **It is not authentication.** The route carries no token or secret: any program on your machine can use the tools while it is on, and some of them spend the same provider quotas as the app. Turn it on only while you use a client that needs it; `npm run mcp` over stdio needs no listener at all.
+- **What the panel's requests can reach.** In clients that display MCP Apps, the globe panel loads the app through the `panel_request` tool, which requests paths on the app's server. It is marked for the panel only and requires a key that each MCP server puts in its panel page, which keeps it from clients that list tools to the model without loading the panel. That key is not access control: any MCP client can read the panel page, key included, and then reach the app's files and data routes through `panel_request`, much as its other tools reach the data. Refused to every caller, in any letter case, percent-encoding or dot suffix: Provider Settings, credential and model endpoints, `/mcp`, the development server's internal routes, your own LAN receiver data (`/api/local-receivers`), cost-bearing Google place search (`/api/google`) and your configured Overpass instances (`/api/overpass`). Paths stay on the app's server, redirects are not followed, responses are capped at 64 MiB, and each server runs six requests at once with at most 256 waiting.
+- **The panel build is keyless by default.** The panel runs inside the client's page, on the client's site, so any browser key in it is handed to that site. `npm run build:panel` never embeds the app's `GOOGLE_MAPS_API_KEY` or `CESIUM_ION_TOKEN`; it builds the keyless globe unless you set `VANTAGE_PANEL_GOOGLE_MAPS_API_KEY` or `VANTAGE_PANEL_CESIUM_ION_TOKEN` for that command, meant for keys restricted separately to the hosts that show the panel, and it warns by name when it embeds one. The dev server serves the build at `/panel/` behind the same `Host` check as every route.
+- **The panel reaches only this app's providers.** The origins the panel declares to its host (`connectDomains`, `resourceDomains`) are derived from the app's own Content-Security-Policy list, so it can contact no provider the page itself could not; script, frame and font origins are not declared, and neither is OpenAI, since the panel cannot request a voice token.
+
 ## Network & privacy — what the browser may contact
 
 The README's [Network & privacy](README.md#network--privacy) section lists
@@ -106,7 +132,9 @@ controls that keep it that way:
   directives it needs and why; everything else is `'self'` and goes through
   `/api`. The dev and preview servers send it as a header (with
   `frame-ancestors 'none'`, `X-Frame-Options: DENY` and
-  `X-Content-Type-Options: nosniff`), and `vite build`
+  `X-Content-Type-Options: nosniff`; embed-mode documents swap only the
+  framing rule, and only for origins in `VANTAGE_EMBED_FRAME_ANCESTORS`),
+  and `vite build`
   writes it into `dist/index.html` as a meta tag. `script-src` allows
   `'unsafe-eval'` only because the Knockout copy inside Cesium's widgets
   compiles its bindings with `new Function`, and `blob:` only because the
@@ -150,7 +178,7 @@ controls that keep it that way:
 
 - The Vite server is a **development/preview** server. If you expose it beyond localhost, put it behind your own auth/proxy and review the bindings (see the threat model above).
 - All data shown is from **public** sources. See [DATA_SOURCES.md](DATA_SOURCES.md). Respect each provider's terms and rate limits.
-- The voice agent receives feed-sourced text (place names, callsigns) as scene context. It is instructed to act only via a fixed set of app-control tools and not to execute arbitrary instructions found in data, but treat model output as untrusted and keep the tool surface limited.
+- The voice agent receives feed-sourced text (place names, callsigns) as scene context. It is instructed to act only via a fixed set of app-control tools and not to execute arbitrary instructions found in data, but treat model output as untrusted and keep the tool surface limited. Voice also offers the read-only catalog queries ([docs/TOOLS.md](docs/TOOLS.md#voice)), which the page runs against the app's own `/api` routes; those that reach Google or OpenAI (`search_places` and `places_nearby`, `get_regional_brief`) run only when the user asks by voice, under the same per-IP throttles, and `get_traffic_flow` spends TomTom tiles only then, under the server's `TOMTOM_DAILY_TILE_BUDGET`.
 
 ## Responsible use
 

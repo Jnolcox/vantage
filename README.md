@@ -217,7 +217,7 @@ Click **MIC**, grant the microphone, and just talk. This is more than a voice-co
 - **🎬 Cinematic framing.** _"Show me the planes overhead"_ pulls the camera back, angles it, and frames the live traffic like a director.
 - **🔒 Honest and secure.** The agent only confirms actions that succeeded. Your `OPENAI_API_KEY` never touches the browser; the client only gets a short-lived session token.
 
-Twenty-eight tools, four jobs — the commands below come straight from the product's voice test suite and tool playbook:
+Thirty app actions plus read-only world queries (weather, places, routes, traffic, briefs), four jobs — the commands below come straight from the product's voice test suite and tool playbook:
 
 **🎥 Direct it** — drone-operator camera verbs:
 
@@ -235,7 +235,7 @@ Twenty-eight tools, four jobs — the commands below come straight from the prod
 
 **🔎 Interrogate it** — analyst queries against the live layers:
 
-> 🗣️ _"How many flights are over Texas right now?"_ · _"Which ships are headed to Oakland?"_ · _"What is the biggest fire near Los Angeles?"_ · _"Is anything flying above forty thousand feet?"_ · _"When does the ISS pass over next?"_
+> 🗣️ _"How many flights are over Texas right now?"_ · _"Which ships are headed to Oakland?"_ · _"What is the biggest fire near Los Angeles?"_ · _"Is anything flying above forty thousand feet?"_ · _"When does the ISS pass over next?"_ · _"What is the weather in Tokyo?"_ · _"How do I drive from Austin to Dallas?"_
 
 **🎛️ Operate it** — the whole console, hands-free:
 
@@ -248,6 +248,8 @@ Twenty-eight tools, four jobs — the commands below come straight from the prod
 <!-- TODO: capture: The globe populating with the world's radio stations as another live layer -->
 
 _Ask for radio near anywhere and the globe starts broadcasting — every station is a real place you can fly to._
+
+**Or ask from Claude and Codex.** Vantage is also an MCP server: ask Claude Desktop, Codex or ChatGPT desktop to show a place, and the live globe opens right in the conversation. See [docs/MCP_SETUP.md](docs/MCP_SETUP.md).
 
 ---
 
@@ -578,24 +580,46 @@ Calgary, and the DelDOT camera list `tmc.deldot.gov`); the Radio Browser directo
 | Destination | From | Trigger | What is sent |
 | --- | --- | --- | --- |
 | `maps.googleapis.com` (Geocoding), then `photon.komoot.io`, then `nominatim.openstreetmap.org` (server) | Browser, server | Search box or a voice search | Query text and a bias from the current view |
-| `places.googleapis.com` | Server | Place and nearby searches, with a Google key | Query, latitude/longitude, radius |
-| `routing.openstreetmap.de` | Server | Directions | Route coordinates |
+| `places.googleapis.com` | Server | Place and nearby searches, typed or asked by voice, with a Google key | Query, latitude/longitude, radius |
+| `routing.openstreetmap.de` | Server | Directions, or a route asked by voice | Route coordinates |
 | `inciweb.wildfire.gov` | Server, then browser | Selecting a fire perimeter checks the matched InciWeb incident page; clicking its **InciWeb** link opens that page in a new tab | Server: the InciWeb incident number. Browser: your IP address, no referrer (`noopener,noreferrer`) |
 | `www.nhc.noaa.gov` | Browser | Clicking **Official advisory ↗** on a Cyclone advisories card opens the NHC advisory in a new tab; the Data attribution credit links the NHC home page | Your IP address, no referrer (`noopener,noreferrer`) |
 | `video.deldot.gov` | Server | Opening a DelDOT live camera; segments are pulled while a viewer holds the stream and stop within 15 s of the last one closing | That camera's registered playlist and segment paths; nothing about your view |
 | `maps.googleapis.com` (Street View Static) | Server | CCTV fallback frame for a registered camera with no live image | That camera's registered location |
 | `api.openai.com` | Server, then browser | Starting voice | Server mints a short-lived secret; the browser then streams microphone audio, map context and tool results, and — with **VIEW** on — screenshots of local-scale views |
+| The providers above, through the app's own `/api` routes; `earthquake.usgs.gov` from the browser | Server; browser for USGS | A world question asked by voice: weather, wind, places, routes, traffic, transit, bike share, cyclones, fire perimeters, a regional or situation brief | The place, point or area you named, in place of the area in view; nothing runs until you ask |
 | A USB RTL-SDR (WebUSB) | Browser | **CONNECT** on the Radio panel's Local RTL-SDR card; the browser asks which device | Nothing leaves the machine: samples, audio and decoded aircraft stay in the page |
 | Your browser's location service | Browser | **LOCATE** on the Local RTL-SDR card (the browser asks first) | Whatever that browser's geolocation provider uses; the resulting position stays in the page and is used only to decode positions |
 | The station's stream host | Browser | Pressing play on Radio | Your IP address and origin; `radio-browser` hears about the play only with `VANTAGE_RADIO_REPORT_CLICKS=1` |
 | `www.youtube-nocookie.com`, `www.youtube.com`; `www.facebook.com`, `connect.facebook.net`; `platform.twitter.com` | Browser | Pressing **LOAD** or **ALWAYS ALLOW** on an embedded witness clip | Your IP address, origin and that provider's cookies |
 | `i.ytimg.com` | Browser | Opening the Bhote Koshi event | Your IP address and origin, no cookies (the event's YouTube thumbnail posters) |
 | `cmr.earthdata.nasa.gov`, `wvs.earthdata.nasa.gov`, `gibs.earthdata.nasa.gov` (NASA) | Browser | Recent Imagery: choosing a box (SELECT BOX, USE VIEW, around a pin) or pressing **SEARCH** for a kept or shared box; then thumbnails and tiles for the days shown, and **EXPORT**. Enabling the layer alone contacts nothing | The box (its corner coordinates) and the dates asked about, with your IP address and origin |
-| `earthquake.usgs.gov` | MCP stdio tools, on a tool call | An MCP client you registered with `npm run mcp` calls `get_earthquakes`; the other tools read the app's own `/api` routes, which contact the providers above as the layers do | The fixed USGS feed request, with your IP address and the `vantage-mcp-tools` User-Agent |
+| `earthquake.usgs.gov` | MCP stdio tools, on a tool call | An MCP client you registered with `npm run mcp` calls `get_earthquakes`; apart from `get_recent_imagery` (next row), the other tools read the app's own `/api` routes, which contact the providers above as the layers do | The fixed USGS feed request, with your IP address and the `vantage-mcp-tools` User-Agent |
+| `cmr.earthdata.nasa.gov`, `wvs.earthdata.nasa.gov` (NASA) | MCP stdio tools, on a tool call | An MCP client you registered with `npm run mcp` calls `get_recent_imagery` | The area's bounding box and the last 30 days, then the chosen day's snapshot request for that box, with your IP address and the `vantage-mcp-tools` User-Agent |
 
 The local MCP server (`npm run mcp`, see [docs/TOOLS.md](docs/TOOLS.md)) opens
 no port: the MCP client that launches it talks to it over stdin and stdout,
-and it reaches only the app's loopback `/api`, as any local process can.
+and apart from the MCP stdio rows above it reaches only the app's loopback
+`/api`, as any local process can. In clients that show MCP Apps, the globe
+panel runs in the client's own page: it loads the app and its data through
+the MCP server (`panel_request`), and only map imagery, tiles and terrain
+come straight from the providers in the table above, which the panel
+declares from this app's Content-Security-Policy. The panel build
+(`npm run build:panel`) is keyless unless you set
+`VANTAGE_PANEL_GOOGLE_MAPS_API_KEY` or `VANTAGE_PANEL_CESIUM_ION_TOKEN`
+(see [SECURITY.md](SECURITY.md#mcp-server)).
+
+**What can reach the server.** The dev and preview servers listen on
+`127.0.0.1` unless you opt into LAN mode (`VANTAGE_HOST=0.0.0.0`). The MCP
+route `/mcp` is off unless you set `VANTAGE_MCP_HTTP=1`; when on, it answers
+only direct requests from this machine (loopback socket, host and origin on
+the port reached; no proxy headers; sharing off), and carries no token, so any local program can then run the tools and spend provider quota
+(see [SECURITY.md](SECURITY.md#mcp-server)). Embed mode (`?embed=1`, the
+globe alone) can be driven by the page that frames it, which posts views to
+it; no page may frame it unless you list that page's origin in
+`VANTAGE_EMBED_FRAME_ANCESTORS` (explicit `http(s)` origins only; `*` is
+refused), and every other page of the app can never be framed (see
+[docs/TOOLS.md](docs/TOOLS.md#embed-mode)).
 
 Nothing else leaves the machine: no analytics, crash reporting, geolocation (beyond LOCATE above)
 or IP lookups. API keys stay on the server except `GOOGLE_MAPS_API_KEY` and

@@ -1,5 +1,6 @@
 /** Public camera and radio queries over the CCTV and radio sources. */
 
+import { suggestView } from '../views.js';
 import { defineTool, ToolError } from '../catalog.js';
 import {
   AREA_SCHEMA,
@@ -8,7 +9,7 @@ import {
   distanceKm,
   resolveArea,
 } from '../area.js';
-import { LIMIT_SCHEMA, capRows, countNoun } from '../results.js';
+import { LIMIT_SCHEMA, capRows, countNoun, toBase64 } from '../results.js';
 
 const FRAME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const MAX_FRAME_BYTES = 3 * 1024 * 1024;
@@ -17,12 +18,37 @@ const round = (value, digits) =>
   Number.isFinite(value) ? Number(value.toFixed(digits)) : null;
 const text = (value) => (typeof value === 'string' && value ? value : null);
 
-async function readCameras(services, signal) {
+async function readCatalog(services, signal) {
   const payload = await services.cctv.getCatalog({ signal });
-  return payload.sources.filter(
-    (camera) =>
-      camera?.id && Number.isFinite(camera.lat) && Number.isFinite(camera.lon),
+  return {
+    cameras: payload.sources.filter(
+      (camera) =>
+        camera?.id &&
+        Number.isFinite(camera.lat) &&
+        Number.isFinite(camera.lon),
+    ),
+    // Regional packs the catalog serves only part of, nearest their centers.
+    trimmed: Array.isArray(payload.trimmedPacks) ? payload.trimmedPacks : [],
+  };
+}
+
+/** Whether an area's box overlaps a plain region box. */
+function boxesOverlap(area, region) {
+  if (area.south > region.north || area.north < region.south) return false;
+  const spans =
+    area.west <= area.east
+      ? [[area.west, area.east]]
+      : [
+          [area.west, 180],
+          [-180, area.east],
+        ];
+  return spans.some(
+    ([west, east]) => west <= region.east && east >= region.west,
   );
+}
+
+async function readCameras(services, signal) {
+  return (await readCatalog(services, signal)).cameras;
 }
 
 export const findCctvCameras = defineTool({
@@ -41,8 +67,17 @@ export const findCctvCameras = defineTool({
   async run(args, { services, signal }) {
     const area = await resolveArea(args.area, { services, signal });
     const center = areaCenter(area);
-    const rows = (await readCameras(services, signal))
-      .filter((camera) => areaContains(area, camera))
+    const catalog = await readCatalog(services, signal);
+    const found = catalog.cameras.filter((camera) =>
+      areaContains(area, camera),
+    );
+    // A trimmed pack matters wherever its cameras are, served or not, so
+    // its region decides, not the cameras returned.
+    const packs = new Set(found.map((camera) => camera.pack).filter(Boolean));
+    const trimmed = catalog.trimmed.filter((entry) =>
+      entry.region ? boxesOverlap(area, entry.region) : packs.has(entry.pack),
+    );
+    const rows = found
       .map((camera) => ({
         id: camera.id,
         name: text(camera.name),
@@ -57,8 +92,26 @@ export const findCctvCameras = defineTool({
       }))
       .sort((a, b) => a.distance_km - b.distance_km);
     return {
-      summary: `${countNoun(rows.length, 'public camera')} in ${area.label}.`,
-      data: capRows(rows, args.limit),
+      summary:
+        (rows.length || trimmed.length
+          ? `${countNoun(rows.length, 'public camera')} in ${area.label}`
+          : // The catalog covers selected regions; an empty answer elsewhere
+            // means it has no cameras there, not that none exist.
+            `The camera catalog has no cameras in ${area.label}`) +
+        (trimmed.length
+          ? ` (the catalog serves only some cameras here: ${trimmed
+              .map(
+                (entry) =>
+                  `${entry.served} of ${entry.available} from ${entry.pack}`,
+              )
+              .join(', ')}).`
+          : '.'),
+      data: {
+        view: suggestView(services, { area, layers: ['cctv'] }),
+        ...capRows(rows, args.limit),
+        complete: trimmed.length === 0,
+        catalog_trimmed: trimmed,
+      },
     };
   },
 });
@@ -99,6 +152,11 @@ export const getCctvSnapshot = defineTool({
     return {
       summary: `Current view from ${name}${camera.city ? ` in ${camera.city}` : ''}${camera.credit ? `, courtesy of ${camera.credit}` : ''}.`,
       data: {
+        view: suggestView(services, {
+          point: { lat: camera.lat, lon: camera.lon },
+          altitudeM: 1_500,
+          layers: ['cctv'],
+        }),
         id: camera.id,
         name,
         city: text(camera.city),
@@ -107,7 +165,7 @@ export const getCctvSnapshot = defineTool({
         mime_type: frame.contentType,
         bytes: frame.bytes.byteLength,
       },
-      images: [{ mimeType: frame.contentType, data: base64(frame.bytes) }],
+      images: [{ mimeType: frame.contentType, data: toBase64(frame.bytes) }],
     };
   },
 });
@@ -116,7 +174,8 @@ export const findRadioStations = defineTool({
   name: 'find_radio_stations',
   title: 'Radio stations',
   description:
-    'Internet radio stations from the Radio Browser directory, by area and/or ' +
+    'Internet radio stations from a directory of popular Radio Browser ' +
+    'stations, not every station, by area and/or ' +
     'a search term matched against name, tags, language and country. Each ' +
     "result includes the broadcaster's public stream URL.",
   inputSchema: {
@@ -186,17 +245,21 @@ export const findRadioStations = defineTool({
     if (center) rows.sort((a, b) => a.distance_km - b.distance_km);
     const where = area ? ` in ${area.label}` : '';
     const what = args.query ? ` matching "${args.query}"` : '';
+    // The directory is a selection of popular stations, not every station.
+    const notes = [
+      `from a directory of ${directory.stations.length} popular stations`,
+      ...(directory.stale ? ['the directory may be stale'] : []),
+      ...(directory.degraded ? ['the directory is incomplete right now'] : []),
+    ];
     return {
-      summary: `${countNoun(rows.length, 'radio station')}${what}${where}.`,
-      data: capRows(rows, args.limit),
+      summary: `${countNoun(rows.length, 'radio station')}${what}${where} (${notes.join('; ')}).`,
+      data: {
+        view: area ? suggestView(services, { area, layers: ['radio'] }) : null,
+        ...capRows(rows, args.limit),
+        directory_size: directory.stations.length,
+        stale: directory.stale === true,
+        degraded: directory.degraded === true,
+      },
     };
   },
 });
-
-/** Base64-encode bytes with the platform's btoa, in chunks. */
-function base64(bytes) {
-  let binary = '';
-  for (let offset = 0; offset < bytes.length; offset += 0x8000)
-    binary += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000));
-  return btoa(binary);
-}

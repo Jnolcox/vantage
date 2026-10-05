@@ -9,6 +9,8 @@ import {
   getAircraftInfo,
   getAircraftTrack,
 } from './queries/aviation.js';
+import { getWeatherMap, getWind } from './queries/atmosphere.js';
+import { findSubmarineCables } from './queries/cables.js';
 import {
   getHudCaption,
   militaryAwareness,
@@ -23,8 +25,23 @@ import {
   getTerrainHeight,
   getWeather,
 } from './queries/environment.js';
+import { getBhoteKoshiFlood } from './queries/events.js';
 import { getActiveFires, getEarthquakes } from './queries/hazards.js';
+import { getRecentImagery } from './queries/imagery.js';
+import { findInfrastructure } from './queries/infrastructure.js';
+import {
+  findVessel,
+  getVesselTrack,
+  vesselsInArea,
+} from './queries/maritime.js';
+import {
+  getBikeShare,
+  getTrafficFlow,
+  getTransitVehicles,
+} from './queries/mobility.js';
+import { panelRequest } from './queries/panelRequest.js';
 import { placesNearby, planRoute, searchPlaces } from './queries/places.js';
+import { showInVantage } from './queries/share.js';
 import {
   findCctvCameras,
   findRadioStations,
@@ -35,6 +52,7 @@ import {
   nextSatellitePass,
   satellitesOverhead,
 } from './queries/space.js';
+import { findAlprCameras } from './queries/surveillance.js';
 
 export {
   defineTool,
@@ -50,6 +68,13 @@ export {
   distanceKm,
 } from './area.js';
 export { LIMIT_SCHEMA, DEFAULT_LIMIT, MAX_LIMIT, capRows } from './results.js';
+export { toFunctionOutput, toFunctionTools } from './functions.js';
+export {
+  SURFACES,
+  TOOL_SURFACES,
+  catalogForSurface,
+  toolsForSurface,
+} from './surfaces.js';
 export {
   createGeocodePlaceService,
   createPlaceSearchService,
@@ -66,15 +91,28 @@ export const coreTools = Object.freeze([
   findAircraft,
   getAircraftTrack,
   getAircraftInfo,
+  vesselsInArea,
+  findVessel,
+  getVesselTrack,
   nextSatellitePass,
   satellitesOverhead,
   findCctvCameras,
   getCctvSnapshot,
+  findAlprCameras,
   findRadioStations,
   searchPlaces,
   placesNearby,
   planRoute,
+  getBikeShare,
+  getTransitVehicles,
+  getTrafficFlow,
   getWeather,
+  getWeatherMap,
+  getWind,
+  getRecentImagery,
+  findSubmarineCables,
+  findInfrastructure,
+  getBhoteKoshiFlood,
   getRegionalBrief,
   getCyclones,
   getFirePerimeters,
@@ -84,4 +122,6 @@ export const coreTools = Object.freeze([
   situationBrief,
   militaryAwareness,
   getHudCaption,
+  showInVantage,
+  panelRequest,
 ]);

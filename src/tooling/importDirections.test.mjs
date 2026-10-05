@@ -31,7 +31,11 @@ test('module analysis parses dependencies and platform references without readin
     analyzeModule(
       "// import('node:fs'); document\nimport x from 'one'; export { x } from 'two'; export * from 'three'; import('four'); const data = { document: 1 }; data.window;",
     ),
-    { imports: ['one', 'two', 'three', 'four'], browser: [] },
+    {
+      imports: ['one', 'two', 'three', 'four'],
+      dynamicImports: ['four'],
+      browser: [],
+    },
   );
   assert.deepEqual(
     analyzeModule(
@@ -52,6 +56,19 @@ test('portable sources can share records, and standalone can assemble rendering'
   write('src/standalone/catalog.js', "import '../layers/demo/index.js';");
   write('src/layers/demo/index.js', "import * as Cesium from 'cesium';");
   assert.equal(checkImportDirections(root).modules, 5);
+});
+
+test('voice reaches the tools only through the adapter and a lazy catalog', (t) => {
+  const { root, write } = fixture(t);
+  write('src/tools/functions.js');
+  write('src/tools/index.js');
+  write('src/tools/services.js');
+  write('src/voice/vantageRealtime.js', "import '../tools/functions.js';");
+  write(
+    'src/standalone/toolCatalog.js',
+    "import('../tools/index.js'); import('../tools/services.js');",
+  );
+  assert.equal(checkImportDirections(root).modules, 6);
 });
 
 for (const [name, files, pattern] of [
@@ -129,6 +146,22 @@ for (const [name, files, pattern] of [
     'application imports tools',
     {
       'src/app/demo.js': "import '../tools/index.js';",
+      'src/tools/index.js': '',
+    },
+    /Application imports tools/,
+  ],
+  [
+    'the standalone tool catalog imports the tools eagerly',
+    {
+      'src/standalone/toolCatalog.js': "import '../tools/index.js';",
+      'src/tools/index.js': '',
+    },
+    /Application imports tools/,
+  ],
+  [
+    'voice imports the whole tool catalog',
+    {
+      'src/voice/vantageRealtime.js': "import '../tools/index.js';",
       'src/tools/index.js': '',
     },
     /Application imports tools/,

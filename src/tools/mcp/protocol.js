@@ -1,7 +1,10 @@
 /**
  * Model Context Protocol server for a tool catalog: JSON-RPC 2.0 handling of
- * initialize, ping, tools/list and tools/call. Transports (HTTP, stdio) pass
- * parsed messages in and send the returned responses out.
+ * initialize, ping, tools/list and tools/call, and resources/list and
+ * resources/read for the resources an application supplies, such as MCP Apps
+ * views (`ui://` resources) that tools name in `_meta.ui.resourceUri`.
+ * Transports (HTTP, stdio) pass parsed messages in and send the returned
+ * responses out.
  */
 
 import { ToolError } from '../catalog.js';
@@ -18,6 +21,7 @@ const INVALID_REQUEST = -32600;
 const METHOD_NOT_FOUND = -32601;
 const INVALID_PARAMS = -32602;
 const INTERNAL_ERROR = -32603;
+const RESOURCE_NOT_FOUND = -32002;
 
 /**
  * Describe catalog tools as MCP tool definitions.
@@ -36,11 +40,21 @@ export function toMcpTools(catalog, { descriptions = {}, decorate } = {}) {
       description: override.description ?? tool.description,
       inputSchema: tool.inputSchema,
       annotations: { title, ...tool.annotations },
+      ...(tool.ui ? { _meta: toolUiMeta(tool.ui) } : {}),
     };
     return decorate
       ? { ...definition, ...decorate(definition, tool) }
       : definition;
   });
+}
+
+function toolUiMeta(ui) {
+  return {
+    ui: { ...ui },
+    // The flat key is the earlier form of the same field, which some hosts
+    // still read; the MCP Apps SDK sends both.
+    ...(ui.resourceUri ? { 'ui/resourceUri': ui.resourceUri } : {}),
+  };
 }
 
 /**
@@ -54,8 +68,12 @@ export function createMcpServer({
   instructions,
   descriptions,
   decorate,
+  resources = [],
 }) {
   const tools = () => toMcpTools(catalog, { descriptions, decorate });
+  const resourceByUri = new Map(
+    resources.map((resource) => [resource.uri, resource]),
+  );
   const methods = {
     initialize(params) {
       const requested = params?.protocolVersion;
@@ -63,13 +81,28 @@ export function createMcpServer({
         protocolVersion: MCP_PROTOCOL_VERSIONS.includes(requested)
           ? requested
           : MCP_PROTOCOL_VERSIONS[0],
-        capabilities: { tools: { listChanged: false } },
+        capabilities: {
+          tools: { listChanged: false },
+          ...(resources.length ? { resources: { listChanged: false } } : {}),
+        },
         serverInfo: { name, version },
         ...(instructions ? { instructions } : {}),
       };
     },
     ping: () => ({}),
     'tools/list': () => ({ tools: tools() }),
+    'resources/list': () => ({
+      resources: resources.map(({ text, ...entry }) => entry),
+    }),
+    'resources/read'(params) {
+      const resource = resourceByUri.get(params?.uri);
+      if (!resource)
+        throw rpcError(RESOURCE_NOT_FOUND, `Unknown resource: ${params?.uri}`);
+      const { uri, mimeType, text, _meta } = resource;
+      return {
+        contents: [{ uri, mimeType, text, ...(_meta ? { _meta } : {}) }],
+      };
+    },
     async 'tools/call'(params, { signal }) {
       if (typeof params?.name !== 'string')
         throw rpcError(INVALID_PARAMS, 'tools/call needs a tool name');
@@ -79,12 +112,18 @@ export function createMcpServer({
         const result = await catalog.call(params.name, params.arguments ?? {}, {
           signal,
         });
+        // Only an app reads a tool the model cannot call, and apps read
+        // structuredContent.
+        const appOnly =
+          catalog.get(params.name).ui?.visibility?.includes('model') === false;
         return {
           // The data is repeated as JSON text for clients that do not read
           // structuredContent.
           content: [
             { type: 'text', text: result.summary },
-            { type: 'text', text: JSON.stringify(result.data) },
+            ...(appOnly
+              ? []
+              : [{ type: 'text', text: JSON.stringify(result.data) }]),
             ...(result.images || []).map((item) => ({
               type: 'image',
               data: item.data,

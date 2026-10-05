@@ -454,27 +454,68 @@ layers' portable source factories, and `vantage/tools/mcp` exposes a composed
 catalog over the Model Context Protocol. `npm run mcp` (`server/mcp/stdio.js`)
 serves Core's tools over stdio to a local MCP client, reading from a running
 app's `/api` routes (default `http://127.0.0.1:4173`, `--api-base` to change).
-It opens no listener. Requests a source sends to another origin directly (the
-USGS earthquake feed) carry `clientUserAgent('mcp-tools')`; requests to the app
+It opens no listener. With `VANTAGE_MCP_HTTP=1` the development and preview
+servers also serve the tools over HTTP at `/mcp` (`server/mcp/plugin.js`,
+installed after the providers and before the `/api` fallback), accepting only
+direct local requests: a loopback socket, a loopback host on the port reached,
+an `Origin` (when sent) from that same host, no proxy forwarding headers
+(`VANTAGE_TRUST_PROXY` never applies), launcher sharing off and, on `POST`, a
+JSON `Content-Type`; without it `/mcp` answers a
+JSON `404` naming the setting. A request body must arrive within 30 s
+(`408`) and stay under 1 MiB (`413`, delivered after draining), and a client
+that disconnects cancels its call. Over stdio, `notifications/cancelled`
+aborts the named request, which then gets no response.
+Requests a source sends to another origin directly (the
+USGS earthquake feed, NASA's CMR catalog and Worldview Snapshots) carry `clientUserAgent('mcp-tools')`; requests to the app
 pass the `/api` guard as a local non-browser client. Queries cover
 earthquakes, active fires, recent launches, aircraft (`aircraft_in_area`,
 `find_aircraft`, `get_aircraft_track`, `get_aircraft_info` over the OpenSky,
-adsb.lol and adsbdb routes) and satellites (`next_satellite_pass`, computed by
+adsb.lol and adsbdb routes), ships (`vessels_in_area`, `find_vessel`,
+`get_vessel_track` over `/api/vessels`, `unavailable` without
+`AISSTREAM_API_KEY`) and satellites (`next_satellite_pass`, computed by
 `src/data/satellitePass.js` as the voice action of the same name is, and
-`satellites_overhead`), public cameras (`find_cctv_cameras`, and
+`satellites_overhead`), public cameras (`find_cctv_cameras`, which marks an
+answer partial when its area overlaps a pack the catalog trimmed, read from the
+`trimmedPacks` list (pack, cameras offered and served, and the pack's camera
+bounding box) that `/api/cctv/sources` now returns beside each camera's
+`pack`, and says the catalog has no cameras rather than that none exist, and
 `get_cctv_snapshot`, which returns the frame from `/api/cctv/frame` as MCP
-image content, JPEG, PNG or WebP up to 3 MB) and radio stations
+image content, JPEG, PNG or WebP up to 3 MB), license plate reader cameras
+(`find_alpr_cameras`, over the ALPR layer's hourly extract through
+`/api/tiles/alpr`, US and Canada only, at most 3° per side) and radio stations
 (`find_radio_stations`, which returns stream URLs and reports no clicks), place
 search (`search_places`, `places_nearby` over `/api/google/text-search` and
 `/api/google/nearby-places`, answering `unavailable` when no Google key is
 configured, and `retry_later` on the routes' per-IP `429`) and routing
 (`plan_route` over `/api/route`, with a place name or coordinates at each end),
+bike-share stations (`get_bike_share` over `/api/gbfs`) and transit vehicles
+(`get_transit_vehicles` over `/api/transit`, with each feed's attribution and
+license; as in the transit layer, a feed the proxy served from its error cache
+(`X-Vantage-Cache: STALE-ERROR`) or whose operator has not answered for 90 s is
+reported stale, and fixes past the layer's vehicle age limit are dropped and
+counted), each reading at most the three nearest systems or feeds that cover the
+area and reporting the ones that did not answer, road traffic
+(`get_traffic_flow` over `/api/tomtom/flow`, at most 16 flow tiles per call,
+stepping down to zoom 9 before refusing a larger area, and `unavailable` without
+a TomTom key),
 and, over the application request services and the layers' sources, weather
-(`get_weather`), regional briefs (`get_regional_brief`), tropical cyclones,
+(`get_weather`), weather map images (`get_weather_map`, the latest NOAA radar,
+satellite or lightning frame from `/api/weather` as MCP image content, in a
+window the image route accepts), wind (`get_wind`, sampled from the
+`/api/wind` GFS or IFS grid), the most recent satellite image of an area
+(`get_recent_imagery`, the Recent Imagery layer's CMR search and ranking with
+the chosen day read from Worldview Snapshots, at most 8 MB, falling back to the
+VIIRS daily overview), submarine cables (`find_submarine_cables`, over the
+bundled TeleGeography data, which the stdio server's fetch reads from
+`src/data/local_data/` only), datacenters and dams (`find_infrastructure`, over
+the bundled layer files with the analyst query's record mapping), the Bhote
+Koshi flood event (`get_bhote_koshi_flood`, the pack's evidence trail, flood
+path and imagery dates from `/events/bhote-koshi-2026/event.json`, as text and
+links with no embed loaded), regional briefs (`get_regional_brief`), tropical cyclones,
 fire perimeters, terrain height, mapped military installations and map
 features (`get_map_features`, `unavailable` without a configured Overpass
 instance), plus `situation_brief`, which runs weather, earthquake, fire,
-aircraft and cyclone sections and marks failed ones unavailable,
+aircraft, ship and cyclone sections and marks failed ones unavailable,
 `military_awareness`, which does the same for military aircraft, other
 aircraft and mapped installations within 250 km of a point, and
 `get_hud_caption`, which posts the HUD's label-only summary context to
@@ -482,12 +523,63 @@ aircraft and mapped installations within 250 km of a point, and
 and, as the HUD does, replaces a caption that hides a non-nominal state with
 the app's own line naming it. The caption and regional brief spend provider
 quota under those routes' throttles, on a tool call only; the HUD's Live/Local
-toggle governs only the page's own periodic lookups.
+toggle governs only the page's own periodic lookups. `show_in_vantage` returns
+a version 2 share link on the app's address (`--api-base`) for a view built by
+the pure `src/view/index.js`: another answer's view, an area framed from above
+or a camera, with registered layers, style, map, an aircraft (optionally in
+its cockpit view, which links cannot carry) or satellite to follow, and
+annotation marks (the bounded `an` parameter). A view that only follows an
+aircraft is framed where a feed reports it now. In clients that display MCP
+Apps it also shows the view as live Vantage in the conversation: the tool
+names the `ui://vantage/globe` resource, which the local MCP server serves
+(`resources/list`, `resources/read`).
+Answers with something to show also carry `data.view`, the view that shows
+them and its link (`src/tools/views.js`); no request is sent to build it.
+Launch and satellite answers say when the proxy served its last copy
+(`X-Vantage-Cache` or `x-tle-cache` of `STALE-ERROR`), aircraft answers name a
+regional fallback feed, ALPR answers say when tiles failed or were trimmed, and
+radio answers say they come from a directory of popular stations.
 Live-source failures become tool errors with the matching code. Tools take a
 shared `area` argument (place name, bounding box, or point and radius) and cap
-lists at 25 rows by default. Nothing under `src/` outside `src/tools/` imports
-the tools (`check:boundaries` enforces it), so the page is unchanged. See
+lists at 25 rows by default. `src/tools/surfaces.js` chooses which surfaces
+offer each tool: MCP leaves out place search, routing, plain weather and wind,
+the regional brief, the HUD caption, radio, bike share and transit, and voice
+leaves out image answers, `show_in_vantage`, the HUD caption and the aircraft,
+ship, hazard, infrastructure and satellite queries its app actions answer;
+composites such as `situation_brief` still reach every tool. Voice offers its
+queries next to its app actions: the session lists them, and the browser runs
+them through the same catalog, loaded on the first query voice calls. Outside
+`src/tools/`, only voice reaches the tools (`check:boundaries` enforces it):
+the voice runner imports the function-calling adapter, and
+`src/standalone/toolCatalog.js` loads the catalog with a dynamic import, so
+page load is unchanged. See
 [tools and the MCP server](TOOLS.md).
+
+`?embed=1` shows the app as the globe alone and takes new views
+(`vantage:view`) from its parent page; links that carry annotations draw them
+once restored. The page loads that code (`src/app/embed.js`) only for those
+two cases. Framing is off unless `VANTAGE_EMBED_FRAME_ANCESTORS` lists the
+framing page's origin; only explicit `http(s)` origins are accepted. A
+followed aircraft owns the camera, so a view flies the camera only while its
+entity is not there yet, then enters cockpit view when asked.
+
+The globe panel (`src/tools/globePanel.js`, with the page script
+`src/app/globePanelRuntime.js`, exported as `vantage/tools/panel`) runs the
+app's panel build inline in embed mode inside the MCP host's page. The
+build, from the opt-in `npm run build:panel`, is written to `dist/panel` and
+served by the development server at `/panel/` behind the `Host` check; `npm
+run build` and the app's page never load it. It is keyless unless
+`VANTAGE_PANEL_GOOGLE_MAPS_API_KEY` or `VANTAGE_PANEL_CESIUM_ION_TOKEN` is set
+for that command, which then warns. The panel never requests the app's server
+itself: it loads the build and the app's data through `panel_request`, an
+app-only tool that needs the key each MCP server puts in its panel page (not
+access control), stays on the app's origin without following redirects, reads
+at most 64 MiB per response within 60 s, runs six requests at once per server
+with up to 256 waiting, and refuses, in any case, encoding or dot suffix,
+`/api/setup`, `/api/realtime`, `/api/openai`, `/mcp`, `/@…`, `/__…`,
+`/api/local-receivers`, `/api/google` and `/api/overpass`. The origins the
+panel declares to its host are derived from `CSP_ORIGINS` (`connect-src` and
+`img-src`, without OpenAI, which the panel cannot use). See [MCP setup](MCP_SETUP.md).
 
 ## Vessel components and sources
 
@@ -1308,7 +1400,7 @@ This is the current runtime/source-of-truth snapshot for the project.
 >   dependency list rather than a fix for one layer, and the dependencies reach
 >   it by different routes:
 >   - **AIS vessels is its reachable producer.** `enable()`/`update()` both
->     resolve as soon as the first `/api/ais-live` poll answers, so the manager's
+>     resolve as soon as the first `/api/vessels` poll answers, so the manager's
 >     lifecycle settles to `enabled` — but until the server-side socket delivers
 >     a position, `firstConnectPhase` stays `'loading'` and `getStats()` reports
 >     `loading: true`, `lastUpdate: null`, count 0, and an UNDEFINED status.
@@ -1713,7 +1805,7 @@ This is the current runtime/source-of-truth snapshot for the project.
 >   the share payload; Radio restores only its allowlisted filter and volume.
 > - **AIS feed watchdog (2026-08-18):** feed liveness is judged by DATA, not
 >   socket state — AISStream can complete the handshake and then deliver
->   nothing forever. `/api/ais-live` reports `live | stale | reconnecting |
+>   nothing forever. `/api/vessels` reports `live | stale | reconnecting |
 >   down | auth-failed` (plus the unchanged `missing-key`/`unsupported`) with
 >   `silentForMs`, `reconnectAttempt` and `nextAttemptAt`. Silence is REPORTED
 >   at 120s and ACTED ON at 300s; recovery walks a 5s/15s/60s/300s ladder and
@@ -2758,9 +2850,9 @@ its criteria cannot be silently ignored.
 
 | Layer | Source | File | Proxy | Update Interval |
 |-------|--------|------|-------|-----------------|
-| Live Flights ✈️ | OpenSky Network; bounded adsb.lol regional fallback | `src/data/flights.js` | `/api/opensky` (OAuth + fallback) | 30s |
-| Military Flights 🎖️ | adsb.lol /v2/mil | `src/data/militaryFlights.js` | `/api/adsblol/mil` | 15s |
-| Live AIS Vessels 🚢 | AISStream websocket | `src/data/aisLiveVessels.js` | `/api/ais-live` | 60s (+800ms visibility pass) |
+| Live Flights ✈️ | OpenSky Network; bounded adsb.lol regional fallback | `src/data/flights.js` | `/api/flights` (OAuth + fallback) | 30s |
+| Military Flights 🎖️ | adsb.lol /v2/mil | `src/data/militaryFlights.js` | `/api/military` | 15s |
+| Live AIS Vessels 🚢 | AISStream websocket | `src/data/aisLiveVessels.js` | `/api/vessels` | 60s (+800ms visibility pass) |
 | Mapped Installations ⌖ | OpenStreetMap mapped context; on-demand Google Maps Places supplement | `src/data/militaryInstallations.js` | `/api/military-installations`, `/api/google/text-search` | viewport-driven + user search; while unavailable, auto-retry 30 s → 240 s backoff |
 | Earthquakes | USGS | `src/data/earthquakes.js` | — | 60s |
 | Satellites | CelesTrak | `src/data/satellites.js` | `/api/celestrak` | 120s |
@@ -3597,7 +3689,7 @@ silently demoting every later lookup for the session.
   A selected mission renders its orbit as four repeating tactical sectors, each containing one prominent cyan dot followed by one hundred thin translucent dashes. The bright dots act as orbit anchors while the subdued dash field remains depth-tested against the globe and is shown only for the selected mission.
   Close selected-pad views add one static 500 m-radius cyan launch-zone ring with a low-opacity translucent fill over the sampled photoreal launch-site surface. The single scene primitive is created only for the visible selected site and is otherwise dormant. It appears during Focus, sufficiently close manual zoom, and the replay countdown, but is suppressed above 120 km camera altitude, beyond 180 km direct camera-to-pad range, for unselected missions, and whenever Space Missions is inactive. Focus establishes a launch-site-centered camera transform once; subsequent manual heading and pitch changes remain centered on that site without an automated per-frame correction. Surface mission markers and labels use an additional conservative globe-limb margin before the exact ellipsoid occluder boundary, preventing near-horizon visibility from alternating between frames.
 - **AIS vessels**: chevron symbology (naval cyan base, type tints), world-space headings, MMSI-keyed reconciliation (selection survives refreshes; pinned 3 refreshes with STALE marker when absent), detection-overlay integration (`type: 'SEA'`), contextStore registration for voice Q&A. Empty-space clicks, id-less photorealistic-tile picks, and Escape dismiss the vessel card/HUD/context and clear its trail; picks owned by another layer (including `vantage-trail:*`) and raw vessel-record picks without a live MMSI key are no-ops for vessel selection. Click and key handlers detach while the layer is disabled and reinstall on enable. Selecting another vessel replaces the selection and trail, and reconciliation clears a trail if its owning vessel is evicted.
-- **Track trails**: server accumulates per-MMSI ring buffers (`/api/ais-live/track?mmsi=`, Float32+Uint32, 64 samples, 30s/25m thinning); aircraft backfill proxies `/api/opensky-track` (OAuth, own credit bucket) and `/api/adsblol/trace` (tar1090 readsb, ~24h history, ODbL — credit adsb.lol).
+- **Track trails**: server accumulates per-MMSI ring buffers (`/api/vessels/track?mmsi=`, Float32+Uint32, 64 samples, 30s/25m thinning); aircraft backfill proxies `/api/flights/track` (OAuth, own credit bucket) and `/api/military/track` (tar1090 readsb, ~24h history, ODbL — credit adsb.lol).
 - Shared `src/data/pickRegistry.js` stops the two flight layers' click handlers from fighting over the camera.
 
 ### Overpass proxy mirror rotation (September 2026)
@@ -3734,7 +3826,16 @@ silently demoting every later lookup for the session.
 ### Live AIS Vessels (June 2026)
 
 - Server-side `ws` websocket to `wss://stream.aisstream.io/v0/stream` maintained by Vite middleware; `AISSTREAM_API_KEY` never reaches the browser (AISStream has no browser CORS). The `ws` package is used rather than Node's built-in WebSocket specifically because only it can hard-abort a wedged socket (see the watchdog note in the delta block at the top).
-- Browser polls same-origin `/api/ais-live` cache every 60s.
+- Browser polls same-origin `/api/vessels` cache every 60s.
+- Each request names the area in view as `lat`, `lon` and `radius_km`
+  (centered on the middle of the screen, radius about the camera height,
+  10-450 km; a wider view sends no area and asks for every vessel). The
+  bundled server keeps every vessel and ignores the area. A camera move of a
+  quarter radius asks again only when the last request is at least
+  `VIEW_AREA_REFETCH_MIN_INTERVAL_MS` (the 60-second poll cadence) old;
+  otherwise the next poll carries the new area, so moving the camera adds no
+  requests to the poll cadence. `vessels_in_area` names its area the same
+  way.
 - The first enable in a session starts one 30-second client grace timer. Until
   an accepted vessel position arrives, `live`/`open`/`connecting` transport reports
   `LOADING`; the timer is not restarted by the 60-second poll. Expiry or a
@@ -3850,6 +3951,7 @@ are omitted rather than framing the wrong part of the globe.
 
 ### Map Stack Switcher (June 2026)
 
+- Google 3D startup (`loadPhotorealisticTileset`, `src/maps/google3d.js`) tries a browser key first (`google-direct`), else short-lived server tokens (`google-token`: `Authorization: Bearer` on every tile, one renewal and retry on 401/403, concurrent refusals coalesced in `src/maps/googleTokens.js`), then ion (`google-ion`), then the keyless globe. The token route runs only when the build defines `import.meta.env.VANTAGE_GOOGLE_TILE_TOKENS` as `true`; the standalone build sets it `false` because Vantage ships no `/api/google/tiles-token` endpoint (Google offers no Map Tiles-only OAuth scope; see `SECURITY.md`), so no token request is made.
 - `src/mapStackController.js` switches between Google Photorealistic 3D (`photoreal`, the default when a Google or ion key is present), keyless Esri World Imagery (the zero-key default landing, with keyless terrain), Bing Aerial / Aerial-with-Labels via Cesium ion world imagery (require `CESIUM_ION_TOKEN`), and OSM tile fallback. Bing Road is **retired**: it is gone from `MAP_STACKS`, from the `set_map_stack` enum, and from the voice aliases (road phrasings now resolve to OSM, the one shipped road basemap). An old `map=bing-road` link is simply an unknown id and takes `setStack()`'s existing photoreal fallback with the Google 3D tile lit — pinned live in `scripts/qa-map-source-tray.mjs`.
 - The bottom Visual Presets tray presents a **five-tile MAP SOURCE row** (`#map-stack-chips`, `src/mapStackChips.js`): Google 3D, Esri Satellite, Bing Aerial, Bing Labels, and OSM. The duplicate left `#stack-panel` is retired. The five tiles share one row on desktop and two rows on narrow screens, carry `aria-pressed` on the active source, and remain keyboard-reachable with a visible focus outline.
 - The lit tile follows controller state, not the click: a rejected switch (no ion token) or a superseded one (rapid A→B) leaves the genuinely active source lit, and the tray heading keeps its short-label status readout (`...` while switching, amber on `lastError`).
@@ -3982,13 +4084,13 @@ are omitted rather than framing the wrong part of the globe.
 - Proxy error payloads are sanitized (no internal error details returned to clients).
 - That holds for the OpenAI and CCTV media paths too: `/api/openai/hud-summary` never relays OpenAI's own `error.message`, `/api/realtime/token` passes successful ephemeral-token responses through but answers with a fixed error when minting fails or upstream rejects the request, and a failed CCTV media fetch stores a fixed camera health `message` — `GET /api/cctv/health` serializes that field and the CCTV panel renders it as a status label, so it is a client surface as much as the response body is.
 - `OPENAI_API_KEY` is server-side only; the browser receives ephemeral Realtime client secrets from `/api/realtime/token`.
-- `AISSTREAM_API_KEY` is server-side only; the browser reads the same-origin `/api/ais-live` cache.
+- `AISSTREAM_API_KEY` is server-side only; the browser reads the same-origin `/api/vessels` cache.
 - `/api/google/nearby-places` keeps the Google key out of Places requests issued for voice scene context.
 - `/api/google/text-search` keeps the Google key server-side for view-biased Places recovery used by annotation resolution.
 - `/api/overpass` is bounded by body/response caps, per-client/global rate limits, concurrency limits, mirror fallback, in-flight dedupe, cache bounds, and static validation that every selector is spatially bounded.
 - `/api/military-installations` uses an independent limiter with the same 90-per-client/300-global one-minute bounds, so viewport installation refreshes never consume `/api/overpass` annotation/traffic capacity.
 - `/api/route` proxies bounded OSRM route requests for annotation routes, with profile allowlisting, distance caps, response caps, caching, and sanitized "no route found" errors.
-- Track endpoints: `/api/ais-live/track?mmsi=` (server-accumulated ring buffers; sub-route handled before the rows snapshot), `/api/opensky-track?icao24=` (OAuth, 60s cache, sanitized errors, independent OpenSky credit bucket), `/api/adsblol/trace?hex=` (60s cache, 5MB cap, ODbL attribution required in UI).
+- Track endpoints: `/api/vessels/track?mmsi=` (server-accumulated ring buffers; sub-route handled before the rows snapshot), `/api/flights/track?icao24=` (OAuth, 60s cache, sanitized errors, independent OpenSky credit bucket), `/api/military/track?hex=` (60s cache, 5MB cap, ODbL attribution required in UI).
 - Realtime debug logs redact API keys, bearer tokens, client secrets, and image data URLs before writing to disk; request bodies are size-capped.
 - `/api/realtime/debug-log` enforces an always-on 120-per-client/400-global one-minute limiter (not the `VANTAGE_RATELIMIT_OPENAI_PER_MIN` bucket the cost-bearing OpenAI routes share), appends asynchronously through a serialized queue, and rotates `realtime-conversations.jsonl` at 32 MB keeping one prior generation, so the sink is bounded at twice that regardless of session length. A malformed record answers 400 and a failed write 500, both with a fixed message.
 

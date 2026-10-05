@@ -16,22 +16,32 @@ import { DEFAULT_API_BASE } from './services.js';
 
 /** Method and tool names as they are logged; anything else is not echoed. */
 const LOGGABLE_NAME = /^[\w./-]{1,80}$/;
+/** Resource URIs as they are logged, such as ui://vantage/globe. */
+const LOGGABLE_URI = /^[a-z][\w+.-]{0,20}:\/\/[\w./-]{1,80}$/i;
 
 /**
  * A one-line description of a request for the diagnostic log: its method,
- * and the tool it names. Arguments and data are never logged, and a name
- * that does not look like one (free text, a line break) is replaced, so a
- * client cannot write arbitrary text or forge lines in the log.
+ * and the tool or resource it names. Arguments and data are never logged,
+ * and a name that does not look like one (free text, a line break) is
+ * replaced, so a client cannot write arbitrary text or forge lines in the
+ * log.
  */
 export function describeRequest(message) {
   if (typeof message?.method !== 'string') return null;
   const method = LOGGABLE_NAME.test(message.method)
     ? message.method
     : '(unnamed method)';
-  if (method !== 'tools/call') return method;
-  const tool = message.params?.name;
-  if (typeof tool !== 'string') return method;
-  return `${method} ${LOGGABLE_NAME.test(tool) ? tool : '(unnamed tool)'}`;
+  if (method === 'tools/call') {
+    const tool = message.params?.name;
+    if (typeof tool !== 'string') return method;
+    return `${method} ${LOGGABLE_NAME.test(tool) ? tool : '(unnamed tool)'}`;
+  }
+  if (method === 'resources/read') {
+    const uri = message.params?.uri;
+    if (typeof uri !== 'string') return method;
+    return `${method} ${LOGGABLE_URI.test(uri) ? uri : '(unnamed resource)'}`;
+  }
+  return method;
 }
 
 /**

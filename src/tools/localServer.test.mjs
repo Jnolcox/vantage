@@ -242,6 +242,24 @@ test('the stdio log does not echo free text given as a method or tool name', () 
   );
 });
 
+test('the stdio log names the resource a read asks for, and only a URI', () => {
+  assert.equal(
+    describeRequest({
+      method: 'resources/read',
+      params: { uri: 'ui://vantage/globe' },
+    }),
+    'resources/read ui://vantage/globe',
+  );
+  assert.equal(
+    describeRequest({
+      method: 'resources/read',
+      params: { uri: 'ui://vantage/globe\n<- forged line' },
+    }),
+    'resources/read (unnamed resource)',
+  );
+  assert.equal(describeRequest({ method: 'resources/list' }), 'resources/list');
+});
+
 test('a failed tool call is logged with its error code, not its message', async () => {
   const server = {
     handle: async (message) => ({

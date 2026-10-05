@@ -3166,7 +3166,11 @@
       "src/data/feedState.js",
       "src/data/layerSnapshot.js",
       "src/hudSummaryResponse.js",
-      "src/tools/queries/brief.js"
+      "src/tools/queries/brief.js",
+      "src/layers/transit/policy.js",
+      "src/data/transitFeeds.js",
+      "src/layers/transit/movement.js",
+      "src/data/contactPlayback.js"
     ],
     "external": ["satellite.js"]
   },

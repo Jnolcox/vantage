@@ -473,7 +473,10 @@ configured, and `retry_later` on the routes' per-IP `429`) and routing
 (`plan_route` over `/api/route`, with a place name or coordinates at each end),
 bike-share stations (`get_bike_share` over `/api/gbfs`) and transit vehicles
 (`get_transit_vehicles` over `/api/transit`, with each feed's attribution and
-license), each reading at most the three nearest systems or feeds that cover the
+license; as in the transit layer, a feed the proxy served from its error cache
+(`X-Vantage-Cache: STALE-ERROR`) or whose operator has not answered for 90 s is
+reported stale, and fixes past the layer's vehicle age limit are dropped and
+counted), each reading at most the three nearest systems or feeds that cover the
 area and reporting the ones that did not answer, road traffic
 (`get_traffic_flow` over `/api/tomtom/flow`, at most 16 flow tiles per call,
 stepping down to zoom 9 before refusing a larger area, and `unavailable` without

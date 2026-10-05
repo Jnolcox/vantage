@@ -463,7 +463,11 @@ adsb.lol and adsbdb routes), ships (`vessels_in_area`, `find_vessel`,
 `get_vessel_track` over `/api/ais-live`, `unavailable` without
 `AISSTREAM_API_KEY`) and satellites (`next_satellite_pass`, computed by
 `src/data/satellitePass.js` as the voice action of the same name is, and
-`satellites_overhead`), public cameras (`find_cctv_cameras`, and
+`satellites_overhead`), public cameras (`find_cctv_cameras`, which marks an
+answer partial when its area overlaps a pack the catalog trimmed, read from the
+`trimmedPacks` list (pack, cameras offered and served, and the pack's camera
+bounding box) that `/api/cctv/sources` now returns beside each camera's
+`pack`, and says the catalog has no cameras rather than that none exist, and
 `get_cctv_snapshot`, which returns the frame from `/api/cctv/frame` as MCP
 image content, JPEG, PNG or WebP up to 3 MB) and radio stations
 (`find_radio_stations`, which returns stream URLs and reports no clicks), place

@@ -24,7 +24,9 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   ignored), those documents keep the full Content-Security-Policy with only
   `frame-ancestors` changed, and every other document, Provider Settings
   included, stays unframable. Answers go only to the origin that sent the
-  view (ported from upstream, Sameh Khamis).
+  view. A panel page can instead load the app into itself after setting
+  `VANTAGE_EMBED_INLINE`; such an inline app keeps drawing while its host
+  reports it hidden (ported from upstream, Sameh Khamis).
 - MODIS NRT (Terra + Aqua, ~1 km) detections join the three VIIRS NRT sources
   in the Active Fires layer. They share the existing `FIRMS_MAP_KEY`, the
   30-minute proxy cache and the trailing-24-hour clamp; MODIS confidence is

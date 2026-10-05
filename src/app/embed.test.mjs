@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { applyView, installViews } from './embed.js';
-import { isEmbedded, needsViews } from './embedMode.js';
+import { applyView, installViews, keepPanelRendering } from './embed.js';
+import { isEmbedded, isEmbeddedInline, needsViews } from './embedMode.js';
 import { createView } from '../view/index.js';
 
 const fakeViewer = () => {
@@ -251,6 +251,51 @@ test('a parent sending views faster than they apply is told to wait', async () =
   remove();
 });
 
+test('an app loaded inline into a panel page talks through its own window', async () => {
+  const posted = [];
+  const windowRef = new EventTarget();
+  windowRef.parent = windowRef;
+  windowRef.postMessage = (message) => posted.push(message);
+  windowRef.document = { body: { classList: new Set() } };
+  windowRef.document.body.classList.add = Set.prototype.add;
+  Object.assign(windowRef, {
+    requestAnimationFrame: () => 1,
+    cancelAnimationFrame() {},
+    setInterval: () => 1,
+    clearInterval() {},
+  });
+  globalThis.VANTAGE_EMBED_INLINE = true;
+  try {
+    assert.equal(isEmbedded({ search: '' }), true);
+    const remove = installViews({
+      shell: { initialRestorePromise: Promise.resolve() },
+      viewer: fakeViewer(),
+      dataManager: fakeLayers(new Set()),
+      run: recorder().run,
+      location: { search: '', hash: '' },
+      windowRef,
+    });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assert.deepEqual(posted, [{ type: 'vantage:ready' }]);
+    const event = new Event('message');
+    Object.assign(event, {
+      source: windowRef,
+      data: {
+        type: 'vantage:view',
+        id: 7,
+        view: { camera: { lat: 1, lon: 2 } },
+      },
+    });
+    windowRef.dispatchEvent(event);
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    assert.equal(posted[1].id, 7);
+    assert.equal(posted[1].ok, true);
+    remove();
+  } finally {
+    delete globalThis.VANTAGE_EMBED_INLINE;
+  }
+});
+
 test('annotations in a link are drawn after it restores, embedded or not', async () => {
   const { calls, run } = recorder();
   const an = encodeURIComponent(
@@ -268,4 +313,39 @@ test('annotations in a link are drawn after it restores, embedded or not', async
   assert.deepEqual(calls, [
     ['annotate_map', { annotations: [{ type: 'pin', target: 'Austin' }] }],
   ]);
+});
+
+test('a panel keeps drawing from a timer while animation frames stop', () => {
+  let clock = 0;
+  let tick = null;
+  let frame = null;
+  const windowRef = {
+    requestAnimationFrame: (fn) => ((frame = fn), 1),
+    cancelAnimationFrame: () => (frame = null),
+    setInterval: (fn) => ((tick = fn), 1),
+    clearInterval: () => (tick = null),
+  };
+  const drawn = [];
+  const viewer = {
+    resize: () => drawn.push('resize'),
+    render: () => drawn.push('render'),
+  };
+  const stop = keepPanelRendering(viewer, { windowRef, now: () => clock });
+  // Frames arrive: the render loop draws, so the timer does nothing.
+  clock = 100;
+  frame();
+  tick();
+  assert.deepEqual(drawn, []);
+  // Frames stop, as in a panel its host reports hidden: the timer draws.
+  clock = 400;
+  tick();
+  assert.deepEqual(drawn, ['resize', 'render']);
+  stop();
+  assert.equal(tick, null);
+  assert.equal(frame, null);
+});
+
+test('a normal tab is not inline, so it still suspends rendering when hidden', () => {
+  assert.equal(isEmbeddedInline(), false);
+  assert.equal(isEmbedded({ search: '' }), false);
 });

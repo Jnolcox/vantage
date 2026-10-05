@@ -225,12 +225,21 @@ until its layer has it) and answers
 `{ type: 'vantage:view-applied', id, ok, steps }` to the origin that sent
 the view. It posts `{ type: 'vantage:ready' }` once it can take views. Only
 its parent page can send them, a parent with an opaque origin is ignored,
-and a page that is not framed takes none. Views apply one at a time; while
-eight are waiting, further ones are answered `ok: false` unapplied.
+and a page that is neither framed nor inline (below) takes none. Views
+apply one at a time; while eight are waiting, further ones are answered
+`ok: false` unapplied.
 Annotations in any link are drawn once the link has been restored, embedded
 or not. See `src/app/embed.js`; the main path loads it
 only for an embed-mode page or a link that carries annotations
 (`src/app/embedMode.js`).
+
+A panel page that loads the app into itself rather than framing it sets
+`globalThis.VANTAGE_EMBED_INLINE = true` first. The app is then embedded
+inline: it takes views from, and answers, its own window. Some panel hosts
+report a panel on screen as hidden, which stops animation frames, so an
+inline app does not suspend rendering when hidden and draws from a timer
+while frames stop arriving (`keepPanelRendering`). Normal tabs still suspend
+rendering when hidden.
 
 No page may frame the app by default: every document keeps
 `X-Frame-Options: DENY` and `frame-ancestors 'none'`.

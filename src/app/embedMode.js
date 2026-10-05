@@ -6,9 +6,21 @@
 
 import { annotationsFromParams } from '../view/index.js';
 
-/** Whether this page was opened in embed mode (`?embed=1`). */
+/**
+ * Whether this page shows the app embedded: `?embed=1` when another page
+ * frames it, or inline when a panel page loads the app into itself and sets
+ * `globalThis.VANTAGE_EMBED_INLINE` first.
+ */
 export function isEmbedded(location = globalThis.location) {
-  return new URLSearchParams(location?.search || '').get('embed') === '1';
+  return (
+    isEmbeddedInline() ||
+    new URLSearchParams(location?.search || '').get('embed') === '1'
+  );
+}
+
+/** Whether a panel page loaded the app into itself. */
+export function isEmbeddedInline() {
+  return globalThis.VANTAGE_EMBED_INLINE === true;
 }
 
 /** The annotations the opening link carries, or an empty list. */

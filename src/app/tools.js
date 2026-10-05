@@ -4,7 +4,7 @@ import { initDrawTool } from '../annotations/drawTool.js';
 import { initImageryBoxTool } from '../ui/imageryBoxTool.js';
 import { createRecentImageryPanel } from '../ui/recentImagery.js';
 import { initVantageVoiceCommands } from '../voice/vantageRealtime.js';
-import { needsViews } from './embedMode.js';
+import { isEmbeddedInline, needsViews } from './embedMode.js';
 import { installScopeMask, destroyScopeMask } from '../scopeMask.js';
 import {
   installRenderGovernor,
@@ -120,7 +120,10 @@ export function createApplicationTools({
   // GPU. Holder/data state is untouched, so return is seamless: restore
   // the loop, refresh the one DOM surface we gated, render a frame.
   const syncVisibilitySuspension = () => {
-    const hidden = document.hidden;
+    // A panel's host may report it hidden while it is on screen; the panel
+    // keeps drawing itself (see keepPanelRendering in embed.js). Normal tabs
+    // are not inline and suspend as before.
+    const hidden = document.hidden && !isEmbeddedInline();
     viewer.useDefaultRenderLoop = !hidden;
     cockpitCloudEffects?.setSuspended?.(hidden);
     if (!hidden) {

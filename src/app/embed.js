@@ -18,7 +18,11 @@
 import * as Cesium from 'cesium';
 import { announceNavigationAuthority } from '../navigationPolicy.js';
 import { createView } from '../view/index.js';
-import { isEmbedded, linkedAnnotations } from './embedMode.js';
+import {
+  isEmbedded,
+  isEmbeddedInline,
+  linkedAnnotations,
+} from './embedMode.js';
 
 export const EMBED_VIEW_MESSAGE = 'vantage:view';
 export const EMBED_APPLIED_MESSAGE = 'vantage:view-applied';
@@ -34,6 +38,39 @@ const FOLLOW_RETRY_MS = 1000;
 const FLIGHT_SECONDS = 2;
 // Views waiting to apply; a parent sending more is told to wait.
 const MAX_PENDING_VIEWS = 8;
+
+// A panel keeps drawing at about this rate when its host stops animation
+// frames; see keepPanelRendering.
+const PANEL_FRAME_MS = 33;
+const MISSED_FRAMES_MS = 250;
+
+/**
+ * Keep the globe drawing in an inline panel. Some hosts report a panel on
+ * screen as hidden, which stops the browser's animation frames and with them
+ * Cesium's render loop; while frames stop arriving, draw from a timer.
+ * Returns a function that stops it.
+ */
+export function keepPanelRendering(
+  viewer,
+  { windowRef = globalThis.window, now = () => performance.now() } = {},
+) {
+  let lastFrame = now();
+  let frameRequest = null;
+  const onFrame = () => {
+    lastFrame = now();
+    frameRequest = windowRef.requestAnimationFrame(onFrame);
+  };
+  frameRequest = windowRef.requestAnimationFrame(onFrame);
+  const timer = windowRef.setInterval(() => {
+    if (now() - lastFrame < MISSED_FRAMES_MS || viewer.isDestroyed?.()) return;
+    viewer.resize();
+    viewer.render();
+  }, PANEL_FRAME_MS);
+  return () => {
+    windowRef.clearInterval(timer);
+    windowRef.cancelAnimationFrame(frameRequest);
+  };
+}
 
 const delay = (ms, signal) =>
   new Promise((resolve) => {
@@ -157,27 +194,34 @@ export function installViews({
 
   windowRef.document.body.classList.add('ui-embed');
   shell.setCleanView?.(true);
-  const parent = windowRef.parent;
-  // A top-level page has no parent: it takes no views and answers no one.
-  const framed = Boolean(parent) && parent !== windowRef;
+  const inline = isEmbeddedInline();
+  const stopRendering = inline
+    ? keepPanelRendering(viewer, { windowRef })
+    : () => {};
+  // A framing page talks to the app across frames; an inline panel shares
+  // the page with it and talks through the page's own window.
+  const peer = inline ? windowRef : windowRef.parent;
+  // A top-level page that is neither framed nor inline takes no views and
+  // answers no one.
+  const talks = Boolean(peer) && (inline || peer !== windowRef);
   // Answers go back only to the origin that asked; the ready notice carries
-  // nothing and goes to any parent.
+  // nothing and goes to any parent. An inline panel posts to its own window.
   const post = (message, origin = '*') => {
-    if (framed) parent.postMessage(message, origin);
+    if (talks) peer.postMessage(message, origin);
   };
   // Views apply one at a time, in the order they arrive.
   let queue = ready;
   let pending = 0;
   const onMessage = (event) => {
     if (
-      !framed ||
-      event.source !== parent ||
+      !talks ||
+      event.source !== peer ||
       event.data?.type !== EMBED_VIEW_MESSAGE
     )
       return;
-    // A sender with an opaque origin could not be answered without
+    // A framing sender with an opaque origin could not be answered without
     // broadcasting to any page, and could not frame embed mode anyway.
-    const replyOrigin = event.origin;
+    const replyOrigin = inline ? '*' : event.origin;
     if (!replyOrigin || replyOrigin === 'null') return;
     const { id = null } = event.data;
     let view;
@@ -232,5 +276,8 @@ export function installViews({
   void ready.then(() => {
     if (!signal?.aborted) post({ type: EMBED_READY_MESSAGE });
   });
-  return () => windowRef.removeEventListener('message', onMessage);
+  return () => {
+    stopRendering();
+    windowRef.removeEventListener('message', onMessage);
+  };
 }

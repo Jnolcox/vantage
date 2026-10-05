@@ -2,14 +2,16 @@
 
 import { randomBytes } from 'node:crypto';
 import { cspOriginsFor } from '../../build/content-security-policy.js';
-import { panelRuntime } from '../../src/app/globePanelRuntime.js';
 import { PACKAGE_VERSION } from '../../src/sources/version.js';
 import {
   composeCatalog,
   coreTools,
   catalogForSurface,
 } from '../../src/tools/index.js';
-import { createGlobePanelResource } from '../../src/tools/globePanel.js';
+import {
+  createGlobePanelResource,
+  panelRuntime,
+} from '../../src/tools/panel.js';
 import { createMcpServer } from '../../src/tools/mcp/index.js';
 import { DEFAULT_API_BASE, createLocalToolServices } from './services.js';
 

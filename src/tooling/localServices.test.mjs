@@ -222,11 +222,24 @@ test('Realtime sessions carry supplied tools, and the standalone voice adds the 
   assert.ok(names.includes('get_weather'));
   assert.ok(names.includes('military_awareness'));
   assert.ok(!names.includes('show_in_vantage'));
+  assert.ok(!names.includes('aircraft_in_area'));
+  assert.ok(!names.includes('get_weather_map'));
   // The action of the same name answers satellite passes.
   assert.equal(
     tools.findLast((tool) => tool.name === 'next_satellite_pass'),
     VANTAGE_REALTIME_TOOLS.find((tool) => tool.name === 'next_satellite_pass'),
   );
+});
+
+test('voice leaves out every catalog tool an app action already names', async () => {
+  const { TOOL_SURFACES, coreTools } = await import('../tools/index.js');
+  const actions = new Set(VANTAGE_REALTIME_TOOLS.map((tool) => tool.name));
+  const shared = coreTools
+    .map((tool) => tool.name)
+    .filter((name) => actions.has(name));
+  assert.deepEqual(shared, ['next_satellite_pass']);
+  for (const name of shared)
+    assert.equal(TOOL_SURFACES[name]?.voice, false, name);
 });
 
 test('debug logging resolves each supplied application directory independently', async (t) => {

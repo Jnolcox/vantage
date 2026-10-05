@@ -48,6 +48,15 @@ them.
 - **Interceptors**: `(call, next) => next(call)` functions wrap every call,
   outermost first. They can observe, reject or change a call.
 
+### Surfaces
+
+`src/tools/surfaces.js` lists which tools MCP and voice offer. A tool is on
+both unless `TOOL_SURFACES` turns it off; edit an entry to turn a tool on or
+off for one surface. `toolsForSurface(tools, surface, overrides)` gives a
+surface's selection in the original order, and an override naming an unknown
+tool or surface throws. Voice leaves out tools that answer with images, link
+to the app, or repeat what its app actions answer.
+
 Expected failures throw `ToolError` with one of `invalid_arguments`,
 `unavailable`, `unsupported`, `malformed` or `retry_later`. Failures the live
 sources report (`LiveSourceError` in `src/sources/live/contract.js`) become
@@ -185,8 +194,12 @@ sending them.
 The voice session token endpoint takes its tool list as `realtime.tools`.
 `realtimeSessionTools(additional)` appends function tools to the app actions,
 skipping names an action already uses, so `next_satellite_pass` stays the
-action. The standalone server supplies every core query except
-`show_in_vantage`, since voice runs inside the app.
+action. The standalone server supplies the core queries that
+`src/tools/surfaces.js` offers on voice, which leaves out tools that answer
+with images, link to the app, or repeat what voice's app actions answer
+(aircraft, ships, earthquakes, fires, datacenters, dams, satellite passes and
+satellites overhead, which `analyst_query`, `next_satellite_pass` and
+`next_iss_pass` cover).
 
 In the browser, `initVantageVoiceCommands({ toolCatalog })` takes a function
 that resolves a catalog. App action names go to the action runner; other names
@@ -197,8 +210,9 @@ build emits it as a separate chunk the page does not request at load.
 
 Queries voice runs read the same `/api` routes as MCP, from the page, under
 the same `Host`, `Origin` and `Sec-Fetch-Site` checks and per-IP throttles.
-Place search and the regional brief spend Google and OpenAI quota, and the
-HUD caption OpenAI quota, only when the user asks by voice.
+Place search and the regional brief spend Google and OpenAI quota only when
+the user asks by voice; voice does not offer the HUD caption, which the app
+shows itself.
 
 ## Running locally
 

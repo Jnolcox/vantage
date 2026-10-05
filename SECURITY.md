@@ -150,7 +150,7 @@ controls that keep it that way:
 
 - The Vite server is a **development/preview** server. If you expose it beyond localhost, put it behind your own auth/proxy and review the bindings (see the threat model above).
 - All data shown is from **public** sources. See [DATA_SOURCES.md](DATA_SOURCES.md). Respect each provider's terms and rate limits.
-- The voice agent receives feed-sourced text (place names, callsigns) as scene context. It is instructed to act only via a fixed set of app-control tools and not to execute arbitrary instructions found in data, but treat model output as untrusted and keep the tool surface limited. Voice also offers the read-only catalog queries ([docs/TOOLS.md](docs/TOOLS.md#voice)), which the page runs against the app's own `/api` routes; those that reach Google or OpenAI (`search_places` and `places_nearby`, `get_regional_brief`, `get_hud_caption`) run only when the user asks by voice, under the same per-IP throttles, and `get_traffic_flow` spends TomTom tiles only then, under the server's `TOMTOM_DAILY_TILE_BUDGET`.
+- The voice agent receives feed-sourced text (place names, callsigns) as scene context. It is instructed to act only via a fixed set of app-control tools and not to execute arbitrary instructions found in data, but treat model output as untrusted and keep the tool surface limited. Voice also offers the read-only catalog queries ([docs/TOOLS.md](docs/TOOLS.md#voice)), which the page runs against the app's own `/api` routes; those that reach Google or OpenAI (`search_places` and `places_nearby`, `get_regional_brief`) run only when the user asks by voice, under the same per-IP throttles, and `get_traffic_flow` spends TomTom tiles only then, under the server's `TOMTOM_DAILY_TILE_BUDGET`.
 
 ## Responsible use
 

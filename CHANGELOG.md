@@ -296,8 +296,11 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   query through the same catalog, loaded on the first query voice calls, so
   "what is the weather in Tokyo" or "how do I drive from Austin to Dallas"
   no longer needs a layer on or the map moved. App actions keep their names:
-  `next_satellite_pass` and `analyst_query` stay the actions (ported from
-  upstream, Sameh Khamis).
+  `next_satellite_pass` and `analyst_query` stay the actions.
+  `src/tools/surfaces.js` chooses per tool whether MCP, voice or both offer
+  it; voice leaves out tools that answer with images, link to the app, or
+  repeat what its actions answer, which keeps the session's tool list lean
+  (ported from upstream, Sameh Khamis).
 
 ### Changed
 

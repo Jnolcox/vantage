@@ -27,6 +27,7 @@ import {
 } from './queries/environment.js';
 import { getActiveFires, getEarthquakes } from './queries/hazards.js';
 import { getRecentImagery } from './queries/imagery.js';
+import { findInfrastructure } from './queries/infrastructure.js';
 import {
   findVessel,
   getVesselTrack,
@@ -100,6 +101,7 @@ export const coreTools = Object.freeze([
   getWind,
   getRecentImagery,
   findSubmarineCables,
+  findInfrastructure,
   getRegionalBrief,
   getCyclones,
   getFirePerimeters,

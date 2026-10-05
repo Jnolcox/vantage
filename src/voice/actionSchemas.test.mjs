@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
+import { VANTAGE_ACTION_NAMES } from './actionNames.js';
 import { VANTAGE_ACTION_SCHEMAS, createActionTools } from './actionSchemas.js';
 import { VANTAGE_REALTIME_TOOLS } from '../../server/providers/openai/tools.js';
 
@@ -60,6 +61,13 @@ const stable = (value) =>
             .map(([key, child]) => [key, stable(child)]),
         )
       : value;
+
+test('the page-side action name list matches the action schemas', () => {
+  assert.deepEqual(
+    VANTAGE_ACTION_NAMES,
+    VANTAGE_ACTION_SCHEMAS.map((schema) => schema.name),
+  );
+});
 
 test('the complete Realtime tool payload retains its pre-extraction contract and wording', () => {
   const digest = createHash('sha256')

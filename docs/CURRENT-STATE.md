@@ -521,8 +521,12 @@ regional fallback feed, ALPR answers say when tiles failed or were trimmed, and
 radio answers say they come from a directory of popular stations.
 Live-source failures become tool errors with the matching code. Tools take a
 shared `area` argument (place name, bounding box, or point and radius) and cap
-lists at 25 rows by default. Nothing under `src/` outside `src/tools/` imports
-the tools (`check:boundaries` enforces it), so the page is unchanged. See
+lists at 25 rows by default. Voice offers the same queries next to its app
+actions: the session lists them, and the browser runs them through the same
+catalog, loaded on the first query voice calls. Outside `src/tools/`, only
+voice reaches the tools (`check:boundaries` enforces it): the voice runner
+imports the function-calling adapter, and `src/standalone/toolCatalog.js`
+loads the catalog with a dynamic import, so page load is unchanged. See
 [tools and the MCP server](TOOLS.md).
 
 ## Vessel components and sources

@@ -1,8 +1,8 @@
 # Tools and the MCP server
 
 Tools answer questions from Vantage data for language-model clients. They are
-defined once and exposed through adapters; the Model Context Protocol (MCP) is
-the first.
+defined once and exposed through adapters: the Model Context Protocol (MCP)
+and function calling, which voice uses.
 
 ## Layers
 
@@ -13,13 +13,18 @@ the first.
 | `src/tools/mcp/`        | MCP protocol (JSON-RPC) and a stateless HTTP transport; knows the catalog interface, not queries |
 | `src/tools/services.js` | The default services: the layers' source factories and place services, given a resolving fetch   |
 | `server/mcp/`           | Node composition: points the services at a running app's `/api` routes and serves stdio          |
+| `src/tools/functions.js` | Function-calling adapter: tool records and results for function-calling clients |
+| `server/standalone/voiceTools.js`, `src/standalone/toolCatalog.js` | Standalone voice composition: the session's tool list and the browser catalog |
 
 Dependencies point downward only. `vantage/tools`, `vantage/tools/mcp` and
 `vantage/tools/services` are portable exports: they reach no application,
 rendering, Node, Cesium or browser-global code, which
-`npm run check:boundaries` enforces. Nothing in the application imports them
-(`scripts/check-import-directions.mjs` reports any `src/` module outside
-`src/tools/` that does), so they add nothing to the page.
+`npm run check:boundaries` enforces. In the application, only voice reaches
+them, and `scripts/check-import-directions.mjs` reports any other `src/`
+module outside `src/tools/` that does: `withToolCatalog` in
+`src/voice/vantageRealtime.js` imports the function-calling adapter, and
+`src/standalone/toolCatalog.js` loads the catalog and its services with
+dynamic imports only, so they stay out of the page's startup graph.
 
 ## Definitions and composition
 
@@ -167,6 +172,33 @@ merges extra fields into each listed definition. `createMcpHttpHandler(server)`
 returns a `Request`-to-`Response` handler for stateless Streamable HTTP: one
 JSON-RPC message per POST, answered with JSON. The host owns routing and any
 access control in front of it; Vantage mounts no HTTP endpoint for it.
+
+## Voice
+
+Voice offers the catalog's queries next to its app actions.
+`toFunctionTools(tools, { exclude })` turns tools into
+`{ type: 'function', name, description, parameters }` records, and
+`toFunctionOutput(name, result)` turns a result into
+`{ ok, tool, summary, data }`, counting images in `images_omitted` instead of
+sending them.
+
+The voice session token endpoint takes its tool list as `realtime.tools`.
+`realtimeSessionTools(additional)` appends function tools to the app actions,
+skipping names an action already uses, so `next_satellite_pass` stays the
+action. The standalone server supplies every core query except
+`show_in_vantage`, since voice runs inside the app.
+
+In the browser, `initVantageVoiceCommands({ toolCatalog })` takes a function
+that resolves a catalog. App action names go to the action runner; other names
+the catalog has go to `catalog.call` with the call's abort signal. The
+standalone entry composes the catalog with `createToolServices` over the
+page's fetch and loads it the first time voice calls a query; the production
+build emits it as a separate chunk the page does not request at load.
+
+Queries voice runs read the same `/api` routes as MCP, from the page, under
+the same `Host`, `Origin` and `Sec-Fetch-Site` checks and per-IP throttles.
+Place search and the regional brief spend Google and OpenAI quota, and the
+HUD caption OpenAI quota, only when the user asks by voice.
 
 ## Running locally
 

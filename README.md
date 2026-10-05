@@ -217,7 +217,7 @@ Click **MIC**, grant the microphone, and just talk. This is more than a voice-co
 - **🎬 Cinematic framing.** _"Show me the planes overhead"_ pulls the camera back, angles it, and frames the live traffic like a director.
 - **🔒 Honest and secure.** The agent only confirms actions that succeeded. Your `OPENAI_API_KEY` never touches the browser; the client only gets a short-lived session token.
 
-Twenty-eight tools, four jobs — the commands below come straight from the product's voice test suite and tool playbook:
+Thirty app actions plus read-only world queries (weather, places, routes, traffic, briefs), four jobs — the commands below come straight from the product's voice test suite and tool playbook:
 
 **🎥 Direct it** — drone-operator camera verbs:
 
@@ -235,7 +235,7 @@ Twenty-eight tools, four jobs — the commands below come straight from the prod
 
 **🔎 Interrogate it** — analyst queries against the live layers:
 
-> 🗣️ _"How many flights are over Texas right now?"_ · _"Which ships are headed to Oakland?"_ · _"What is the biggest fire near Los Angeles?"_ · _"Is anything flying above forty thousand feet?"_ · _"When does the ISS pass over next?"_
+> 🗣️ _"How many flights are over Texas right now?"_ · _"Which ships are headed to Oakland?"_ · _"What is the biggest fire near Los Angeles?"_ · _"Is anything flying above forty thousand feet?"_ · _"When does the ISS pass over next?"_ · _"What is the weather in Tokyo?"_ · _"How do I drive from Austin to Dallas?"_
 
 **🎛️ Operate it** — the whole console, hands-free:
 
@@ -578,13 +578,14 @@ Calgary, and the DelDOT camera list `tmc.deldot.gov`); the Radio Browser directo
 | Destination | From | Trigger | What is sent |
 | --- | --- | --- | --- |
 | `maps.googleapis.com` (Geocoding), then `photon.komoot.io`, then `nominatim.openstreetmap.org` (server) | Browser, server | Search box or a voice search | Query text and a bias from the current view |
-| `places.googleapis.com` | Server | Place and nearby searches, with a Google key | Query, latitude/longitude, radius |
-| `routing.openstreetmap.de` | Server | Directions | Route coordinates |
+| `places.googleapis.com` | Server | Place and nearby searches, typed or asked by voice, with a Google key | Query, latitude/longitude, radius |
+| `routing.openstreetmap.de` | Server | Directions, or a route asked by voice | Route coordinates |
 | `inciweb.wildfire.gov` | Server, then browser | Selecting a fire perimeter checks the matched InciWeb incident page; clicking its **InciWeb** link opens that page in a new tab | Server: the InciWeb incident number. Browser: your IP address, no referrer (`noopener,noreferrer`) |
 | `www.nhc.noaa.gov` | Browser | Clicking **Official advisory ↗** on a Cyclone advisories card opens the NHC advisory in a new tab; the Data attribution credit links the NHC home page | Your IP address, no referrer (`noopener,noreferrer`) |
 | `video.deldot.gov` | Server | Opening a DelDOT live camera; segments are pulled while a viewer holds the stream and stop within 15 s of the last one closing | That camera's registered playlist and segment paths; nothing about your view |
 | `maps.googleapis.com` (Street View Static) | Server | CCTV fallback frame for a registered camera with no live image | That camera's registered location |
 | `api.openai.com` | Server, then browser | Starting voice | Server mints a short-lived secret; the browser then streams microphone audio, map context and tool results, and — with **VIEW** on — screenshots of local-scale views |
+| The providers above, through the app's own `/api` routes; `earthquake.usgs.gov` from the browser | Server; browser for USGS | A world question asked by voice: weather, wind, places, routes, traffic, transit, bike share, cyclones, fire perimeters, a regional or situation brief | The place, point or area you named, in place of the area in view; nothing runs until you ask |
 | A USB RTL-SDR (WebUSB) | Browser | **CONNECT** on the Radio panel's Local RTL-SDR card; the browser asks which device | Nothing leaves the machine: samples, audio and decoded aircraft stay in the page |
 | Your browser's location service | Browser | **LOCATE** on the Local RTL-SDR card (the browser asks first) | Whatever that browser's geolocation provider uses; the resulting position stays in the page and is used only to decode positions |
 | The station's stream host | Browser | Pressing play on Radio | Your IP address and origin; `radio-browser` hears about the play only with `VANTAGE_RADIO_REPORT_CLICKS=1` |

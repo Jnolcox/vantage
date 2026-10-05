@@ -11,6 +11,7 @@ import {
   lanExposureWarning,
   resolveBindHost,
 } from './network.js';
+import { standaloneVoiceTools } from './voiceTools.js';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 
@@ -27,7 +28,7 @@ export default defineConfig(({ command, mode }) => {
   return createBrowserViteConfig({
     plugins: [
       apiRequestGuardPlugin(),
-      ...localProviderPlugins(),
+      ...localProviderPlugins({ realtime: { tools: standaloneVoiceTools() } }),
       apiNotFoundPlugin(),
     ],
     googleApiKey: process.env.GOOGLE_MAPS_API_KEY,

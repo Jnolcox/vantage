@@ -29,6 +29,16 @@ const compatibilityEdge = (from, to) =>
   (from === 'server/providers/local.js' &&
     to === 'server/standalone/key-setup.js') ||
   (from === 'src/ui.js' && to === 'src/standalone/catalog.js');
+// Voice is the one application surface that reaches the tools: its runner
+// imports the small function-calling adapter, and the standalone entry loads
+// the catalog with a dynamic import on the first query voice runs, so the
+// catalog never joins the page's startup graph.
+const toolEdge = (from, to, lazy) =>
+  (from === 'src/voice/vantageRealtime.js' &&
+    to === 'src/tools/functions.js') ||
+  (lazy &&
+    from === 'src/standalone/toolCatalog.js' &&
+    ['src/tools/index.js', 'src/tools/services.js'].includes(to));
 const portableExport = (key) =>
   key.startsWith('./sources/') ||
   /\/source$/.test(key) ||
@@ -149,7 +159,8 @@ export function checkImportDirections(root) {
       if (
         file.startsWith('src/') &&
         !file.startsWith('src/tools/') &&
-        to.startsWith('src/tools/')
+        to.startsWith('src/tools/') &&
+        !toolEdge(file, to, analysis.dynamicImports.includes(specifier))
       )
         report(file, `Application imports tools: ${to}`);
       if (source(file) && renderer(to))

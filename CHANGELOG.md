@@ -291,6 +291,13 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   aircraft come from a regional fallback feed, when license plate camera
   tiles were trimmed or failed, and that radio stations come from a directory
   of popular stations (ported from upstream, Sameh Khamis).
+- Voice answers world questions from the tool catalog. The voice session
+  lists the catalog's queries after its app actions, and the browser runs a
+  query through the same catalog, loaded on the first query voice calls, so
+  "what is the weather in Tokyo" or "how do I drive from Austin to Dallas"
+  no longer needs a layer on or the map moved. App actions keep their names:
+  `next_satellite_pass` and `analyst_query` stay the actions (ported from
+  upstream, Sameh Khamis).
 
 ### Changed
 

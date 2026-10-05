@@ -2076,7 +2076,9 @@
       "src/data/local_data/natural_earth/states_provinces.json",
       "src/data/local_data/natural_earth/countries.json",
       "src/data/local_data/us_census_counties/counties.json",
-      "src/sources/infrastructureData.js"
+      "src/sources/infrastructureData.js",
+      "src/tools/functions.js",
+      "src/voice/actionNames.js"
     ],
     "external": [
       "hls.js",
@@ -3183,7 +3185,8 @@
       "src/tools/queries/surveillance.js",
       "src/tools/queries/infrastructure.js",
       "src/tools/queries/events.js",
-      "src/data/bhoteKoshiFloodPath.js"
+      "src/data/bhoteKoshiFloodPath.js",
+      "src/tools/functions.js"
     ],
     "external": ["satellite.js"]
   },

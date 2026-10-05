@@ -21,6 +21,7 @@ import { openAiRealtimeProxy } from 'vantage/server/providers/openai';
 import { keySetupEndpoint } from 'vantage/server/standalone/key-setup';
 import { realtimeInstructions } from '../../server/providers/openai/instructions.js';
 import { VANTAGE_REALTIME_TOOLS } from '../../server/providers/openai/tools.js';
+import { standaloneVoiceTools } from '../../server/standalone/voiceTools.js';
 
 function install(plugin, preview = false) {
   const routes = new Map();
@@ -193,6 +194,39 @@ test('Realtime handler preserves tools and default instructions, isolates suppli
   }
   assert.notEqual(sent[0].session.instructions, sent[1].session.instructions);
   assert.equal(sent[0].session.instructions, sent[2].session.instructions);
+});
+
+test('Realtime sessions carry supplied tools, and the standalone voice adds the catalog queries', async (t) => {
+  env(t, 'OPENAI_API_KEY', 'fixture-upstream-secret');
+  env(t, 'VANTAGE_RATELIMIT_OPENAI_PER_MIN', undefined);
+  const sent = [];
+  t.mock.method(globalThis, 'fetch', async (url, options) => {
+    sent.push(JSON.parse(options.body));
+    return Response.json({ value: 'fixture-ephemeral' });
+  });
+  const tools = standaloneVoiceTools();
+  const response = await request(
+    install(openAiRealtimeProxy({ realtime: { tools } })).get(
+      '/api/realtime/token',
+    ),
+    { method: 'POST' },
+  );
+  assert.equal(response.status, 200);
+  assert.deepEqual(sent.at(-1).session.tools, tools);
+  const names = tools.map((tool) => tool.name);
+  assert.equal(new Set(names).size, names.length);
+  assert.deepEqual(
+    tools.slice(0, VANTAGE_REALTIME_TOOLS.length),
+    VANTAGE_REALTIME_TOOLS,
+  );
+  assert.ok(names.includes('get_weather'));
+  assert.ok(names.includes('military_awareness'));
+  assert.ok(!names.includes('show_in_vantage'));
+  // The action of the same name answers satellite passes.
+  assert.equal(
+    tools.findLast((tool) => tool.name === 'next_satellite_pass'),
+    VANTAGE_REALTIME_TOOLS.find((tool) => tool.name === 'next_satellite_pass'),
+  );
 });
 
 test('debug logging resolves each supplied application directory independently', async (t) => {

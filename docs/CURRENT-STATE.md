@@ -461,7 +461,10 @@ direct local requests: a loopback socket, a loopback host on the port reached,
 an `Origin` (when sent) from that same host, no proxy forwarding headers
 (`VANTAGE_TRUST_PROXY` never applies), launcher sharing off and, on `POST`, a
 JSON `Content-Type`; without it `/mcp` answers a
-JSON `404` naming the setting. A client that disconnects cancels its call.
+JSON `404` naming the setting. A request body must arrive within 30 s
+(`408`) and stay under 1 MiB (`413`, delivered after draining), and a client
+that disconnects cancels its call. Over stdio, `notifications/cancelled`
+aborts the named request, which then gets no response.
 Requests a source sends to another origin directly (the
 USGS earthquake feed, NASA's CMR catalog and Worldview Snapshots) carry `clientUserAgent('mcp-tools')`; requests to the app
 pass the `/api` guard as a local non-browser client. Queries cover

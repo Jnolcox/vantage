@@ -27,6 +27,13 @@ export const MCP_HTTP_SETTING = 'VANTAGE_MCP_HTTP';
 const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]']);
 const LOOPBACK_ADDRESSES = new Set(['127.0.0.1', '::1', '::ffff:127.0.0.1']);
 const MAX_BODY_BYTES = 1024 * 1024;
+/** How long a client may take to send its request body. */
+const BODY_TIMEOUT_MS = 30 * 1000;
+/** Body-reading failures answered with their own status; others are 400. */
+const BODY_FAILURES = new Map([
+  [408, 'Request timed out'],
+  [413, 'Request too large'],
+]);
 
 /** Whether VANTAGE_MCP_HTTP turns the /mcp route on (`1` or `true`). */
 export function isMcpHttpEnabled(env = process.env) {
@@ -97,7 +104,7 @@ function disabledMcpMiddleware(_req, res) {
   });
 }
 
-function localMcpMiddleware(createServer) {
+function localMcpMiddleware(createServer, bodyTimeoutMs) {
   const handlers = new Map();
   const handlerFor = (apiBase) => {
     if (!handlers.has(apiBase))
@@ -135,7 +142,8 @@ function localMcpMiddleware(createServer) {
     };
     res.on('close', onClose);
     try {
-      const body = req.method === 'POST' ? await readBody(req) : undefined;
+      const body =
+        req.method === 'POST' ? await readBody(req, bodyTimeoutMs) : undefined;
       const request = new Request(`http://${authority}/mcp`, {
         method: req.method,
         headers: Object.entries(req.headers).flatMap(([name, value]) =>
@@ -150,9 +158,9 @@ function localMcpMiddleware(createServer) {
     } catch (error) {
       if (disconnect.signal.aborted) return;
       if (res.headersSent) return res.destroy();
-      const tooLarge = error?.status === 413;
-      sendJson(res, tooLarge ? 413 : 400, {
-        error: tooLarge ? 'Request too large' : 'Bad request',
+      const status = BODY_FAILURES.has(error?.status) ? error.status : 400;
+      sendJson(res, status, {
+        error: BODY_FAILURES.get(status) ?? 'Bad request',
       });
     } finally {
       res.off('close', onClose);
@@ -168,11 +176,14 @@ function localMcpMiddleware(createServer) {
 export function localMcpPlugin({
   enabled = false,
   createServer = createLocalMcpServer,
+  bodyTimeoutMs = BODY_TIMEOUT_MS,
 } = {}) {
   const install = (server) => {
     server.middlewares.use(
       '/mcp',
-      enabled ? localMcpMiddleware(createServer) : disabledMcpMiddleware,
+      enabled
+        ? localMcpMiddleware(createServer, bodyTimeoutMs)
+        : disabledMcpMiddleware,
     );
   };
   return {
@@ -182,11 +193,21 @@ export function localMcpPlugin({
   };
 }
 
-function readBody(req) {
+function readBody(req, timeoutMs) {
   return new Promise((resolve, reject) => {
     const chunks = [];
     let size = 0;
     let tooLarge = false;
+    // A client that stops sending must not hold the request open.
+    const timer = setTimeout(
+      () =>
+        reject(Object.assign(new Error('Request timed out'), { status: 408 })),
+      timeoutMs,
+    );
+    const fail = (error) => {
+      clearTimeout(timer);
+      reject(error);
+    };
     req.on('data', (chunk) => {
       size += chunk.length;
       // Keep draining without storing, so the 413 response can still be sent.
@@ -196,9 +217,12 @@ function readBody(req) {
       }
       tooLarge = true;
       chunks.length = 0;
-      reject(Object.assign(new Error('Request too large'), { status: 413 }));
+      fail(Object.assign(new Error('Request too large'), { status: 413 }));
     });
-    req.on('end', () => resolve(Buffer.concat(chunks)));
-    req.on('error', reject);
+    req.on('end', () => {
+      clearTimeout(timer);
+      resolve(Buffer.concat(chunks));
+    });
+    req.on('error', fail);
   });
 }

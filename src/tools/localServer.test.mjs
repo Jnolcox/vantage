@@ -310,3 +310,43 @@ test('search_places over the local services and the real keyless Google route re
       /needs a Google Places key/.test(error.message),
   );
 });
+
+test('a request the client cancels over stdio is aborted and gets no answer', async () => {
+  let seen;
+  const server = {
+    handle: (message, { signal } = {}) => {
+      if (message.id === 1) {
+        seen = signal;
+        return new Promise((resolve) =>
+          signal.addEventListener(
+            'abort',
+            () => resolve({ jsonrpc: '2.0', id: 1, result: {} }),
+            { once: true },
+          ),
+        );
+      }
+      return Promise.resolve(
+        message.id === undefined
+          ? null
+          : { jsonrpc: '2.0', id: message.id, result: {} },
+      );
+    },
+  };
+  const input = new PassThrough();
+  const output = new PassThrough();
+  let written = '';
+  output.on('data', (chunk) => (written += chunk));
+  const served = serveStdio(server, { input, output });
+  input.write('{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{}}\n');
+  input.write('{"jsonrpc":"2.0","id":2,"method":"ping"}\n');
+  input.end(
+    '{"jsonrpc":"2.0","method":"notifications/cancelled","params":{"requestId":1}}\n',
+  );
+  await served;
+  assert.equal(seen.aborted, true);
+  const ids = written
+    .trim()
+    .split('\n')
+    .map((line) => JSON.parse(line).id);
+  assert.deepEqual(ids, [2]);
+});

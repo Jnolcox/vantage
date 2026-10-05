@@ -293,7 +293,9 @@ Claude Desktop copy into their logs: the method, the tool a `tools/call`
 names, and for a failed call its error code (`invalid_arguments`,
 `retry_later`, ...). Arguments, results and error messages, which can repeat
 an argument, are never logged, and a method or tool name that is not a plain
-name is logged as `(unnamed ...)` rather than echoed.
+name is logged as `(unnamed ...)` rather than echoed. A client's
+`notifications/cancelled` aborts the request it names, which then gets no
+response.
 
 ## Network and security
 
@@ -317,7 +319,8 @@ It refuses requests a proxy forwarded, even with `VANTAGE_TRUST_PROXY=1`,
 refuses all requests while launcher sharing is on, and accepts only a JSON
 `Content-Type` on `POST`, so a web page cannot post to it cross-site. These
 checks sit behind the server-wide `Host` check. This is local transport safety, not authentication.
-A client that disconnects cancels its tool call.
+A request body must arrive within 30 seconds (`408` otherwise) and stay
+under 1 MiB (`413`), and a client that disconnects cancels its tool call.
 
 A few sources fetch a public feed directly instead of through `/api`
 (`get_earthquakes` reads the USGS feed; `get_recent_imagery` reads NASA's CMR

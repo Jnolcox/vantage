@@ -336,9 +336,11 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   connection (whatever address the server binds) naming a loopback host on the
   port it reached, an `Origin` (when sent) from that same host, no proxy
   forwarding headers (`VANTAGE_TRUST_PROXY` does not apply), launcher sharing
-  off, and a JSON `Content-Type` on `POST`. With the setting off, `/mcp` answers a JSON `404` naming it. A
-  client that disconnects cancels its tool call (ported from upstream, Sameh
-  Khamis).
+  off, and a JSON `Content-Type` on `POST`. With the setting off, `/mcp`
+  answers a JSON `404` naming it. A request body must arrive within 30 seconds
+  (`408` otherwise), and a client that disconnects cancels its tool call. Over
+  stdio, a client's `notifications/cancelled` now aborts the named request,
+  which then gets no response (ported from upstream, Sameh Khamis).
 
 ### Changed
 

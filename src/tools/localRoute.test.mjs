@@ -306,3 +306,44 @@ test('a client that disconnects cancels its tool call', async (t) => {
   await aborted.promise;
   assert.equal(seen.aborted, true);
 });
+
+test('a client that stops sending its request body is answered with a timeout', async (t) => {
+  const port = await listen(
+    t,
+    localMcpPlugin({
+      enabled: true,
+      bodyTimeoutMs: 20,
+      createServer: () => ({ handle: async () => null }),
+    }),
+  );
+  const answer = await new Promise((resolve, reject) => {
+    const request = httpRequest(
+      {
+        host: '127.0.0.1',
+        port,
+        path: '/mcp',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Length': '100',
+          Host: `localhost:${port}`,
+        },
+      },
+      (response) => {
+        let text = '';
+        response.on('data', (chunk) => (text += chunk));
+        response.on('end', () => {
+          resolve({ status: response.statusCode, text });
+          request.destroy();
+        });
+      },
+    );
+    request.on('error', (error) => {
+      if (error.code !== 'ECONNRESET') reject(error);
+    });
+    // Part of the body, then nothing more.
+    request.write('{"jsonrpc"');
+  });
+  assert.equal(answer.status, 408);
+  assert.deepEqual(JSON.parse(answer.text), { error: 'Request timed out' });
+});

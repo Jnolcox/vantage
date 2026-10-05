@@ -26,7 +26,8 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   included, stays unframable. Answers go only to the origin that sent the
   view. A panel page can instead load the app into itself after setting
   `VANTAGE_EMBED_INLINE`; such an inline app keeps drawing while its host
-  reports it hidden (ported from upstream, Sameh Khamis).
+  reports it hidden, and logs a render error in full before it stops drawing
+  (ported from upstream, Sameh Khamis).
 - MODIS NRT (Terra + Aqua, ~1 km) detections join the three VIIRS NRT sources
   in the Active Fires layer. They share the existing `FIRMS_MAP_KEY`, the
   30-minute proxy cache and the trailing-24-hour clamp; MODIS confidence is

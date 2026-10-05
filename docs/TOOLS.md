@@ -238,8 +238,10 @@ A panel page that loads the app into itself rather than framing it sets
 inline: it takes views from, and answers, its own window. Some panel hosts
 report a panel on screen as hidden, which stops animation frames, so an
 inline app does not suspend rendering when hidden and draws from a timer
-while frames stop arriving (`keepPanelRendering`). Normal tabs still suspend
-rendering when hidden.
+while frames stop arriving (`keepPanelRendering`). After a render error the
+timer stops, as Cesium's own loop does, and the error is logged in full
+(workers report plain objects that Cesium prints as `[object Object]`).
+Normal tabs still suspend rendering when hidden.
 
 No page may frame the app by default: every document keeps
 `X-Frame-Options: DENY` and `frame-ancestors 'none'`.

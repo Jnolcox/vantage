@@ -345,6 +345,43 @@ test('a panel keeps drawing from a timer while animation frames stop', () => {
   assert.equal(frame, null);
 });
 
+test('a panel reports a render error in full and stops drawing', () => {
+  let listener = null;
+  let tick = null;
+  const windowRef = {
+    requestAnimationFrame: () => 1,
+    cancelAnimationFrame() {},
+    setInterval: (fn) => ((tick = fn), 1),
+    clearInterval() {},
+  };
+  const drawn = [];
+  const viewer = {
+    resize() {},
+    render: () => drawn.push('render'),
+    scene: {
+      renderError: {
+        addEventListener: (fn) => ((listener = fn), () => (listener = null)),
+      },
+    },
+  };
+  const logged = [];
+  const original = console.error;
+  console.error = (...args) => logged.push(args.join(' '));
+  try {
+    let clock = 0;
+    const stop = keepPanelRendering(viewer, { windowRef, now: () => clock });
+    listener(viewer.scene, { name: 'RuntimeError', message: 'worker failed' });
+    assert.match(logged[0], /render error: .*"message":"worker failed"/);
+    clock = 1000;
+    tick();
+    assert.deepEqual(drawn, []);
+    stop();
+    assert.equal(listener, null);
+  } finally {
+    console.error = original;
+  }
+});
+
 test('a normal tab is not inline, so it still suspends rendering when hidden', () => {
   assert.equal(isEmbeddedInline(), false);
   assert.equal(isEmbedded({ search: '' }), false);

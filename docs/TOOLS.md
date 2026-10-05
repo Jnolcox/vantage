@@ -12,7 +12,7 @@ and function calling, which voice uses.
 | `src/tools/queries/`                                               | Queries, one file per domain, reading only portable source contracts                             |
 | `src/tools/mcp/`                                                   | MCP protocol (JSON-RPC) and a stateless HTTP transport; knows the catalog interface, not queries |
 | `src/tools/services.js`                                            | The default services: the layers' source factories and place services, given a resolving fetch   |
-| `server/mcp/`                                                      | Node composition: points the services at a running app's `/api` routes and serves stdio          |
+| `server/mcp/`                                                      | Node composition: points the services at a running app's `/api` routes; serves stdio and `/mcp`  |
 | `src/tools/functions.js`                                           | Function-calling adapter: tool records and results for function-calling clients                  |
 | `server/standalone/voiceTools.js`, `src/standalone/toolCatalog.js` | Standalone voice composition: the session's tool list and the browser catalog                    |
 
@@ -230,7 +230,8 @@ tool's title or description for this surface; `decorate(definition, tool)`
 merges extra fields into each listed definition. `createMcpHttpHandler(server)`
 returns a `Request`-to-`Response` handler for stateless Streamable HTTP: one
 JSON-RPC message per POST, answered with JSON. The host owns routing and any
-access control in front of it; Vantage mounts no HTTP endpoint for it.
+access control in front of it; Vantage mounts it at `/mcp` only when
+`VANTAGE_MCP_HTTP=1` (see below).
 
 ## Voice
 
@@ -277,6 +278,16 @@ claude mcp add vantage -- npm --prefix /path/to/vantage run --silent mcp
 default is `http://127.0.0.1:4173`, the IPv4 loopback address the app binds;
 `localhost` may resolve to `::1` first and miss it.
 
+With `VANTAGE_MCP_HTTP=1` in `.env` (or the environment), the development and
+preview servers also serve the same tools over HTTP at `/mcp`, for clients
+that connect by URL:
+
+```bash
+claude mcp add --transport http vantage http://127.0.0.1:4173/mcp
+```
+
+Without the setting, `/mcp` answers `404` with a JSON error naming it.
+
 The server writes one line per request to stderr, which clients such as
 Claude Desktop copy into their logs: the method, the tool a `tools/call`
 names, and for a failed call its error code (`invalid_arguments`,
@@ -295,6 +306,14 @@ as other local non-browser tools such as curl. It reads no keys: requests that
 need one go through the app's routes, which keep their keys server-side, their
 per-IP throttles and their "not configured" answers. It is therefore available
 without an opt-in setting; it runs only when you register it with a client.
+
+The `/mcp` route is different: it is a listener, and it carries no token or
+secret, so it is off unless `VANTAGE_MCP_HTTP=1`. While it is on, any program
+on this machine can run the tools, including those that spend provider quota.
+The route accepts only requests from this machine that name a loopback host
+and, when a browser sends an `Origin`, come from a loopback origin, behind the
+server-wide `Host` check. This is local transport safety, not authentication.
+A client that disconnects cancels its tool call.
 
 A few sources fetch a public feed directly instead of through `/api`
 (`get_earthquakes` reads the USGS feed; `get_recent_imagery` reads NASA's CMR

@@ -95,6 +95,14 @@ The dev server is a **key broker**: every server-side key above is spendable by 
   loopback only. Use a separately reviewed authentication proxy for remote
   access and keep provider-side quotas as the spend backstop.
 
+## MCP server
+
+Vantage's tools are also served to MCP clients: over stdio (`npm run mcp`, above) and, only when you opt in, at `/mcp` on the development and preview servers.
+
+- **`/mcp` is off by default.** Set `VANTAGE_MCP_HTTP=1` to serve it; there is no other name for the setting. While it is off, `/mcp` answers `404` with a JSON error naming the setting and runs nothing.
+- **What it admits when on.** Only requests from this machine (a loopback socket, whatever address the server binds) that name a loopback host and, when a browser sends an `Origin`, come from a loopback origin. The server-wide `Host` check runs first.
+- **It is not authentication.** The route carries no token or secret: any program on your machine can use the tools while it is on, and some of them spend the same provider quotas as the app. Turn it on only while you use a client that needs it; `npm run mcp` over stdio needs no listener at all.
+
 ## Network & privacy — what the browser may contact
 
 The README's [Network & privacy](README.md#network--privacy) section lists

@@ -1,6 +1,7 @@
 import { fileURLToPath } from 'node:url';
 import { defineConfig, loadEnv } from 'vite';
 import { createBrowserViteConfig } from '../../build/vite.js';
+import { isMcpHttpEnabled, localMcpPlugin } from '../mcp/plugin.js';
 import { localProviderPlugins } from '../providers/local.js';
 import { readVantageEnv } from '../providers/common/env.js';
 import { apiNotFoundPlugin } from './api-not-found.js';
@@ -29,6 +30,8 @@ export default defineConfig(({ command, mode }) => {
     plugins: [
       apiRequestGuardPlugin(),
       ...localProviderPlugins({ realtime: { tools: standaloneVoiceTools() } }),
+      // Off unless VANTAGE_MCP_HTTP=1; when off, /mcp answers a JSON 404.
+      localMcpPlugin({ enabled: isMcpHttpEnabled(process.env) }),
       apiNotFoundPlugin(),
     ],
     googleApiKey: process.env.GOOGLE_MAPS_API_KEY,

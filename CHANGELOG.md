@@ -328,6 +328,15 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   `show_in_vantage` view of an area places the camera behind its center so
   the area stays in the middle of the frame (ported from upstream, Sameh
   Khamis).
+- The same tools over HTTP at `/mcp` on the development and preview servers,
+  for MCP clients that connect by URL, off by default: set
+  `VANTAGE_MCP_HTTP=1` to serve them. The route carries no token, so while it
+  is on any program on this machine can run the tools, including those that
+  spend provider quota; it answers only requests from this machine that name
+  a loopback host and, when a browser sends an `Origin`, come from a loopback
+  origin. With the setting off, `/mcp` answers a JSON `404` naming it. A
+  client that disconnects cancels its tool call (ported from upstream, Sameh
+  Khamis).
 
 ### Changed
 

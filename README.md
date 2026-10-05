@@ -600,6 +600,13 @@ no port: the MCP client that launches it talks to it over stdin and stdout,
 and apart from the MCP stdio rows above it reaches only the app's loopback
 `/api`, as any local process can.
 
+**What can reach the server.** The dev and preview servers listen on
+`127.0.0.1` unless you opt into LAN mode (`VANTAGE_HOST=0.0.0.0`). The MCP
+route `/mcp` is off unless you set `VANTAGE_MCP_HTTP=1`; when on, it answers
+only requests from this machine with a loopback host and origin, and carries no
+token, so any local program can then run the tools and spend provider quota
+(see [SECURITY.md](SECURITY.md#mcp-server)).
+
 Nothing else leaves the machine: no analytics, crash reporting, geolocation (beyond LOCATE above)
 or IP lookups. API keys stay on the server except `GOOGLE_MAPS_API_KEY` and
 `CESIUM_ION_TOKEN`, which the browser needs and which a production `vite

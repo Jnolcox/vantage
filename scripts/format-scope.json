@@ -994,5 +994,6 @@
   "src/tools/functions.test.mjs",
   "src/tools/surfaces.test.mjs",
   "src/view/index.test.mjs",
-  "src/tools/views.test.mjs"
+  "src/tools/views.test.mjs",
+  "src/tools/localRoute.test.mjs"
 ]

@@ -454,7 +454,12 @@ layers' portable source factories, and `vantage/tools/mcp` exposes a composed
 catalog over the Model Context Protocol. `npm run mcp` (`server/mcp/stdio.js`)
 serves Core's tools over stdio to a local MCP client, reading from a running
 app's `/api` routes (default `http://127.0.0.1:4173`, `--api-base` to change).
-It opens no listener. Requests a source sends to another origin directly (the
+It opens no listener. With `VANTAGE_MCP_HTTP=1` the development and preview
+servers also serve the tools over HTTP at `/mcp` (`server/mcp/plugin.js`,
+installed after the providers and before the `/api` fallback), accepting only
+local requests with loopback hosts and origins; without it `/mcp` answers a
+JSON `404` naming the setting. A client that disconnects cancels its call.
+Requests a source sends to another origin directly (the
 USGS earthquake feed, NASA's CMR catalog and Worldview Snapshots) carry `clientUserAgent('mcp-tools')`; requests to the app
 pass the `/api` guard as a local non-browser client. Queries cover
 earthquakes, active fires, recent launches, aircraft (`aircraft_in_area`,

@@ -468,7 +468,21 @@ image content, JPEG, PNG or WebP up to 3 MB) and radio stations
 search (`search_places`, `places_nearby` over `/api/google/text-search` and
 `/api/google/nearby-places`, answering `unavailable` when no Google key is
 configured, and `retry_later` on the routes' per-IP `429`) and routing
-(`plan_route` over `/api/route`, with a place name or coordinates at each end).
+(`plan_route` over `/api/route`, with a place name or coordinates at each end),
+and, over the application request services and the layers' sources, weather
+(`get_weather`), regional briefs (`get_regional_brief`), tropical cyclones,
+fire perimeters, terrain height, mapped military installations and map
+features (`get_map_features`, `unavailable` without a configured Overpass
+instance), plus `situation_brief`, which runs weather, earthquake, fire,
+aircraft and cyclone sections and marks failed ones unavailable,
+`military_awareness`, which does the same for military aircraft, other
+aircraft and mapped installations within 250 km of a point, and
+`get_hud_caption`, which posts the HUD's label-only summary context to
+`/api/openai/hud-summary` with each section's feed state taken from its result
+and, as the HUD does, replaces a caption that hides a non-nominal state with
+the app's own line naming it. The caption and regional brief spend provider
+quota under those routes' throttles, on a tool call only; the HUD's Live/Local
+toggle governs only the page's own periodic lookups.
 Live-source failures become tool errors with the matching code. Tools take a
 shared `area` argument (place name, bounding box, or point and radius) and cap
 lists at 25 rows by default. Nothing under `src/` outside `src/tools/` imports

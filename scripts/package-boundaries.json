@@ -3156,7 +3156,14 @@
       "src/tools/queries/media.js",
       "src/tools/queries/places.js",
       "src/sources/tle.js",
-      "src/data/satellitePass.js"
+      "src/data/satellitePass.js",
+      "src/tools/queries/environment.js",
+      "src/data/installationFeedback.js",
+      "src/loadingFeedback.js",
+      "src/data/feedState.js",
+      "src/data/layerSnapshot.js",
+      "src/hudSummaryResponse.js",
+      "src/tools/queries/brief.js"
     ],
     "external": ["satellite.js"]
   },
@@ -3191,8 +3198,28 @@
       "src/layers/radio/policy.js",
       "src/layers/radio/source.js",
       "src/tools/schema.js",
-      "src/tools/catalog.js"
+      "src/tools/catalog.js",
+      "src/layers/cyclones/source.js",
+      "src/layers/perimeters/source.js",
+      "src/sources/httpBody.js",
+      "src/sources/requestDeadline.js",
+      "src/sources/capability.js",
+      "src/data/tomtomTiles.js",
+      "src/sources/militaryTileGeometry.js",
+      "src/data/militaryInstallationData.js",
+      "src/sources/featureSource.js",
+      "src/sources/phaseTiming.js",
+      "src/sources/featureGeometry.js",
+      "src/sources/overpassFeaturesRecords.js",
+      "src/sources/overpassFeatures.js",
+      "src/services/requests.js",
+      "src/sources/vectorTiles.js",
+      "src/sources/openFreeMap.js",
+      "src/data/bundledJson.js",
+      "src/data/retryableLoad.js",
+      "src/data/militaryNames.js",
+      "src/layers/installations/source.js"
     ],
-    "external": []
+    "external": ["@mapbox/vector-tile", "pbf"]
   }
 }

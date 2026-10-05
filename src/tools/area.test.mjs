@@ -1,6 +1,13 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { areaCenter, areaContains, distanceKm, resolveArea } from './area.js';
+import {
+  areaCenter,
+  areaContains,
+  distanceKm,
+  lineTouchesArea,
+  polygonsTouchArea,
+  resolveArea,
+} from './area.js';
 import { placeFromGeocodeResult } from './places.js';
 
 test('an area needs exactly one form', async () => {
@@ -146,4 +153,95 @@ test('radius areas include every point within the radius, near the poles too', a
     const point = { lat: (lat2 * 180) / Math.PI, lon: (lon2 * 180) / Math.PI };
     assert.ok(areaContains(wide, point), `bearing ${bearing}`);
   }
+});
+
+test('lines touch an area when a segment crosses it with no vertex inside', async () => {
+  const box = await resolveArea({ bbox: [-1, -1, 1, 1] });
+  assert.ok(
+    lineTouchesArea(
+      [
+        [-2, 0],
+        [2, 0],
+      ],
+      box,
+    ),
+  );
+  assert.ok(
+    !lineTouchesArea(
+      [
+        [-2, 2],
+        [2, 2],
+      ],
+      box,
+    ),
+  );
+  const circle = await resolveArea({ lat: 0, lon: 0, radius_km: 50 });
+  assert.ok(
+    lineTouchesArea(
+      [
+        [-2, 0.3],
+        [2, 0.3],
+      ],
+      circle,
+    ),
+  );
+  // Inside the circle's box but beyond its radius.
+  assert.ok(
+    !lineTouchesArea(
+      [
+        [0.3, 0.42],
+        [0.6, 0.42],
+      ],
+      circle,
+    ),
+  );
+  const dateline = await resolveArea({ bbox: [179, -1, -179, 1] });
+  assert.ok(
+    lineTouchesArea(
+      [
+        [178, 0],
+        [-178, 0],
+      ],
+      dateline,
+    ),
+  );
+  const nearDateline = await resolveArea({ bbox: [179.5, -1, 179.9, 1] });
+  assert.ok(
+    lineTouchesArea(
+      [
+        [179, 0],
+        [-179, 0],
+      ],
+      nearDateline,
+    ),
+  );
+  assert.ok(
+    !lineTouchesArea(
+      [
+        [170, 0],
+        [175, 0],
+      ],
+      nearDateline,
+    ),
+  );
+});
+
+test('polygons touch an area by vertex, crossing edge or enclosing it', async () => {
+  const box = await resolveArea({ bbox: [-1, -1, 1, 1] });
+  const square = (half, x = 0) => [
+    [
+      [x - half, -half],
+      [x + half, -half],
+      [x + half, half],
+      [x - half, half],
+    ],
+  ];
+  assert.ok(polygonsTouchArea([square(5)], box), 'encloses the area');
+  assert.ok(polygonsTouchArea([square(0.5)], box), 'inside the area');
+  assert.ok(polygonsTouchArea([square(1, 1.5)], box), 'overlaps an edge');
+  assert.ok(!polygonsTouchArea([square(0.5, 5)], box), 'elsewhere');
+  const ring = [...square(5), ...square(3)];
+  assert.ok(!polygonsTouchArea([ring], box), 'the area sits in a hole');
+  const circle = await resolveArea({ lat: 0, lon: 0, radius_km: 20 });
+  assert.ok(polygonsTouchArea([square(5)], circle));
 });

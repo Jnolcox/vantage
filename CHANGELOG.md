@@ -315,6 +315,11 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   it. `show_in_vantage` now builds its link from a full view: an area framed
   from above or a camera, plus layers, style, map and something to follow
   (ported from upstream, Sameh Khamis).
+- Tool answers with something to show include `data.view`: the view with the
+  matching layers on, the area framed from above or a single aircraft or
+  satellite followed, and the link that opens it (null when the app's
+  address is not configured). Area framing lives in `src/tools/views.js`, so
+  links and answers frame alike (ported from upstream, Sameh Khamis).
 
 ### Changed
 

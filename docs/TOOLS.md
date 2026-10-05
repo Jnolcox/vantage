@@ -196,6 +196,12 @@ Tools take a view as `VIEW_ARGUMENTS`: an `area` to frame from above, or a
 with an area override its framing. `resolveViewArguments` turns them into a
 view.
 
+Answers that have something to show include `data.view`: the view that
+shows them, with the matching layers on, an area framed from above, and a
+single aircraft or satellite followed, plus `url` to open it (null when the
+app's address is not configured). `suggestView` in `src/tools/views.js`
+builds one.
+
 ## The `area` argument
 
 Location-scoped tools take `area` as exactly one of a `place` name, a `bbox`

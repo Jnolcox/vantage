@@ -516,6 +516,8 @@ toggle governs only the page's own periodic lookups. `show_in_vantage` returns
 a version 2 share link on the app's address (`--api-base`) for a view built by
 the pure `src/view/index.js`: an area framed from above or a camera, with
 registered layers, style, map and an aircraft or satellite to follow.
+Answers with something to show also carry `data.view`, the view that shows
+them and its link (`src/tools/views.js`); no request is sent to build it.
 Launch and satellite answers say when the proxy served its last copy
 (`X-Vantage-Cache` or `x-tle-cache` of `STALE-ERROR`), aircraft answers name a
 regional fallback feed, ALPR answers say when tiles failed or were trimmed, and

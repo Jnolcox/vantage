@@ -3190,7 +3190,8 @@
       "src/tools/functions.js",
       "src/tools/surfaces.js",
       "src/view/index.js",
-      "src/view/styles.js"
+      "src/view/styles.js",
+      "src/tools/views.js"
     ],
     "external": ["satellite.js"]
   },

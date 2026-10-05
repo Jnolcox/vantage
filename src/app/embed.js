@@ -32,6 +32,8 @@ const FOLLOW_LAYERS = {
 const FOLLOW_ATTEMPTS = 20;
 const FOLLOW_RETRY_MS = 1000;
 const FLIGHT_SECONDS = 2;
+// Views waiting to apply; a parent sending more is told to wait.
+const MAX_PENDING_VIEWS = 8;
 
 const delay = (ms, signal) =>
   new Promise((resolve) => {
@@ -156,37 +158,75 @@ export function installViews({
   windowRef.document.body.classList.add('ui-embed');
   shell.setCleanView?.(true);
   const parent = windowRef.parent;
-  const post = (message) => {
-    if (parent && parent !== windowRef) parent.postMessage(message, '*');
+  // A top-level page has no parent: it takes no views and answers no one.
+  const framed = Boolean(parent) && parent !== windowRef;
+  // Answers go back only to the origin that asked; the ready notice carries
+  // nothing and goes to any parent.
+  const post = (message, origin = '*') => {
+    if (framed) parent.postMessage(message, origin);
   };
   // Views apply one at a time, in the order they arrive.
   let queue = ready;
+  let pending = 0;
   const onMessage = (event) => {
-    if (event.source !== parent || event.data?.type !== EMBED_VIEW_MESSAGE)
+    if (
+      !framed ||
+      event.source !== parent ||
+      event.data?.type !== EMBED_VIEW_MESSAGE
+    )
       return;
+    // A sender with an opaque origin could not be answered without
+    // broadcasting to any page, and could not frame embed mode anyway.
+    const replyOrigin = event.origin;
+    if (!replyOrigin || replyOrigin === 'null') return;
     const { id = null } = event.data;
     let view;
     try {
       view = createView(event.data.view);
     } catch (error) {
-      post({
-        type: EMBED_APPLIED_MESSAGE,
-        id,
-        ok: false,
-        error: error.message,
-      });
+      post(
+        { type: EMBED_APPLIED_MESSAGE, id, ok: false, error: error.message },
+        replyOrigin,
+      );
       return;
     }
-    queue = queue.then(async () => {
-      if (signal?.aborted) return;
-      const steps = await applyView(view, { viewer, dataManager, run, signal });
-      post({
-        type: EMBED_APPLIED_MESSAGE,
-        id,
-        ok: steps.every((step) => step.ok),
-        steps,
+    if (pending >= MAX_PENDING_VIEWS) {
+      post(
+        {
+          type: EMBED_APPLIED_MESSAGE,
+          id,
+          ok: false,
+          error: 'Too many views are waiting; send it once one has applied.',
+        },
+        replyOrigin,
+      );
+      return;
+    }
+    pending += 1;
+    queue = queue
+      .then(async () => {
+        if (signal?.aborted) return;
+        const steps = await applyView(view, {
+          viewer,
+          dataManager,
+          run,
+          signal,
+        });
+        post(
+          {
+            type: EMBED_APPLIED_MESSAGE,
+            id,
+            ok: steps.every((step) => step.ok),
+            steps,
+          },
+          replyOrigin,
+        );
+      })
+      // A view that throws must not stop the ones after it.
+      .catch((error) => console.error('[vantage] embed view failed:', error))
+      .finally(() => {
+        pending -= 1;
       });
-    });
   };
   windowRef.addEventListener('message', onMessage);
   void ready.then(() => {

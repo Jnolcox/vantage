@@ -5,6 +5,11 @@ import {
   createBrowserViteConfig,
   exposedKeyBuildWarning,
 } from '../../build/vite.js';
+import {
+  contentSecurityPolicy,
+  parseEmbedFrameAncestors,
+  securityHeaders,
+} from '../../build/content-security-policy.js';
 import standaloneConfig, * as compatibility from '../../vite.config.js';
 import * as providers from '../../server/providers/local.js';
 
@@ -104,4 +109,157 @@ test('a keyless build stays quiet', () => {
   plugin.buildStart.call({ warn: (message) => warnings.push(message) });
   assert.deepEqual(warnings, []);
   assert.equal(plugin.apply, 'build');
+});
+
+test('embed framing is refused by default: every document stays unframable', () => {
+  const config = createBrowserViteConfig();
+  assert.equal(
+    config.plugins.some((plugin) => plugin.name === 'vantage-embed-framing'),
+    false,
+  );
+  for (const headers of [config.server.headers, config.preview.headers]) {
+    assert.equal(headers['X-Frame-Options'], 'DENY');
+    assert.match(headers['Content-Security-Policy'], /frame-ancestors 'none'/);
+  }
+});
+
+test('only explicit http(s) origins may be allowed to frame embed mode', () => {
+  const warnings = [];
+  const warn = (message) => warnings.push(message);
+  assert.deepEqual(
+    parseEmbedFrameAncestors(
+      'https://a.example, http://localhost:3000 https://a.example/ https://B.example:8443',
+      { warn },
+    ),
+    ['https://a.example', 'http://localhost:3000', 'https://b.example:8443'],
+  );
+  assert.deepEqual(warnings, []);
+  const refused = [
+    '*',
+    'https://*.example.com',
+    "'self'",
+    "'none'",
+    'https:',
+    'data:',
+    'example.com',
+    'ftp://a.example',
+    'https://a.example/app',
+    'https://a.example/?x=1',
+    'https://user@a.example',
+    'https://a.example;script-src',
+    "https://a'b.example",
+    'http://[::1]:3000',
+  ];
+  assert.deepEqual(parseEmbedFrameAncestors(refused.join(' '), { warn }), []);
+  assert.equal(warnings.length, refused.length);
+  assert.match(warnings[0], /VANTAGE_EMBED_FRAME_ANCESTORS: ignoring "\*"/);
+  assert.deepEqual(parseEmbedFrameAncestors(undefined, { warn }), []);
+  assert.deepEqual(parseEmbedFrameAncestors('  ', { warn }), []);
+});
+
+test('the standalone server reads only VANTAGE_EMBED_FRAME_ANCESTORS and refuses *', () => {
+  const before = {
+    current: process.env.VANTAGE_EMBED_FRAME_ANCESTORS,
+    legacy: process.env.GEV_EMBED_FRAME_ANCESTORS,
+  };
+  const originalWarn = console.warn;
+  console.warn = () => {};
+  const framing = (config) =>
+    config.plugins.some((plugin) => plugin.name === 'vantage-embed-framing');
+  try {
+    delete process.env.VANTAGE_EMBED_FRAME_ANCESTORS;
+    process.env.GEV_EMBED_FRAME_ANCESTORS = 'https://a.example';
+    assert.equal(framing(standaloneConfig({ mode: 'test' })), false);
+    process.env.VANTAGE_EMBED_FRAME_ANCESTORS = '*';
+    const anyPage = standaloneConfig({ mode: 'test' });
+    assert.equal(framing(anyPage), false);
+    assert.equal(anyPage.server.headers['X-Frame-Options'], 'DENY');
+    process.env.VANTAGE_EMBED_FRAME_ANCESTORS = 'https://a.example';
+    assert.equal(framing(standaloneConfig({ mode: 'test' })), true);
+  } finally {
+    console.warn = originalWarn;
+    for (const [name, value] of [
+      ['VANTAGE_EMBED_FRAME_ANCESTORS', before.current],
+      ['GEV_EMBED_FRAME_ANCESTORS', before.legacy],
+    ]) {
+      if (value === undefined) delete process.env[name];
+      else process.env[name] = value;
+    }
+  }
+});
+
+/** Run a framing plugin's middleware for one request and return its headers. */
+function framingHeaders(plugin, url, hook = 'configureServer') {
+  let middleware;
+  plugin[hook]({ middlewares: { use: (handler) => (middleware = handler) } });
+  const headers = {};
+  let continued = false;
+  middleware(
+    { url },
+    { setHeader: (name, value) => (headers[name] = value) },
+    () => (continued = true),
+  );
+  assert.equal(continued, true);
+  return headers;
+}
+
+test('listed origins may frame embed-mode documents only, with the policy otherwise intact', () => {
+  const config = createBrowserViteConfig({
+    embedFrameAncestors: ['https://a.example', 'http://localhost:3000'],
+  });
+  // Nothing static is left for the server to write over the per-request
+  // headers.
+  assert.deepEqual(config.server.headers, {});
+  assert.deepEqual(config.preview.headers, {});
+  const plugin = config.plugins.find(
+    (candidate) => candidate.name === 'vantage-embed-framing',
+  );
+  assert.ok(plugin);
+  for (const hook of ['configureServer', 'configurePreviewServer']) {
+    for (const url of ['/?embed=1', '/index.html?embed=1#v=2']) {
+      const embedded = framingHeaders(plugin, url, hook);
+      assert.equal(embedded['X-Frame-Options'], undefined);
+      assert.equal(
+        embedded['Content-Security-Policy'],
+        contentSecurityPolicy().replace(
+          "frame-ancestors 'none'",
+          'frame-ancestors https://a.example http://localhost:3000',
+        ),
+      );
+      assert.equal(embedded['X-Content-Type-Options'], 'nosniff');
+    }
+    for (const url of [
+      '/',
+      '/?embed=0',
+      '/api/x?embed=1',
+      '/src/main.js?embed=1',
+      '/src/ui/templates/provider-settings.html?embed=1',
+    ]) {
+      assert.deepEqual(
+        framingHeaders(plugin, url, hook),
+        securityHeaders(),
+        url,
+      );
+    }
+  }
+});
+
+test('report-only mode still enforces the embed framing rule', () => {
+  const plugin = createBrowserViteConfig({
+    cspReportOnly: true,
+    embedFrameAncestors: ['https://a.example'],
+  }).plugins.find((candidate) => candidate.name === 'vantage-embed-framing');
+  const embedded = framingHeaders(plugin, '/?embed=1');
+  assert.equal(
+    embedded['Content-Security-Policy'],
+    'frame-ancestors https://a.example',
+  );
+  assert.match(
+    embedded['Content-Security-Policy-Report-Only'],
+    /frame-ancestors https:\/\/a\.example$/,
+  );
+  assert.equal(embedded['X-Frame-Options'], undefined);
+  const normal = framingHeaders(plugin, '/');
+  assert.equal(normal['Content-Security-Policy'], "frame-ancestors 'none'");
+  assert.equal(normal['X-Frame-Options'], 'DENY');
 });

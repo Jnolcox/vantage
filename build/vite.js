@@ -1,6 +1,7 @@
 import { applicationHtmlPlugin } from './application-html.js';
 import {
   contentSecurityPolicyHtmlPlugin,
+  embedFramingPlugin,
   securityHeaders,
 } from './content-security-policy.js';
 import cesium from 'vite-plugin-cesium';
@@ -39,8 +40,16 @@ export function createBrowserViteConfig({
   port = 4173,
   allowedHosts = [],
   cspReportOnly = false,
+  embedFrameAncestors = [],
   command,
 } = {}) {
+  // With origins allowed to frame embed mode, the headers depend on the
+  // request and embedFramingPlugin sends them all; otherwise they are the
+  // same for every response.
+  const framesEmbeds = embedFrameAncestors.length > 0;
+  const headers = framesEmbeds
+    ? {}
+    : securityHeaders({ reportOnly: cspReportOnly });
   return {
     plugins: [
       cesium(),
@@ -48,6 +57,14 @@ export function createBrowserViteConfig({
       contentSecurityPolicyHtmlPlugin({ reportOnly: cspReportOnly }),
       exposedKeyBuildWarning({ googleApiKey, cesiumToken }),
       ...plugins,
+      ...(framesEmbeds
+        ? [
+            embedFramingPlugin({
+              frameAncestors: embedFrameAncestors,
+              reportOnly: cspReportOnly,
+            }),
+          ]
+        : []),
     ],
     ...(publicDir === undefined ? {} : { publicDir }),
     // A production build must not clean the dependency cache a running dev
@@ -92,11 +109,11 @@ export function createBrowserViteConfig({
       },
       // The policy limits where the page can send data, and keeps the
       // document containing Provider Settings out of other sites' frames.
-      headers: securityHeaders({ reportOnly: cspReportOnly }),
+      headers,
     },
     preview: {
       cors: false,
-      headers: securityHeaders({ reportOnly: cspReportOnly }),
+      headers,
     },
     define: {
       'import.meta.env.GOOGLE_MAPS_API_KEY': JSON.stringify(googleApiKey),

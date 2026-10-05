@@ -605,7 +605,12 @@ and apart from the MCP stdio rows above it reaches only the app's loopback
 route `/mcp` is off unless you set `VANTAGE_MCP_HTTP=1`; when on, it answers
 only direct requests from this machine (loopback socket, host and origin on
 the port reached; no proxy headers; sharing off), and carries no token, so any local program can then run the tools and spend provider quota
-(see [SECURITY.md](SECURITY.md#mcp-server)).
+(see [SECURITY.md](SECURITY.md#mcp-server)). Embed mode (`?embed=1`, the
+globe alone) can be driven by the page that frames it, which posts views to
+it; no page may frame it unless you list that page's origin in
+`VANTAGE_EMBED_FRAME_ANCESTORS` (explicit `http(s)` origins only; `*` is
+refused), and every other page of the app can never be framed (see
+[docs/TOOLS.md](docs/TOOLS.md#embed-mode)).
 
 Nothing else leaves the machine: no analytics, crash reporting, geolocation (beyond LOCATE above)
 or IP lookups. API keys stay on the server except `GOOGLE_MAPS_API_KEY` and

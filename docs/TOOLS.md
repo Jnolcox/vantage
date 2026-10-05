@@ -222,15 +222,29 @@ changes the view by posting `{ type: 'vantage:view', id, view }` to the
 frame. The app applies it through its own actions (style, map, exactly the
 view's layers, annotations, the camera, then the followed entity, retried
 until its layer has it) and answers
-`{ type: 'vantage:view-applied', id, ok, steps }`. It posts
-`{ type: 'vantage:ready' }` once it can take views, and only its parent page
-can send them. Annotations in any link are drawn once the link has been
-restored, embedded or not. See `src/app/embed.js`; the main path loads it
+`{ type: 'vantage:view-applied', id, ok, steps }` to the origin that sent
+the view. It posts `{ type: 'vantage:ready' }` once it can take views. Only
+its parent page can send them, a parent with an opaque origin is ignored,
+and a page that is not framed takes none. Views apply one at a time; while
+eight are waiting, further ones are answered `ok: false` unapplied.
+Annotations in any link are drawn once the link has been restored, embedded
+or not. See `src/app/embed.js`; the main path loads it
 only for an embed-mode page or a link that carries annotations
 (`src/app/embedMode.js`).
 
-Every document, embed-mode ones included, keeps `X-Frame-Options: DENY` and
-`frame-ancestors 'none'`.
+No page may frame the app by default: every document keeps
+`X-Frame-Options: DENY` and `frame-ancestors 'none'`.
+`VANTAGE_EMBED_FRAME_ANCESTORS` lets the origins it lists frame embed-mode
+documents (`/?embed=1` or `/index.html?embed=1`) only, on the development
+and preview servers; a static host serving `dist/` must send its own
+`frame-ancestors` header, since the page's meta policy cannot carry one.
+It takes explicit `http(s)` origins such as `https://example.com`,
+separated by spaces or commas; `*`, wildcards,
+keywords such as `'self'`, other schemes and paths are logged and ignored.
+Those documents get the full Content-Security-Policy with `frame-ancestors`
+naming the origins and no `X-Frame-Options`, in report-only mode too. Every
+other document, Provider Settings included, stays unframable
+(`embedFramingPlugin` in `build/content-security-policy.js`).
 
 ## The `area` argument
 

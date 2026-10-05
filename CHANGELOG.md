@@ -18,7 +18,13 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   through its own actions and answers `vantage:view-applied` with every
   step. Annotations in any link are drawn once it restores. The code loads
   only for an embed-mode page or an annotated link, so a normal page load
-  pays nothing for it (ported from upstream, Sameh Khamis).
+  pays nothing for it. No page may frame it unless
+  `VANTAGE_EMBED_FRAME_ANCESTORS` lists that page's origin: only explicit
+  `http(s)` origins are accepted (`*`, wildcards and keywords are logged and
+  ignored), those documents keep the full Content-Security-Policy with only
+  `frame-ancestors` changed, and every other document, Provider Settings
+  included, stays unframable. Answers go only to the origin that sent the
+  view (ported from upstream, Sameh Khamis).
 - MODIS NRT (Terra + Aqua, ~1 km) detections join the three VIIRS NRT sources
   in the Active Fires layer. They share the existing `FIRMS_MAP_KEY`, the
   30-minute proxy cache and the trailing-24-hour clamp; MODIS confidence is

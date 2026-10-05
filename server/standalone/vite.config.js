@@ -1,5 +1,6 @@
 import { fileURLToPath } from 'node:url';
 import { defineConfig, loadEnv } from 'vite';
+import { parseEmbedFrameAncestors } from '../../build/content-security-policy.js';
 import { createBrowserViteConfig } from '../../build/vite.js';
 import { isMcpHttpEnabled, localMcpPlugin } from '../mcp/plugin.js';
 import { localProviderPlugins } from '../providers/local.js';
@@ -44,6 +45,10 @@ export default defineConfig(({ command, mode }) => {
       String(readVantageEnv('CSP') ?? '')
         .trim()
         .toLowerCase() === 'report-only',
+    // Opt-in, new in Vantage: no legacy GEV_ name is read.
+    embedFrameAncestors: parseEmbedFrameAncestors(
+      process.env.VANTAGE_EMBED_FRAME_ANCESTORS,
+    ),
     command,
   });
 });

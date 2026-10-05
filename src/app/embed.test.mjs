@@ -105,7 +105,13 @@ test('a followed entity is retried until its layer has it', async () => {
 
 test('an embedded page takes views only from its parent and answers it', async () => {
   const posted = [];
-  const parent = { postMessage: (message) => posted.push(message) };
+  const targets = [];
+  const parent = {
+    postMessage: (message, target) => {
+      posted.push(message);
+      targets.push(target);
+    },
+  };
   const windowRef = new EventTarget();
   windowRef.parent = parent;
   windowRef.document = { body: { classList: new Set() } };
@@ -129,9 +135,9 @@ test('an embedded page takes views only from its parent and answers it', async (
   await new Promise((resolve) => setTimeout(resolve, 0));
   assert.equal(shell.clean, true);
   assert.deepEqual(posted, [{ type: 'vantage:ready' }]);
-  const send = (source, data) => {
+  const send = (source, data, origin = 'https://host.example') => {
     const event = new Event('message');
-    Object.assign(event, { source, data });
+    Object.assign(event, { source, data, origin });
     windowRef.dispatchEvent(event);
   };
   send(
@@ -160,6 +166,88 @@ test('an embedded page takes views only from its parent and answers it', async (
     ),
   );
   assert.equal(posted.filter((message) => message.id === 1).length, 0);
+  // Ready names no data and goes to any parent; answers go only to the
+  // origin that asked.
+  assert.deepEqual(targets, [
+    '*',
+    'https://host.example',
+    'https://host.example',
+  ]);
+  // A parent with an opaque origin gets nothing applied and no answer.
+  send(parent, { type: 'vantage:view', id: 4, view: { camera: {} } }, 'null');
+  await new Promise((resolve) => setTimeout(resolve, 10));
+  assert.equal(posted.length, 3);
+  remove();
+});
+
+test('a top-level embed page takes no views, even from its own window', async () => {
+  const windowRef = new EventTarget();
+  windowRef.parent = windowRef;
+  const posted = [];
+  windowRef.postMessage = (message) => posted.push(message);
+  windowRef.document = { body: { classList: new Set() } };
+  windowRef.document.body.classList.add = Set.prototype.add;
+  const { calls, run } = recorder();
+  const remove = installViews({
+    shell: { initialRestorePromise: Promise.resolve() },
+    viewer: fakeViewer(),
+    dataManager: fakeLayers(new Set()),
+    run,
+    location: { search: '?embed=1', hash: '' },
+    windowRef,
+  });
+  const event = new Event('message');
+  Object.assign(event, {
+    source: windowRef,
+    origin: 'https://host.example',
+    data: { type: 'vantage:view', id: 1, view: { camera: { lat: 1, lon: 2 } } },
+  });
+  windowRef.dispatchEvent(event);
+  await new Promise((resolve) => setTimeout(resolve, 10));
+  assert.deepEqual(calls, []);
+  assert.deepEqual(posted, []);
+  remove();
+});
+
+test('a parent sending views faster than they apply is told to wait', async () => {
+  const posted = [];
+  const parent = { postMessage: (message) => posted.push(message) };
+  const windowRef = new EventTarget();
+  windowRef.parent = parent;
+  windowRef.document = { body: { classList: new Set() } };
+  windowRef.document.body.classList.add = Set.prototype.add;
+  let release;
+  const restored = new Promise((resolve) => (release = resolve));
+  const { run } = recorder();
+  const remove = installViews({
+    shell: { initialRestorePromise: restored },
+    viewer: fakeViewer(),
+    dataManager: fakeLayers(new Set()),
+    run,
+    location: { search: '?embed=1', hash: '' },
+    windowRef,
+  });
+  for (let id = 1; id <= 10; id++) {
+    const event = new Event('message');
+    Object.assign(event, {
+      source: parent,
+      origin: 'https://host.example',
+      data: { type: 'vantage:view', id, view: { camera: { lat: 1, lon: 2 } } },
+    });
+    windowRef.dispatchEvent(event);
+  }
+  const refused = posted.filter((message) => message.ok === false);
+  assert.deepEqual(
+    refused.map((message) => message.id),
+    [9, 10],
+  );
+  release();
+  await new Promise((resolve) => setTimeout(resolve, 10));
+  const applied = posted.filter((message) => message.ok === true);
+  assert.deepEqual(
+    applied.map((message) => message.id),
+    [1, 2, 3, 4, 5, 6, 7, 8],
+  );
   remove();
 });
 

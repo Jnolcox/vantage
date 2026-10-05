@@ -551,6 +551,12 @@ the voice runner imports the function-calling adapter, and
 page load is unchanged. See
 [tools and the MCP server](TOOLS.md).
 
+`?embed=1` shows the app as the globe alone and takes new views
+(`vantage:view`) from its parent page; links that carry annotations draw them
+once restored. The page loads that code (`src/app/embed.js`) only for those
+two cases. Framing is off unless `VANTAGE_EMBED_FRAME_ANCESTORS` lists the
+framing page's origin; only explicit `http(s)` origins are accepted.
+
 ## Vessel components and sources
 
 `src/data/aisLiveVessels.js` assembles `createVesselLayer` from the

@@ -48,6 +48,7 @@ import {
   nextSatellitePass,
   satellitesOverhead,
 } from './queries/space.js';
+import { findAlprCameras } from './queries/surveillance.js';
 
 export {
   defineTool,
@@ -86,6 +87,7 @@ export const coreTools = Object.freeze([
   satellitesOverhead,
   findCctvCameras,
   getCctvSnapshot,
+  findAlprCameras,
   findRadioStations,
   searchPlaces,
   placesNearby,

@@ -105,6 +105,11 @@ stdio server's fetch reads those `file:` URLs from `src/data/local_data/` on
 disk and answers 404 for any other `file:` URL, including one that climbs out
 with `..`.
 
+`alpr` is the ALPR layer's hourly OpenStreetMap camera extract, read through the
+app's `/api/tiles/alpr` proxy. `find_alpr_cameras` takes a US or Canadian area of
+at most 3° per side and reports an area outside that coverage rather than an
+empty list; it does not fall back to the layer's Overpass path.
+
 `get_map_features` reads `/api/overpass`, which reaches only the Overpass
 instances an operator lists in `VANTAGE_OVERPASS_UPSTREAMS`. With none, the
 request services' one `/api/overpass/status` probe says so and the tool
@@ -202,6 +207,7 @@ process, on a tool call only, with the `vantage-mcp-tools` User-Agent from
 | `satellites_overhead`         | `satellites`         | Satellites in a CelesTrak group above a place or point now, highest first                   |
 | `find_cctv_cameras`           | `cctv`               | Public cameras in an area, nearest first, noting regions the catalog only partly serves     |
 | `get_cctv_snapshot`           | `cctv`               | The current image from one camera, returned as image content                                |
+| `find_alpr_cameras`           | `alpr`               | OpenStreetMap-mapped license plate readers in a US/Canadian area up to 3°                   |
 | `find_radio_stations`         | `radio`              | Radio Browser stations by area and/or search terms, with stream URLs                        |
 | `search_places`               | `placeSearch`        | Points of interest matching a query within an area (Google Places)                          |
 | `places_nearby`               | `placeSearch`        | Notable places around a place or point (Google Places)                                      |

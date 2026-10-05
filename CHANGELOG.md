@@ -259,6 +259,7 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   `unavailable` without `AISSTREAM_API_KEY`) and satellite (next pass over a
   place or point, those overhead now), public camera (find cameras, saying when
   the capped catalog serves only part of a region; a camera's current image),
+  license plate reader camera (OpenStreetMap extract, US and Canada),
   radio station, place search, routing, bike-share station (public GBFS systems)
   and transit vehicle (GTFS-Realtime feeds, with each feed's attribution and
   license; stale feeds are marked and expired positions dropped, by the transit

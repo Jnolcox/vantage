@@ -469,7 +469,9 @@ answer partial when its area overlaps a pack the catalog trimmed, read from the
 bounding box) that `/api/cctv/sources` now returns beside each camera's
 `pack`, and says the catalog has no cameras rather than that none exist, and
 `get_cctv_snapshot`, which returns the frame from `/api/cctv/frame` as MCP
-image content, JPEG, PNG or WebP up to 3 MB) and radio stations
+image content, JPEG, PNG or WebP up to 3 MB), license plate reader cameras
+(`find_alpr_cameras`, over the ALPR layer's hourly extract through
+`/api/tiles/alpr`, US and Canada only, at most 3° per side) and radio stations
 (`find_radio_stations`, which returns stream URLs and reports no clicks), place
 search (`search_places`, `places_nearby` over `/api/google/text-search` and
 `/api/google/nearby-places`, answering `unavailable` when no Google key is

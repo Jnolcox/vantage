@@ -43,6 +43,9 @@ export function createBrowserViteConfig({
   publicDir,
   googleApiKey,
   cesiumToken,
+  // True only when the server answers /api/google/tiles-token. Vantage ships
+  // no such endpoint (see SECURITY.md), so the client never asks for one.
+  googleTileTokens = false,
   host = '127.0.0.1',
   port = 4173,
   allowedHosts = [],
@@ -125,6 +128,9 @@ export function createBrowserViteConfig({
     define: {
       'import.meta.env.GOOGLE_MAPS_API_KEY': JSON.stringify(googleApiKey),
       'import.meta.env.CESIUM_ION_TOKEN': JSON.stringify(cesiumToken),
+      'import.meta.env.VANTAGE_GOOGLE_TILE_TOKENS': JSON.stringify(
+        googleTileTokens === true,
+      ),
     },
     build: { chunkSizeWarningLimit: 1500 },
   };

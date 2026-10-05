@@ -36,6 +36,7 @@ test('explicit build inputs preserve browser-only defines, plugin order and loop
   assert.deepEqual(config.define, {
     'import.meta.env.GOOGLE_MAPS_API_KEY': '"browser-fixture"',
     'import.meta.env.CESIUM_ION_TOKEN': '"ion-fixture"',
+    'import.meta.env.VANTAGE_GOOGLE_TILE_TOKENS': 'false',
   });
   assert.deepEqual(
     createBrowserViteConfig({
@@ -48,6 +49,23 @@ test('explicit build inputs preserve browser-only defines, plugin order and loop
   assert.equal(
     createBrowserViteConfig({ host: '::', port: '4800' }).server.port,
     4800,
+  );
+});
+
+test('the build asks for Google tile tokens only when a server offers them', () => {
+  assert.equal(
+    createBrowserViteConfig({ googleTileTokens: true }).define[
+      'import.meta.env.VANTAGE_GOOGLE_TILE_TOKENS'
+    ],
+    'true',
+  );
+});
+
+test('the standalone server offers no Google tile tokens, so the page never requests one', () => {
+  const config = standaloneConfig({ mode: 'test' });
+  assert.equal(
+    config.define['import.meta.env.VANTAGE_GOOGLE_TILE_TOKENS'],
+    'false',
   );
 });
 

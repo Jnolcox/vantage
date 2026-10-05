@@ -5,6 +5,7 @@ import { describeError } from './standalone/errors.js';
 
 const application = createStandaloneApplication({
   googleApiKey: import.meta.env.GOOGLE_MAPS_API_KEY,
+  googleTileTokens: import.meta.env.VANTAGE_GOOGLE_TILE_TOKENS === true,
   cesiumToken: import.meta.env.CESIUM_ION_TOKEN,
   allowQaRegistration: import.meta.env.DEV,
 });

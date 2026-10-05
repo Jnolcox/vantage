@@ -598,6 +598,8 @@
   "src/maps/credits.js",
   "src/maps/defaultSources.js",
   "src/maps/google3d.js",
+  "src/maps/googleTokens.js",
+  "src/maps/googleTokens.test.mjs",
   "src/maps/imagery.js",
   "src/maps/registry.js",
   "src/maps/terrain.js",

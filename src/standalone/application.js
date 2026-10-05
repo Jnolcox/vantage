@@ -6,6 +6,7 @@ import { createStandaloneScene } from './scene.js';
 import { createStandaloneControls } from './controls.js';
 import { createStandaloneData } from './data.js';
 import { createStandaloneTools } from './tools.js';
+import { startupGoogleTokenSource } from '../maps/googleTokens.js';
 
 // The existing controls and layer catalog contain page-scoped state.
 let constructed = false;
@@ -13,6 +14,7 @@ let constructed = false;
 /** Compose the standalone application once per page. Reload to start again. */
 export function createStandaloneApplication({
   googleApiKey,
+  googleTileTokens = false,
   cesiumToken,
   geospatial = {},
   voice = {},
@@ -39,6 +41,10 @@ export function createStandaloneApplication({
       const scene = await createStandaloneScene({
         ...context,
         googleApiKey,
+        googleTokens: startupGoogleTokenSource({
+          googleApiKey,
+          serverOffersTokens: googleTileTokens,
+        }),
         cesiumToken,
         loaderStatus,
       });

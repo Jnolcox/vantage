@@ -28,6 +28,50 @@ export function cameraForArea(area) {
   };
 }
 
+const EARTH_RADIUS_M = 6_371_008.8;
+// Pitches this close to straight down keep the camera above the point.
+const STRAIGHT_DOWN_PITCH_DEG = -89.5;
+// Shallower pitches are treated as this one, so the camera is never pulled
+// back toward the horizon.
+const SHALLOWEST_PITCH_DEG = -5;
+
+/**
+ * The camera position for looking at a point from `altitudeM` with a heading
+ * and a tilt: straight above it when looking down, otherwise pulled back
+ * along the heading so the point stays in the middle of the view.
+ */
+export function cameraLookingAt(
+  target,
+  { altitudeM, headingDeg = 0, pitchDeg = -90 },
+) {
+  const camera = {
+    lat: target.lat,
+    lon: target.lon,
+    altitude_m: altitudeM,
+    heading_deg: headingDeg,
+    pitch_deg: pitchDeg,
+  };
+  if (pitchDeg <= STRAIGHT_DOWN_PITCH_DEG) return camera;
+  // Ground distance from the camera to the point it looks at, on flat ground.
+  const back =
+    altitudeM /
+    Math.tan((-Math.min(pitchDeg, SHALLOWEST_PITCH_DEG) * Math.PI) / 180);
+  const heading = (headingDeg * Math.PI) / 180;
+  const lat =
+    target.lat -
+    ((back * Math.cos(heading)) / EARTH_RADIUS_M) * (180 / Math.PI);
+  const lon =
+    target.lon -
+    ((back * Math.sin(heading)) /
+      (EARTH_RADIUS_M * Math.cos((target.lat * Math.PI) / 180))) *
+      (180 / Math.PI);
+  return {
+    ...camera,
+    lat: Math.max(-90, Math.min(90, lat)),
+    lon: ((((lon + 180) % 360) + 360) % 360) - 180,
+  };
+}
+
 /** The app's address, or null when it is not configured. */
 function appUrl(services) {
   try {

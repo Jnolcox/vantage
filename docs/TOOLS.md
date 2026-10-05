@@ -191,10 +191,22 @@ style names are the ones share links use. Ships cannot be followed from a
 link yet. The module is pure (no DOM, no network), so the app imports it too:
 `src/sharelink.js` takes its style names from it.
 
-Tools take a view as `VIEW_ARGUMENTS`: an `area` to frame from above, or a
-`camera`, plus `layers`, `style`, `map` and `follow`; camera fields given
-with an area override its framing. `resolveViewArguments` turns them into a
-view.
+A view can also carry `annotations`, the marks the app's `annotate_map`
+action draws (pin, highlight, area, arrow, route, label). Links carry them as
+JSON in the `an` parameter, bounded: at most 24 marks, 12 points per route,
+200-character targets, 120-character labels and 6,000 characters for the
+whole parameter (a longer list stays in the view but is left out of the link).
+`annotationsFromParams` keeps only the fields the app draws and drops
+out-of-range values. The page does not yet draw marks from a link it
+restores. Labels are untrusted text from whoever wrote the link; the
+annotation renderers draw them as text (`textContent` or Cesium labels), never as
+markup.
+
+Tools take a view as `VIEW_ARGUMENTS`: an `area` to frame, or a `camera`, plus
+`layers`, `style`, `map`, `follow` and `annotations`. An area alone is framed
+from above; with a heading or pitch the camera is placed behind its center so
+the area stays in the middle of the frame. Camera lat and lon given with an
+area override its framing. `resolveViewArguments` turns them into a view.
 
 Answers that have something to show include `data.view`: the view that
 shows them, with the matching layers on, an area framed from above, and a
@@ -293,44 +305,44 @@ process, on a tool call only, with the `vantage-mcp-tools` User-Agent from
 
 ## Tools
 
-| Tool                          | Reads                | Returns                                                                                               |
-| ----------------------------- | -------------------- | ----------------------------------------------------------------------------------------------------- |
-| `get_earthquakes`             | `earthquakes`        | USGS M2.5+ events in the last 24 hours, strongest first                                               |
-| `get_active_fires`            | `fires`              | NASA FIRMS detections in an area, highest radiative power first                                       |
-| `get_recent_launches`         | `launches`           | Launch Library 2 launches in the last 30 days, newest first                                           |
-| `aircraft_in_area`            | `aircraft`           | Aircraft in an area, nearest first; `military: true` reads the `military` feed                        |
-| `find_aircraft`               | `aircraft`           | Aircraft anywhere by callsign, ICAO address or registration                                           |
-| `get_aircraft_track`          | `aircraft`           | Recent positions of one aircraft, thinned to 200 points                                               |
-| `get_aircraft_info`           | `aircraft`           | Aircraft type and registration, and flight route, from adsbdb                                         |
-| `vessels_in_area`             | `vessels`            | Ships reported by AIS in an area, nearest first, optionally by type                                   |
-| `find_vessel`                 | `vessels`            | Ships anywhere by MMSI, IMO number or name                                                            |
-| `get_vessel_track`            | `vessels`            | Recent positions of one ship, thinned to 200 points                                                   |
-| `next_satellite_pass`         | `satellites`         | Next pass over a place or point (default the ISS), with naked-eye visibility                          |
-| `satellites_overhead`         | `satellites`         | Satellites in a CelesTrak group above a place or point now, highest first                             |
-| `find_cctv_cameras`           | `cctv`               | Public cameras in an area, nearest first, noting regions the catalog only partly serves               |
-| `get_cctv_snapshot`           | `cctv`               | The current image from one camera, returned as image content                                          |
-| `find_alpr_cameras`           | `alpr`               | OpenStreetMap-mapped license plate readers in a US/Canadian area up to 3°                             |
-| `find_radio_stations`         | `radio`              | Radio Browser stations by area and/or search terms, with stream URLs                                  |
-| `search_places`               | `placeSearch`        | Points of interest matching a query within an area (Google Places)                                    |
-| `places_nearby`               | `placeSearch`        | Notable places around a place or point (Google Places)                                                |
-| `plan_route`                  | `routing`            | Walking, driving or cycling route over OpenStreetMap, with a simplified path                          |
-| `get_bike_share`              | `bikeshare`          | Live GBFS stations in an area, with bikes and docks available                                         |
-| `get_transit_vehicles`        | `transit`            | Live GTFS-Realtime vehicle positions in an area, optionally one route                                 |
-| `get_traffic_flow`            | `traffic`            | TomTom flow in a city-sized area: speed vs free flow, congested and closed road                       |
-| `get_weather`                 | `weather`            | Current conditions at a place or point                                                                |
-| `get_weather_map`             | `weatherMaps`        | The latest NOAA radar, satellite or lightning map image over an area                                  |
-| `get_wind`                    | `wind`               | GFS or IFS model wind 10 m above ground at a location                                                 |
-| `get_recent_imagery`          | `imagery`            | The most recent clear Landsat/Sentinel-2 image of an area (VIIRS fallback)                            |
-| `find_submarine_cables`       | `cables`             | TeleGeography cables and landing points by area or name (CC BY-NC-SA 3.0)                             |
-| `find_infrastructure`         | `infrastructure`     | OpenStreetMap datacenters or dams in an area, nearest first (ODbL)                                    |
-| `get_bhote_koshi_flood`       | `events`             | 2026 Bhote Koshi flood: evidence trail, flood path and imagery dates (CC BY-NC 4.0)                   |
-| `get_regional_brief`          | `regional`           | What and where a location is, its weather and recent headlines                                        |
-| `get_cyclones`                | `cyclones`           | Active NHC/CPHC tropical cyclones, optionally in an area                                              |
-| `get_fire_perimeters`         | `perimeters`         | Mapped WFIGS wildfire perimeters in an area, largest first                                            |
-| `get_terrain_height`          | `terrain`            | Ground, geoid and ellipsoid heights at up to 20 points                                                |
-| `find_military_installations` | `installations`      | OpenStreetMap military sites in an area of at most 10° per side                                       |
-| `get_map_features`            | `features`           | Administrative areas, named places or monuments at a location (needs Overpass)                        |
-| `situation_brief`             | `weather`            | Weather, earthquakes, fires, aircraft, ships and cyclones for an area, by section                     |
-| `military_awareness`          | `military`           | Military and other aircraft and military installations within 250 km of a point, by section           |
-| `get_hud_caption`             | `weather`, `summary` | The app's heads-up display caption for an area                                                        |
-| `show_in_vantage`             | `app`                | A share link to a view: an area or camera, layers, style, map, and an aircraft or satellite to follow |
+| Tool                          | Reads                | Returns                                                                                                      |
+| ----------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `get_earthquakes`             | `earthquakes`        | USGS M2.5+ events in the last 24 hours, strongest first                                                      |
+| `get_active_fires`            | `fires`              | NASA FIRMS detections in an area, highest radiative power first                                              |
+| `get_recent_launches`         | `launches`           | Launch Library 2 launches in the last 30 days, newest first                                                  |
+| `aircraft_in_area`            | `aircraft`           | Aircraft in an area, nearest first; `military: true` reads the `military` feed                               |
+| `find_aircraft`               | `aircraft`           | Aircraft anywhere by callsign, ICAO address or registration                                                  |
+| `get_aircraft_track`          | `aircraft`           | Recent positions of one aircraft, thinned to 200 points                                                      |
+| `get_aircraft_info`           | `aircraft`           | Aircraft type and registration, and flight route, from adsbdb                                                |
+| `vessels_in_area`             | `vessels`            | Ships reported by AIS in an area, nearest first, optionally by type                                          |
+| `find_vessel`                 | `vessels`            | Ships anywhere by MMSI, IMO number or name                                                                   |
+| `get_vessel_track`            | `vessels`            | Recent positions of one ship, thinned to 200 points                                                          |
+| `next_satellite_pass`         | `satellites`         | Next pass over a place or point (default the ISS), with naked-eye visibility                                 |
+| `satellites_overhead`         | `satellites`         | Satellites in a CelesTrak group above a place or point now, highest first                                    |
+| `find_cctv_cameras`           | `cctv`               | Public cameras in an area, nearest first, noting regions the catalog only partly serves                      |
+| `get_cctv_snapshot`           | `cctv`               | The current image from one camera, returned as image content                                                 |
+| `find_alpr_cameras`           | `alpr`               | OpenStreetMap-mapped license plate readers in a US/Canadian area up to 3°                                    |
+| `find_radio_stations`         | `radio`              | Radio Browser stations by area and/or search terms, with stream URLs                                         |
+| `search_places`               | `placeSearch`        | Points of interest matching a query within an area (Google Places)                                           |
+| `places_nearby`               | `placeSearch`        | Notable places around a place or point (Google Places)                                                       |
+| `plan_route`                  | `routing`            | Walking, driving or cycling route over OpenStreetMap, with a simplified path                                 |
+| `get_bike_share`              | `bikeshare`          | Live GBFS stations in an area, with bikes and docks available                                                |
+| `get_transit_vehicles`        | `transit`            | Live GTFS-Realtime vehicle positions in an area, optionally one route                                        |
+| `get_traffic_flow`            | `traffic`            | TomTom flow in a city-sized area: speed vs free flow, congested and closed road                              |
+| `get_weather`                 | `weather`            | Current conditions at a place or point                                                                       |
+| `get_weather_map`             | `weatherMaps`        | The latest NOAA radar, satellite or lightning map image over an area                                         |
+| `get_wind`                    | `wind`               | GFS or IFS model wind 10 m above ground at a location                                                        |
+| `get_recent_imagery`          | `imagery`            | The most recent clear Landsat/Sentinel-2 image of an area (VIIRS fallback)                                   |
+| `find_submarine_cables`       | `cables`             | TeleGeography cables and landing points by area or name (CC BY-NC-SA 3.0)                                    |
+| `find_infrastructure`         | `infrastructure`     | OpenStreetMap datacenters or dams in an area, nearest first (ODbL)                                           |
+| `get_bhote_koshi_flood`       | `events`             | 2026 Bhote Koshi flood: evidence trail, flood path and imagery dates (CC BY-NC 4.0)                          |
+| `get_regional_brief`          | `regional`           | What and where a location is, its weather and recent headlines                                               |
+| `get_cyclones`                | `cyclones`           | Active NHC/CPHC tropical cyclones, optionally in an area                                                     |
+| `get_fire_perimeters`         | `perimeters`         | Mapped WFIGS wildfire perimeters in an area, largest first                                                   |
+| `get_terrain_height`          | `terrain`            | Ground, geoid and ellipsoid heights at up to 20 points                                                       |
+| `find_military_installations` | `installations`      | OpenStreetMap military sites in an area of at most 10° per side                                              |
+| `get_map_features`            | `features`           | Administrative areas, named places or monuments at a location (needs Overpass)                               |
+| `situation_brief`             | `weather`            | Weather, earthquakes, fires, aircraft, ships and cyclones for an area, by section                            |
+| `military_awareness`          | `military`           | Military and other aircraft and military installations within 250 km of a point, by section                  |
+| `get_hud_caption`             | `weather`, `summary` | The app's heads-up display caption for an area                                                               |
+| `show_in_vantage`             | `app`                | A share link to a view: an area or camera, layers, style, map, marks, and an aircraft or satellite to follow |

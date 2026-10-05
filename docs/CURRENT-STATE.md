@@ -515,7 +515,9 @@ quota under those routes' throttles, on a tool call only; the HUD's Live/Local
 toggle governs only the page's own periodic lookups. `show_in_vantage` returns
 a version 2 share link on the app's address (`--api-base`) for a view built by
 the pure `src/view/index.js`: an area framed from above or a camera, with
-registered layers, style, map and an aircraft or satellite to follow.
+registered layers, style, map, an aircraft or satellite to follow and
+annotation marks (the bounded `an` parameter; the page does not yet draw marks
+from a restored link).
 Answers with something to show also carry `data.view`, the view that shows
 them and its link (`src/tools/views.js`); no request is sent to build it.
 Launch and satellite answers say when the proxy served its last copy

@@ -326,3 +326,70 @@ test('an add that throws after inserting its group unwinds instead of orphaning 
   );
   renderer.destroy();
 });
+
+// ── Link labels are text ──────────────────────────────────────────────────────
+//
+// A share link's `an` parameter carries annotation labels that anyone can write,
+// and they are drawn when the link is restored. A label must reach the page as
+// text, never parsed as markup.
+
+test('a link label containing markup is drawn as inert text', async (t) => {
+  const { annotationsFromParams } = await import('../view/index.js');
+  const originalDocument = globalThis.document;
+  const originalRequestAnimationFrame = globalThis.requestAnimationFrame;
+  const originalProjection = Cesium.SceneTransforms.worldToWindowCoordinates;
+  globalThis.document = fakeDocument();
+  globalThis.requestAnimationFrame = (callback) => { callback(); return 1; };
+  Cesium.SceneTransforms.worldToWindowCoordinates = () => ({ x: 0, y: 0 });
+  t.after(() => {
+    Cesium.SceneTransforms.worldToWindowCoordinates = originalProjection;
+    if (originalDocument === undefined) delete globalThis.document;
+    else globalThis.document = originalDocument;
+    if (originalRequestAnimationFrame === undefined) delete globalThis.requestAnimationFrame;
+    else globalThis.requestAnimationFrame = originalRequestAnimationFrame;
+  });
+
+  const markup = '<img src=x onerror="alert(1)"><script>alert(2)</script>';
+  const link = new URLSearchParams();
+  link.set('an', JSON.stringify([{ type: 'label', latitude: 10, longitude: 20, label: markup }]));
+  const [linked] = annotationsFromParams(new URLSearchParams(link.toString()));
+  assert.equal(linked.label, markup.slice(0, 120), 'the link keeps the label as a string');
+
+  const positionWC = Cesium.Cartesian3.fromDegrees(20, 10, 1000);
+  const directionWC = Cesium.Cartesian3.normalize(
+    Cesium.Cartesian3.negate(positionWC, new Cesium.Cartesian3()),
+    new Cesium.Cartesian3(),
+  );
+  const camera = { positionWC, directionWC, positionCartographic: { height: 1000 } };
+  const scene = {
+    camera,
+    canvas: { clientWidth: 1280, clientHeight: 720, width: 1280, height: 720 },
+    clampToHeightSupported: false,
+    postRender: { addEventListener() {}, removeEventListener() {} },
+  };
+  const renderer = createScreenAnnotationRenderer({ scene, camera, trackedEntity: null });
+  renderer.add({
+    id: 'anno-link-label',
+    type: linked.type,
+    color: 'primary',
+    label: linked.label,
+    alpha: 1,
+    anchor: { lon: linked.longitude, lat: linked.latitude, height: 0 },
+  });
+
+  const { group } = findAnnotationGroup(globalThis.document);
+  const text = group.querySelector('.vantage-anno-text');
+  assert.equal(text.textContent, linked.label, 'the label is set as text content');
+  assert.equal(text.children.length, 0, 'no element is parsed out of the label');
+  const tags = [];
+  const markupWrites = [];
+  const visit = (node) => {
+    tags.push(node.tagName);
+    if (node._innerHTML !== undefined) markupWrites.push(node.tagName);
+    node.children.forEach(visit);
+  };
+  visit(group);
+  assert.ok(!tags.includes('img') && !tags.includes('script'), 'no img or script element is drawn');
+  assert.deepEqual(markupWrites, [], 'nothing in the mark is written as HTML');
+  renderer.destroy();
+});

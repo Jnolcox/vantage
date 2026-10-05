@@ -320,6 +320,14 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   satellite followed, and the link that opens it (null when the app's
   address is not configured). Area framing lives in `src/tools/views.js`, so
   links and answers frame alike (ported from upstream, Sameh Khamis).
+- Views carry annotations, the marks `annotate_map` draws, and share links
+  carry them as JSON in the `an` parameter, bounded to 24 marks, 12 route
+  points, 200-character targets, 120-character labels and 6,000 characters
+  in all; decoding keeps only the fields the app draws. A test pins that a
+  link label containing markup is drawn as inert text. A tilted
+  `show_in_vantage` view of an area places the camera behind its center so
+  the area stays in the middle of the frame (ported from upstream, Sameh
+  Khamis).
 
 ### Changed
 

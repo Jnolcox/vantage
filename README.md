@@ -591,11 +591,13 @@ Calgary, and the DelDOT camera list `tmc.deldot.gov`); the Radio Browser directo
 | `www.youtube-nocookie.com`, `www.youtube.com`; `www.facebook.com`, `connect.facebook.net`; `platform.twitter.com` | Browser | Pressing **LOAD** or **ALWAYS ALLOW** on an embedded witness clip | Your IP address, origin and that provider's cookies |
 | `i.ytimg.com` | Browser | Opening the Bhote Koshi event | Your IP address and origin, no cookies (the event's YouTube thumbnail posters) |
 | `cmr.earthdata.nasa.gov`, `wvs.earthdata.nasa.gov`, `gibs.earthdata.nasa.gov` (NASA) | Browser | Recent Imagery: choosing a box (SELECT BOX, USE VIEW, around a pin) or pressing **SEARCH** for a kept or shared box; then thumbnails and tiles for the days shown, and **EXPORT**. Enabling the layer alone contacts nothing | The box (its corner coordinates) and the dates asked about, with your IP address and origin |
-| `earthquake.usgs.gov` | MCP stdio tools, on a tool call | An MCP client you registered with `npm run mcp` calls `get_earthquakes`; the other tools read the app's own `/api` routes, which contact the providers above as the layers do | The fixed USGS feed request, with your IP address and the `vantage-mcp-tools` User-Agent |
+| `earthquake.usgs.gov` | MCP stdio tools, on a tool call | An MCP client you registered with `npm run mcp` calls `get_earthquakes`; apart from `get_recent_imagery` (next row), the other tools read the app's own `/api` routes, which contact the providers above as the layers do | The fixed USGS feed request, with your IP address and the `vantage-mcp-tools` User-Agent |
+| `cmr.earthdata.nasa.gov`, `wvs.earthdata.nasa.gov` (NASA) | MCP stdio tools, on a tool call | An MCP client you registered with `npm run mcp` calls `get_recent_imagery` | The area's bounding box and the last 30 days, then the chosen day's snapshot request for that box, with your IP address and the `vantage-mcp-tools` User-Agent |
 
 The local MCP server (`npm run mcp`, see [docs/TOOLS.md](docs/TOOLS.md)) opens
 no port: the MCP client that launches it talks to it over stdin and stdout,
-and it reaches only the app's loopback `/api`, as any local process can.
+and apart from the MCP stdio rows above it reaches only the app's loopback
+`/api`, as any local process can.
 
 Nothing else leaves the machine: no analytics, crash reporting, geolocation (beyond LOCATE above)
 or IP lookups. API keys stay on the server except `GOOGLE_MAPS_API_KEY` and

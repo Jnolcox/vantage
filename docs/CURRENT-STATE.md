@@ -455,7 +455,7 @@ catalog over the Model Context Protocol. `npm run mcp` (`server/mcp/stdio.js`)
 serves Core's tools over stdio to a local MCP client, reading from a running
 app's `/api` routes (default `http://127.0.0.1:4173`, `--api-base` to change).
 It opens no listener. Requests a source sends to another origin directly (the
-USGS earthquake feed) carry `clientUserAgent('mcp-tools')`; requests to the app
+USGS earthquake feed, NASA's CMR catalog and Worldview Snapshots) carry `clientUserAgent('mcp-tools')`; requests to the app
 pass the `/api` guard as a local non-browser client. Queries cover
 earthquakes, active fires, recent launches, aircraft (`aircraft_in_area`,
 `find_aircraft`, `get_aircraft_track`, `get_aircraft_info` over the OpenSky,
@@ -489,7 +489,10 @@ and, over the application request services and the layers' sources, weather
 (`get_weather`), weather map images (`get_weather_map`, the latest NOAA radar,
 satellite or lightning frame from `/api/weather` as MCP image content, in a
 window the image route accepts), wind (`get_wind`, sampled from the
-`/api/wind` GFS or IFS grid), regional briefs (`get_regional_brief`), tropical cyclones,
+`/api/wind` GFS or IFS grid), the most recent satellite image of an area
+(`get_recent_imagery`, the Recent Imagery layer's CMR search and ranking with
+the chosen day read from Worldview Snapshots, at most 8 MB, falling back to the
+VIIRS daily overview), regional briefs (`get_regional_brief`), tropical cyclones,
 fire perimeters, terrain height, mapped military installations and map
 features (`get_map_features`, `unavailable` without a configured Overpass
 instance), plus `situation_brief`, which runs weather, earthquake, fire,

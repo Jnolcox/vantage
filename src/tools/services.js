@@ -17,6 +17,8 @@ import { createInstallationSource } from '../layers/installations/source.js';
 import { createLaunchSource } from '../layers/launches/source.js';
 import { createWfigsPerimeterSource } from '../layers/perimeters/source.js';
 import { createRadioSource } from '../layers/radio/source.js';
+import { searchHls } from '../layers/recentImagery/catalog.js';
+import { rankLatest, wvsSnapshotUrl } from '../layers/recentImagery/model.js';
 import { createSatelliteSource } from '../layers/satellites/source.js';
 import { createTrafficSource } from '../layers/traffic/source.js';
 import { createTransitSource } from '../layers/transit/source.js';
@@ -28,6 +30,7 @@ import {
   createOpenSkySource,
 } from '../sources/live/standalone.js';
 import { createApplicationRequestServices } from '../services/requests.js';
+import { readResponseBytesCapped } from '../sources/httpBody.js';
 import {
   createGeocodePlaceService,
   createPlaceSearchService,
@@ -63,6 +66,7 @@ export function createToolServices({ fetchImpl, appUrl }) {
     weather: requests.weather,
     weatherMaps: createWeatherSource({ fetchImpl }),
     wind: createWindSource({ fetchImpl }),
+    imagery: createImageryService({ fetchImpl }),
     regional: requests.regional,
     terrain: requests.terrain,
     summary: requests.summary,
@@ -74,5 +78,38 @@ export function createToolServices({ fetchImpl, appUrl }) {
       tileFetchImpl: fetchImpl,
     }),
     places: createGeocodePlaceService({ fetchImpl }),
+  };
+}
+
+/**
+ * The most an imagery snapshot may buffer. NASA's snapshot service is read
+ * directly, so its body is capped here; the tool returns at most 6 MB.
+ */
+const MAX_IMAGERY_SNAPSHOT_BYTES = 8 * 1024 * 1024;
+
+/** Recent keyless satellite imagery: the clearest recent day and its image. */
+function createImageryService({ fetchImpl }) {
+  return {
+    async latest({ box, signal }) {
+      const result = await searchHls({ box, fetchImpl, signal });
+      return {
+        ...rankLatest(result.candidates, { truncated: result.truncated }),
+        errors: result.errors,
+      };
+    },
+    async getSnapshot({ product, day, box, width, height, signal }) {
+      const response = await fetchImpl(
+        wvsSnapshotUrl({ product, day, box, width, height }),
+        { signal },
+      );
+      if (!response.ok) throw new Error(`Imagery HTTP ${response.status}`);
+      const bytes = await readResponseBytesCapped(
+        response,
+        MAX_IMAGERY_SNAPSHOT_BYTES,
+        signal,
+      );
+      const type = response.headers.get('content-type') || '';
+      return { contentType: type.split(';')[0].trim().toLowerCase(), bytes };
+    },
   };
 }

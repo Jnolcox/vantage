@@ -31,3 +31,25 @@ test('the vessel source requests its snapshot from the app it serves', async () 
   assert.equal(new URL(requested[0]).origin, 'http://127.0.0.1:4173');
   assert.equal(new URL(requested[0]).pathname, '/api/ais-live');
 });
+
+test('an imagery snapshot larger than the cap is refused', async () => {
+  const services = createToolServices({
+    fetchImpl: async () =>
+      new Response(new Uint8Array(1), {
+        headers: {
+          'content-type': 'image/png',
+          'content-length': String(9 * 1024 * 1024),
+        },
+      }),
+  });
+  await assert.rejects(
+    services.imagery.getSnapshot({
+      product: 'S30',
+      day: '2026-09-28',
+      box: { west: -97.9, south: 30.1, east: -97.5, north: 30.5 },
+      width: 64,
+      height: 64,
+    }),
+    { code: 'RESPONSE_TOO_LARGE' },
+  );
+});

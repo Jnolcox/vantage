@@ -94,6 +94,12 @@ of the latest frame, in a 2:1 window snapped to 0.25° that the image route
 accepts, or the product's whole extent when no window can hold the area.
 `get_wind` samples the model grid with the layer's own sampling.
 
+`imagery` searches NASA's CMR catalog for Harmonized Landsat and Sentinel-2
+granules with the Recent Imagery layer's `searchHls`, ranks days with its
+`rankLatest`, and reads the chosen day from NASA Worldview Snapshots
+(`wvsSnapshotUrl`), at most 8 MB per image. These keyless NASA services are read
+directly, not through `/api`.
+
 `get_map_features` reads `/api/overpass`, which reaches only the Overpass
 instances an operator lists in `VANTAGE_OVERPASS_UPSTREAMS`. With none, the
 request services' one `/api/overpass/status` probe says so and the tool
@@ -167,7 +173,8 @@ per-IP throttles and their "not configured" answers. It is therefore available
 without an opt-in setting; it runs only when you register it with a client.
 
 A few sources fetch a public feed directly instead of through `/api`
-(`get_earthquakes` reads the USGS feed). Those requests leave from the stdio
+(`get_earthquakes` reads the USGS feed; `get_recent_imagery` reads NASA's CMR
+catalog and Worldview Snapshots). Those requests leave from the stdio
 process, on a tool call only, with the `vantage-mcp-tools` User-Agent from
 `src/sources/projectIdentity.js`. The README's
 [Network & privacy](../README.md#network--privacy) section lists them.
@@ -200,6 +207,7 @@ process, on a tool call only, with the `vantage-mcp-tools` User-Agent from
 | `get_weather`                 | `weather`            | Current conditions at a place or point                                                      |
 | `get_weather_map`             | `weatherMaps`        | The latest NOAA radar, satellite or lightning map image over an area                        |
 | `get_wind`                    | `wind`               | GFS or IFS model wind 10 m above ground at a location                                       |
+| `get_recent_imagery`          | `imagery`            | The most recent clear Landsat/Sentinel-2 image of an area (VIIRS fallback)                  |
 | `get_regional_brief`          | `regional`           | What and where a location is, its weather and recent headlines                              |
 | `get_cyclones`                | `cyclones`           | Active NHC/CPHC tropical cyclones, optionally in an area                                    |
 | `get_fire_perimeters`         | `perimeters`         | Mapped WFIGS wildfire perimeters in an area, largest first                                  |

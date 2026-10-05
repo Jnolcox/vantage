@@ -7,6 +7,7 @@ import {
   DEFAULT_API_BASE,
   MCP_TOOLS_USER_AGENT,
   createApiFetch,
+  createLocalToolServices,
 } from '../../server/mcp/services.js';
 import {
   admitApiRequest,
@@ -66,6 +67,40 @@ test('direct third-party requests carry the project User-Agent', async () => {
   assert.equal(seen[0].get('user-agent'), clientUserAgent('mcp-tools'));
   assert.equal(seen[0].get('accept'), 'application/json');
   assert.equal(MCP_TOOLS_USER_AGENT, clientUserAgent('mcp-tools'));
+});
+
+test('recent imagery reads NASA directly with the project User-Agent', async () => {
+  const seen = [];
+  const services = createLocalToolServices({
+    apiBase: 'http://127.0.0.1:5000',
+    fetchImpl: async (input, init) => {
+      const url = new URL(String(input));
+      seen.push({
+        host: url.host,
+        userAgent: new Headers(init?.headers).get('user-agent'),
+      });
+      return url.host === 'wvs.earthdata.nasa.gov'
+        ? new Response(Uint8Array.from([0x89, 0x50]), {
+            headers: { 'content-type': 'image/png' },
+          })
+        : Response.json({ hits: 0, items: [] });
+    },
+  });
+  const box = { west: -97.9, south: 30.1, east: -97.5, north: 30.5 };
+  const latest = await services.imagery.latest({ box });
+  await services.imagery.getSnapshot({
+    product: latest.candidate.product,
+    day: latest.candidate.day,
+    box,
+    width: 64,
+    height: 64,
+  });
+  assert.deepEqual([...new Set(seen.map(({ host }) => host))].sort(), [
+    'cmr.earthdata.nasa.gov',
+    'wvs.earthdata.nasa.gov',
+  ]);
+  for (const { userAgent } of seen)
+    assert.equal(userAgent, MCP_TOOLS_USER_AGENT);
 });
 
 test("requests to the app's own origin keep their headers unchanged", async () => {

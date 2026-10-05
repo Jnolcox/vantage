@@ -264,7 +264,9 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   license; stale feeds are marked and expired positions dropped, by the transit
   layer's rules), road traffic flow (TomTom, at most 16 flow tiles per call)
   queries, plus weather, weather map image (NOAA radar, satellite or lightning
-  over an area) and wind (GFS or IFS at a location), regional
+  over an area), wind (GFS or IFS at a location) and recent satellite image
+  (Harmonized Landsat and Sentinel-2, VIIRS fallback; read from NASA directly
+  with the `vantage-mcp-tools` User-Agent), regional
   brief, tropical cyclone, fire perimeter, terrain height, military
   installation and map feature queries, a combined situation brief, military
   awareness around a point and the HUD caption, over stdio to clients such as

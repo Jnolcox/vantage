@@ -474,7 +474,10 @@ configured, and `retry_later` on the routes' per-IP `429`) and routing
 bike-share stations (`get_bike_share` over `/api/gbfs`) and transit vehicles
 (`get_transit_vehicles` over `/api/transit`, with each feed's attribution and
 license), each reading at most the three nearest systems or feeds that cover the
-area and reporting the ones that did not answer,
+area and reporting the ones that did not answer, road traffic
+(`get_traffic_flow` over `/api/tomtom/flow`, at most 16 flow tiles per call,
+stepping down to zoom 9 before refusing a larger area, and `unavailable` without
+a TomTom key),
 and, over the application request services and the layers' sources, weather
 (`get_weather`), regional briefs (`get_regional_brief`), tropical cyclones,
 fire perimeters, terrain height, mapped military installations and map

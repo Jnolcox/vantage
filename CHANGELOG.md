@@ -260,7 +260,8 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   place or point, those overhead now), public camera (find cameras, a camera's
   current image), radio station, place search, routing, bike-share station
   (public GBFS systems) and transit vehicle (GTFS-Realtime feeds, with each
-  feed's attribution and license) queries, plus weather, regional
+  feed's attribution and license), road traffic flow (TomTom, at most 16 flow
+  tiles per call) queries, plus weather, regional
   brief, tropical cyclone, fire perimeter, terrain height, military
   installation and map feature queries, a combined situation brief, military
   awareness around a point and the HUD caption, over stdio to clients such as

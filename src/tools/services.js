@@ -18,6 +18,7 @@ import { createLaunchSource } from '../layers/launches/source.js';
 import { createWfigsPerimeterSource } from '../layers/perimeters/source.js';
 import { createRadioSource } from '../layers/radio/source.js';
 import { createSatelliteSource } from '../layers/satellites/source.js';
+import { createTrafficSource } from '../layers/traffic/source.js';
 import { createTransitSource } from '../layers/transit/source.js';
 import {
   createAdsbLolSource,
@@ -56,6 +57,7 @@ export function createToolServices({ fetchImpl, appUrl }) {
       getStations: createBikeshareSource({ fetchImpl }).getStations,
     },
     transit: createTransitSource({ fetchImpl }),
+    traffic: createTrafficSource({ fetchImpl, tileFetchImpl: fetchImpl }),
     weather: requests.weather,
     regional: requests.regional,
     terrain: requests.terrain,

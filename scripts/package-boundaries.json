@@ -3225,6 +3225,12 @@
       "src/layers/bikeshare/registry.js",
       "src/layers/bikeshare/source.js",
       "src/layers/transit/source.js",
+      "src/sources/overpassRoads.js",
+      "src/layers/traffic/source.js",
+      "src/layers/traffic/roadModes.js",
+      "src/data/flowMatch.js",
+      "src/layers/traffic/flowSource.js",
+      "src/layers/traffic/flowDecode.js",
       "src/sources/transitHistory.js"
     ],
     "external": ["@mapbox/vector-tile", "pbf"]

@@ -70,10 +70,15 @@ MCP server passes its `--api-base`). Without `AISSTREAM_API_KEY` on the server,
 the route's own reason reaches clients as an `unavailable` error.
 `get_bike_share` and `get_transit_vehicles` read at most the three systems or
 feeds nearest the area whose coverage reaches it, and report any that did not
-answer instead of failing the whole answer. These are the app's own routes, so
-the tools inherit their limits: the Google routes keep their per-IP throttle (a
-`429` becomes `retry_later` with its wait), refuse proxied requests, and never
-expose the key. The `weather`, `regional`, `terrain`, `summary` and
+answer instead of failing the whole answer. `traffic` is the Street Traffic
+layer's source: `get_traffic_flow` reads TomTom flow tiles through
+`/api/tomtom/flow`, which spends the server's TomTom quota, so it reads at most
+the 16 tiles the flow source allows per request, stepping down from zoom 12 to 9
+for a larger area and refusing an area that still needs more. It answers
+`unavailable` when no TomTom key is configured. These are the app's own routes,
+so the tools inherit their limits: the Google routes keep their per-IP throttle
+(a `429` becomes `retry_later` with its wait), refuse proxied requests, and
+never expose the key. The `weather`, `regional`, `terrain`, `summary` and
 `features` services are the application request services from
 `src/services/requests.js`, the same ones the HUD and cockpit use.
 `situation_brief` and `military_awareness` run each section whose services are
@@ -182,6 +187,7 @@ process, on a tool call only, with the `vantage-mcp-tools` User-Agent from
 | `plan_route`                  | `routing`            | Walking, driving or cycling route over OpenStreetMap, with a simplified path                |
 | `get_bike_share`              | `bikeshare`          | Live GBFS stations in an area, with bikes and docks available                               |
 | `get_transit_vehicles`        | `transit`            | Live GTFS-Realtime vehicle positions in an area, optionally one route                       |
+| `get_traffic_flow`            | `traffic`            | TomTom flow in a city-sized area: speed vs free flow, congested and closed road             |
 | `get_weather`                 | `weather`            | Current conditions at a place or point                                                      |
 | `get_regional_brief`          | `regional`           | What and where a location is, its weather and recent headlines                              |
 | `get_cyclones`                | `cyclones`           | Active NHC/CPHC tropical cyclones, optionally in an area                                    |

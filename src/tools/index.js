@@ -29,7 +29,11 @@ import {
   getVesselTrack,
   vesselsInArea,
 } from './queries/maritime.js';
-import { getBikeShare, getTransitVehicles } from './queries/mobility.js';
+import {
+  getBikeShare,
+  getTrafficFlow,
+  getTransitVehicles,
+} from './queries/mobility.js';
 import { placesNearby, planRoute, searchPlaces } from './queries/places.js';
 import {
   findCctvCameras,
@@ -85,6 +89,7 @@ export const coreTools = Object.freeze([
   planRoute,
   getBikeShare,
   getTransitVehicles,
+  getTrafficFlow,
   getWeather,
   getRegionalBrief,
   getCyclones,

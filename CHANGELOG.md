@@ -28,6 +28,14 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   `VANTAGE_EMBED_INLINE`; such an inline app keeps drawing while its host
   reports it hidden, and logs a render error in full before it stops drawing
   (ported from upstream, Sameh Khamis).
+- Google Photorealistic 3D Tiles can load without a browser key using a
+  short-lived bearer token from the app's server, renewed once and retried on
+  a 401 or 403. The client half is dormant in Vantage: the page asks for a
+  token only when the build says the server offers them, and the standalone
+  server deliberately offers none, because Google has no Map Tiles-only OAuth
+  scope and a `cloud-platform` token in the browser would be broader than a
+  restricted key (see `SECURITY.md`). A keyless start makes no extra request
+  (ported from upstream, Sameh Khamis).
 - MODIS NRT (Terra + Aqua, ~1 km) detections join the three VIIRS NRT sources
   in the Active Fires layer. They share the existing `FIRMS_MAP_KEY`, the
   30-minute proxy cache and the trailing-24-hour clamp; MODIS confidence is

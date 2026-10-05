@@ -29,7 +29,21 @@ These are designed to be used directly in the browser (like a Mapbox public toke
 1. **Google Maps API key** — loads Photorealistic 3D Tiles directly and powers Vantage place search. **Restrict it** (HTTP referrer + API restriction to the required Google APIs) in the Google Cloud Console. An unrestricted key in a public deployment can be abused and billed to you.
 2. **Cesium ion token** (`CESIUM_ION_TOKEN`, optional — for ion-hosted Google Photorealistic 3D Tiles, Bing world imagery, and world terrain) — used as `Cesium.Ion.defaultAccessToken` client-side. Use a public **`assets:read`** token with **URL restrictions** for any hosted deployment. The Community plan has eligibility and usage limits; a public token is not a secret, but it can still consume the account's quota.
 
-> The explicit browser `define` block in `build/vite.js` controls exactly what reaches the client: only these two keys. Everything else stays server-side.
+> The explicit browser `define` block in `build/vite.js` controls exactly what reaches the client: only these two keys, plus the boolean that says whether the server offers Google tile tokens (it does not; see below). Everything else stays server-side.
+
+**Why there is no keyless Google 3D token endpoint.** The client can load
+Google 3D with a short-lived bearer token from the app's server instead of a
+browser key (`src/maps/googleTokens.js`, the `google-token` route in
+`src/maps/google3d.js`), but Vantage deliberately ships no
+`/api/google/tiles-token` endpoint to mint one. Google documents no OAuth scope
+limited to the Map Tiles API: Google Maps Platform APIs that take OAuth require
+`https://www.googleapis.com/auth/cloud-platform`, which authorizes every Google
+Cloud API the service account can reach. Handing such a token to the browser,
+even for an hour, is worse than a referrer- and API-restricted key, so the
+browser key above remains the way to load Google 3D directly. The client half
+stays dormant: the build defines `import.meta.env.VANTAGE_GOOGLE_TILE_TOKENS` as
+`false`, so the page never requests a token and never sends one to Google.
+Revisit only if Google publishes a Map Tiles-only scope.
 
 **Places and Street View never needed to be on that list** (#33): they're called from the server-side proxies in the table above, which use `GOOGLE_MAPS_SERVER_API_KEY` when it's set. Splitting it from the browser-exposed key lets each key's Google Cloud restriction actually match what it does — the browser key referrer-restricted to the APIs the client loads, the server key IP-restricted (never a referrer, since it never leaves your server) to Places + Street View Static — instead of one key that has to be either over-permissioned or broken for one of its two jobs. A single shared `GOOGLE_MAPS_API_KEY` still works if you don't split them; it just has to cover every API both sides use.
 

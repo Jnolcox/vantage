@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createServer } from 'node:http';
 import { PassThrough } from 'node:stream';
+import { cspOriginsFor } from '../../build/content-security-policy.js';
 import { createLocalMcpServer } from '../../server/mcp/server.js';
 import {
   DEFAULT_API_BASE,
@@ -367,4 +368,72 @@ test('a request the client cancels over stdio is aborted and gets no answer', as
     .split('\n')
     .map((line) => JSON.parse(line).id);
   assert.deepEqual(ids, [2]);
+});
+
+const readPanel = (server, id = 1) =>
+  server.handle({
+    jsonrpc: '2.0',
+    id,
+    method: 'resources/read',
+    params: { uri: 'ui://vantage/globe' },
+  });
+
+test("only the key in the server's own panel page opens panel requests", async () => {
+  const requested = [];
+  const server = createLocalMcpServer({
+    apiBase: 'http://127.0.0.1:5000',
+    fetchImpl: async (url) => {
+      requested.push(new URL(url).pathname);
+      return new Response('ok');
+    },
+  });
+  const call = (id, args) =>
+    server.handle({
+      jsonrpc: '2.0',
+      id,
+      method: 'tools/call',
+      params: { name: 'panel_request', arguments: args },
+    });
+  const page = await readPanel(server);
+  const [, key] = page.result.contents[0].text.match(/"panelKey":"([^"]+)"/);
+  assert.ok(key.length >= 40);
+  const refused = await call(2, { path: '/panel/index.html' });
+  assert.equal(refused.result.isError, true);
+  const opened = await call(3, { key, path: '/panel/index.html' });
+  assert.equal(opened.result.isError, false);
+  assert.deepEqual(requested, ['/panel/index.html']);
+  // Every server makes its own key.
+  const other = createLocalMcpServer({ apiBase: 'http://127.0.0.1:5000' });
+  const otherPage = await readPanel(other, 4);
+  assert.doesNotMatch(otherPage.result.contents[0].text, new RegExp(key));
+});
+
+test("the panel may reach the page policy's providers and only those", async () => {
+  const page = await readPanel(createLocalMcpServer());
+  const { csp } = page.result.contents[0]._meta.ui;
+  assert.deepEqual(
+    csp.connectDomains,
+    cspOriginsFor(['connect-src']).filter(
+      (origin) => origin !== 'https://api.openai.com',
+    ),
+  );
+  assert.deepEqual(csp.resourceDomains, cspOriginsFor(['img-src']));
+  assert.ok(csp.connectDomains.includes('https://tile.googleapis.com'));
+  assert.ok(csp.resourceDomains.includes('https://services.arcgisonline.com'));
+  // Served locally or proxied by Vantage, so never declared to a host.
+  for (const origin of [
+    'https://server.arcgisonline.com',
+    'https://tiles.openfreemap.org',
+    'https://fonts.googleapis.com',
+    'https://fonts.gstatic.com',
+  ]) {
+    assert.ok(!csp.connectDomains.includes(origin), origin);
+    assert.ok(!csp.resourceDomains.includes(origin), origin);
+  }
+  // Voice needs a token from /api/realtime, which the panel cannot get.
+  assert.ok(cspOriginsFor(['connect-src']).includes('https://api.openai.com'));
+  assert.ok(!csp.connectDomains.includes('https://api.openai.com'));
+  // Script and frame origins for the event media stay out of the panel.
+  assert.ok(!csp.resourceDomains.includes('https://www.youtube.com'));
+  assert.equal(csp.frameDomains, undefined);
 });

@@ -1001,5 +1001,6 @@
   "src/tools/queries/panelRequest.test.mjs",
   "build/panel.js",
   "scripts/build-panel.mjs",
-  "src/tooling/panelBuild.test.mjs"
+  "src/tooling/panelBuild.test.mjs",
+  "src/tools/globePanel.test.mjs"
 ]

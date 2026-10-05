@@ -9,6 +9,7 @@ import {
   contentSecurityPolicy,
   contentSecurityPolicyDirectives,
   contentSecurityPolicyHtmlPlugin,
+  cspOriginsFor,
   securityHeaders,
 } from '../../build/content-security-policy.js';
 import { createBrowserViteConfig } from '../../build/vite.js';
@@ -122,6 +123,9 @@ const LINKS_AND_ATTRIBUTION = [
 const NOT_NETWORK_DESTINATIONS = [
   'localhost', // URL parsing bases and loopback checks
   'www.w3.org', // XML namespaces
+  // The app's address inside the MCP Apps panel; its paths load through
+  // the MCP server and the reserved name never resolves.
+  'app.vantage.invalid',
 ];
 
 /** Every host spelled in a URL literal in code that runs in the browser. */
@@ -326,4 +330,20 @@ test('built Cesium workers may load their blob: worker bundle', () => {
   const directives = contentSecurityPolicyDirectives();
   assert.ok(directives['worker-src'].includes('blob:'));
   assert.ok(directives['script-src'].includes('blob:'));
+});
+
+test('the origins for a set of directives come from CSP_ORIGINS in order', () => {
+  const images = cspOriginsFor(['img-src']);
+  assert.deepEqual(
+    images,
+    CSP_ORIGINS.filter((entry) => entry.directives.includes('img-src')).map(
+      (entry) => entry.origin,
+    ),
+  );
+  assert.ok(images.includes('https://tile.googleapis.com'));
+  assert.ok(!images.includes('https://api.openai.com'));
+  const either = cspOriginsFor(['img-src', 'frame-src']);
+  assert.ok(either.includes('https://www.youtube-nocookie.com'));
+  assert.ok(either.includes('https://tile.googleapis.com'));
+  assert.deepEqual(cspOriginsFor([]), []);
 });

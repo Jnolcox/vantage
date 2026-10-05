@@ -152,6 +152,18 @@ export const CSP_ORIGINS = Object.freeze([
   },
 ]);
 
+/**
+ * The CSP_ORIGINS that join any of `directives`, in list order. The MCP
+ * Apps panel declares these to its host, so the globe in a conversation
+ * reaches the same providers the page does and no others.
+ */
+export function cspOriginsFor(directives) {
+  const wanted = new Set(directives);
+  return CSP_ORIGINS.filter((entry) =>
+    entry.directives.some((name) => wanted.has(name)),
+  ).map((entry) => entry.origin);
+}
+
 const SELF = "'self'";
 
 /** Fixed directives; origins from CSP_ORIGINS are appended per directive. */

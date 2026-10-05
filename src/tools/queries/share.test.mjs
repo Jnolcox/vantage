@@ -110,6 +110,6 @@ test('links carry a camera, style, map and an entity to follow', async () => {
   assert.match(camera.summary, /^Open 48\.858, 2\.295 in Vantage: /);
   await assert.rejects(
     catalog.call('show_in_vantage', { layers: ['flights'] }),
-    /Give an area, or a camera with lat and lon/,
+    /Give a view, an area, or a camera with lat and lon/,
   );
 });

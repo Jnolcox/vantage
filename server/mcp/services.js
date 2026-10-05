@@ -38,5 +38,8 @@ export function createApiFetch({
 
 /** Construct every service Core's tools read, backed by the local server. */
 export function createLocalToolServices(options = {}) {
-  return createToolServices({ fetchImpl: createApiFetch(options) });
+  return createToolServices({
+    fetchImpl: createApiFetch(options),
+    appUrl: options.apiBase ?? DEFAULT_API_BASE,
+  });
 }

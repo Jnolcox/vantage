@@ -982,5 +982,6 @@
   "src/tools/queries/places.test.mjs",
   "src/tools/queries/environment.test.mjs",
   "src/tools/places.test.mjs",
-  "src/tools/queries/mobility.test.mjs"
+  "src/tools/queries/mobility.test.mjs",
+  "src/tools/queries/maritime.test.mjs"
 ]

@@ -15,3 +15,19 @@ test('the default services supply every service Core tools read', () => {
     coreTools.map((tool) => tool.name),
   );
 });
+
+test('the vessel source requests its snapshot from the app it serves', async () => {
+  const requested = [];
+  const services = createToolServices({
+    appUrl: 'http://127.0.0.1:4173',
+    fetchImpl: async (url) => {
+      requested.push(String(url));
+      return new Response(JSON.stringify({ rows: [] }), {
+        headers: { 'content-type': 'application/json' },
+      });
+    },
+  });
+  await services.vessels.getSnapshot();
+  assert.equal(new URL(requested[0]).origin, 'http://127.0.0.1:4173');
+  assert.equal(new URL(requested[0]).pathname, '/api/ais-live');
+});

@@ -255,11 +255,12 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   and Sameh Khamis; sonar style inspired by kk376).
 - Tools for language-model clients and a local MCP server. `npm run mcp`
   serves earthquake, active-fire, launch, aircraft (in an area, by identifier,
-  tracks, type and route) and satellite (next pass over a place or point,
-  those overhead now), public camera (find cameras, a camera's current image),
-  radio station, place search, routing, bike-share station (public GBFS
-  systems) and transit vehicle (GTFS-Realtime feeds, with each feed's
-  attribution and license) queries, plus weather, regional
+  tracks, type and route), ship (in an area, by MMSI, IMO or name, tracks;
+  `unavailable` without `AISSTREAM_API_KEY`) and satellite (next pass over a
+  place or point, those overhead now), public camera (find cameras, a camera's
+  current image), radio station, place search, routing, bike-share station
+  (public GBFS systems) and transit vehicle (GTFS-Realtime feeds, with each
+  feed's attribution and license) queries, plus weather, regional
   brief, tropical cyclone, fire perimeter, terrain height, military
   installation and map feature queries, a combined situation brief, military
   awareness around a point and the HUD caption, over stdio to clients such as

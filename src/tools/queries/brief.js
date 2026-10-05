@@ -20,6 +20,7 @@ import {
   getWeather,
 } from './environment.js';
 import { getActiveFires, getEarthquakes } from './hazards.js';
+import { vesselsInArea } from './maritime.js';
 
 const SECTION_LIMIT = 5;
 const AWARENESS_LIMIT = 10;
@@ -55,6 +56,12 @@ const SECTIONS = [
     key: 'aircraft',
     label: 'Aircraft',
     tool: aircraftInArea,
+    args: (area) => ({ area: area.argument, limit: SECTION_LIMIT }),
+  },
+  {
+    key: 'vessels',
+    label: 'Ships',
+    tool: vesselsInArea,
     args: (area) => ({ area: area.argument, limit: SECTION_LIMIT }),
   },
   {
@@ -184,7 +191,7 @@ export const situationBrief = defineTool({
   title: 'Situation brief',
   description:
     'One overview of an area: current weather, recent earthquakes, active ' +
-    'fires, aircraft overhead and tropical cyclones, each summarized with ' +
+    'fires, aircraft overhead, ships and tropical cyclones, each summarized with ' +
     'its top items. Sections that are unavailable are marked as such.',
   inputSchema: {
     type: 'object',

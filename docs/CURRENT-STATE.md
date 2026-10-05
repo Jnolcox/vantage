@@ -459,7 +459,9 @@ USGS earthquake feed) carry `clientUserAgent('mcp-tools')`; requests to the app
 pass the `/api` guard as a local non-browser client. Queries cover
 earthquakes, active fires, recent launches, aircraft (`aircraft_in_area`,
 `find_aircraft`, `get_aircraft_track`, `get_aircraft_info` over the OpenSky,
-adsb.lol and adsbdb routes) and satellites (`next_satellite_pass`, computed by
+adsb.lol and adsbdb routes), ships (`vessels_in_area`, `find_vessel`,
+`get_vessel_track` over `/api/ais-live`, `unavailable` without
+`AISSTREAM_API_KEY`) and satellites (`next_satellite_pass`, computed by
 `src/data/satellitePass.js` as the voice action of the same name is, and
 `satellites_overhead`), public cameras (`find_cctv_cameras`, and
 `get_cctv_snapshot`, which returns the frame from `/api/cctv/frame` as MCP
@@ -478,7 +480,7 @@ and, over the application request services and the layers' sources, weather
 fire perimeters, terrain height, mapped military installations and map
 features (`get_map_features`, `unavailable` without a configured Overpass
 instance), plus `situation_brief`, which runs weather, earthquake, fire,
-aircraft and cyclone sections and marks failed ones unavailable,
+aircraft, ship and cyclone sections and marks failed ones unavailable,
 `military_awareness`, which does the same for military aircraft, other
 aircraft and mapped installations within 250 km of a point, and
 `get_hud_caption`, which posts the HUD's label-only summary context to

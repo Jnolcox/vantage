@@ -52,7 +52,7 @@ a wait time. Other errors are reported to clients without details.
 ## Services
 
 `vantage/tools/services` builds the default set with
-`createToolServices({ fetchImpl })`. Services are the portable source
+`createToolServices({ fetchImpl, appUrl })`. Services are the portable source
 factories the layers already use, such as `createUsgsEarthquakeSource`,
 `createFirmsSource` and `createLaunchSource`, plus a `places` service with
 `resolve(name, { signal })`. Sources request relative `/api/...` paths through
@@ -64,13 +64,16 @@ answer as `unavailable` rather than as an empty result; `createRouteService`
 plans routes through `/api/route`. The `bikeshare` service is
 `{ systems, getStations }`, the system registry and the GBFS source, which reads
 station documents through `/api/gbfs`; `transit` is the transit layer's source
-over `/api/transit`. `get_bike_share` and `get_transit_vehicles` read at most
-the three systems or feeds nearest the area whose coverage reaches it, and
-report any that did not answer instead of failing the whole answer. These are
-the app's own routes, so the tools inherit their limits: the Google routes keep
-their per-IP throttle (a `429` becomes `retry_later` with its wait), refuse
-proxied requests, and never expose the key. The `weather`, `regional`,
-`terrain`, `summary` and
+over `/api/transit`. `vessels` is the AISStream source over `/api/ais-live`; it
+builds its snapshot URL against the `appUrl` passed to `createToolServices` (the
+MCP server passes its `--api-base`). Without `AISSTREAM_API_KEY` on the server,
+the route's own reason reaches clients as an `unavailable` error.
+`get_bike_share` and `get_transit_vehicles` read at most the three systems or
+feeds nearest the area whose coverage reaches it, and report any that did not
+answer instead of failing the whole answer. These are the app's own routes, so
+the tools inherit their limits: the Google routes keep their per-IP throttle (a
+`429` becomes `retry_later` with its wait), refuse proxied requests, and never
+expose the key. The `weather`, `regional`, `terrain`, `summary` and
 `features` services are the application request services from
 `src/services/requests.js`, the same ones the HUD and cockpit use.
 `situation_brief` and `military_awareness` run each section whose services are
@@ -166,6 +169,9 @@ process, on a tool call only, with the `vantage-mcp-tools` User-Agent from
 | `find_aircraft`               | `aircraft`           | Aircraft anywhere by callsign, ICAO address or registration                                 |
 | `get_aircraft_track`          | `aircraft`           | Recent positions of one aircraft, thinned to 200 points                                     |
 | `get_aircraft_info`           | `aircraft`           | Aircraft type and registration, and flight route, from adsbdb                               |
+| `vessels_in_area`             | `vessels`            | Ships reported by AIS in an area, nearest first, optionally by type                         |
+| `find_vessel`                 | `vessels`            | Ships anywhere by MMSI, IMO number or name                                                  |
+| `get_vessel_track`            | `vessels`            | Recent positions of one ship, thinned to 200 points                                         |
 | `next_satellite_pass`         | `satellites`         | Next pass over a place or point (default the ISS), with naked-eye visibility                |
 | `satellites_overhead`         | `satellites`         | Satellites in a CelesTrak group above a place or point now, highest first                   |
 | `find_cctv_cameras`           | `cctv`               | Public cameras in an area, nearest first                                                    |
@@ -183,6 +189,6 @@ process, on a tool call only, with the `vantage-mcp-tools` User-Agent from
 | `get_terrain_height`          | `terrain`            | Ground, geoid and ellipsoid heights at up to 20 points                                      |
 | `find_military_installations` | `installations`      | OpenStreetMap military sites in an area of at most 10° per side                             |
 | `get_map_features`            | `features`           | Administrative areas, named places or monuments at a location (needs Overpass)              |
-| `situation_brief`             | `weather`            | Weather, earthquakes, fires, aircraft and cyclones for an area, by section                  |
+| `situation_brief`             | `weather`            | Weather, earthquakes, fires, aircraft, ships and cyclones for an area, by section           |
 | `military_awareness`          | `military`           | Military and other aircraft and military installations within 250 km of a point, by section |
 | `get_hud_caption`             | `weather`, `summary` | The app's heads-up display caption for an area                                              |

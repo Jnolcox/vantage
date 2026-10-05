@@ -3,7 +3,8 @@
  * factories, the application request services, and the place, place-search
  * and routing services. `fetchImpl` must resolve the sources' relative
  * `/api/...` paths; in a browser the page's own fetch does, and elsewhere a
- * caller supplies a resolving fetch.
+ * caller supplies a resolving fetch. `appUrl` is the address the app is
+ * served from; the vessel source builds its snapshot URL against it.
  */
 
 import { GBFS_CITY_REGISTRY } from '../layers/bikeshare/registry.js';
@@ -20,6 +21,7 @@ import { createSatelliteSource } from '../layers/satellites/source.js';
 import { createTransitSource } from '../layers/transit/source.js';
 import {
   createAdsbLolSource,
+  createAisStreamSource,
   createOpenSkySource,
 } from '../sources/live/standalone.js';
 import { createApplicationRequestServices } from '../services/requests.js';
@@ -30,7 +32,7 @@ import {
 } from './places.js';
 
 /** Construct every service Core's tools read. */
-export function createToolServices({ fetchImpl }) {
+export function createToolServices({ fetchImpl, appUrl }) {
   if (typeof fetchImpl !== 'function')
     throw new TypeError('A fetch implementation is required');
   const requests = createApplicationRequestServices({ fetchImpl });
@@ -40,6 +42,10 @@ export function createToolServices({ fetchImpl }) {
     launches: createLaunchSource({ fetchImpl }),
     aircraft: createOpenSkySource({ fetchImpl }),
     military: createAdsbLolSource({ fetchImpl }),
+    vessels: createAisStreamSource({
+      fetchImpl,
+      origin: () => new URL(appUrl).origin,
+    }),
     satellites: createSatelliteSource({ fetchImpl }),
     cctv: createCctvSource({ fetchImpl }),
     radio: createRadioSource({ fetchImpl }),

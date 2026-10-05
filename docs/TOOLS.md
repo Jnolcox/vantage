@@ -93,7 +93,7 @@ answer as `unavailable` rather than as an empty result; `createRouteService`
 plans routes through `/api/route`. The `bikeshare` service is
 `{ systems, getStations }`, the system registry and the GBFS source, which reads
 station documents through `/api/gbfs`; `transit` is the transit layer's source
-over `/api/transit`. `vessels` is the AISStream source over `/api/ais-live`; it
+over `/api/transit`. `vessels` is the AISStream source over `/api/vessels`; it
 builds its snapshot URL against the `appUrl` passed to `createToolServices` (the
 MCP server passes its `--api-base`). Without `AISSTREAM_API_KEY` on the server,
 the route's own reason reaches clients as an `unavailable` error.

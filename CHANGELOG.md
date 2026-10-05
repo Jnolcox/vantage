@@ -383,6 +383,17 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
 
 ### Changed
 
+- Live feed routes are named for what they serve, not the provider behind
+  them: `/api/flights` (track `/api/flights/track?icao24=`), `/api/military`
+  (track `/api/military/track?hex=`) and `/api/vessels` (track
+  `/api/vessels/track?mmsi=`). The old `/api/opensky`, `/api/opensky-track`,
+  `/api/adsblol/mil`, `/api/adsblol/trace` and `/api/ais-live` routes are
+  removed; set `VITE_AIS_LIVE_API_URL` to `/api/vessels` if you had it
+  pointed at the old route. Each server names its provider in
+  `X-Feed-Source` (the bundled one still sends OpenSky Network, adsb.lol and
+  AISStream, so attribution is unchanged) and the military feed's cache
+  state and age move to `X-Feed-Cache` and `X-Feed-Age-Ms` (ported from
+  upstream, Sameh Khamis).
 - Performance: each bundled data pack ships once. The region, marine,
   admin-boundary, county, military-name and neighborhood packs were emitted
   twice by the production build, as the JSON the browser fetches and as an

@@ -30,9 +30,9 @@ import { createTransitSource } from '../layers/transit/source.js';
 import { createWeatherSource } from '../layers/weather/source.js';
 import { createWindSource } from '../layers/wind/source.js';
 import {
-  createAdsbLolSource,
-  createAisStreamSource,
-  createOpenSkySource,
+  createMilitarySource,
+  createVesselSource,
+  createFlightSource,
 } from '../sources/live/standalone.js';
 import { createApplicationRequestServices } from '../services/requests.js';
 import { readResponseBytesCapped } from '../sources/httpBody.js';
@@ -53,9 +53,9 @@ export function createToolServices({ fetchImpl, appUrl, panelKey }) {
     earthquakes: createUsgsEarthquakeSource({ fetchImpl }),
     fires: createFirmsSource({ fetchImpl }),
     launches: createLaunchSource({ fetchImpl }),
-    aircraft: createOpenSkySource({ fetchImpl }),
-    military: createAdsbLolSource({ fetchImpl }),
-    vessels: createAisStreamSource({
+    aircraft: createFlightSource({ fetchImpl }),
+    military: createMilitarySource({ fetchImpl }),
+    vessels: createVesselSource({
       fetchImpl,
       origin: () => new URL(appUrl).origin,
     }),

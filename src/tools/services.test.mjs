@@ -29,7 +29,7 @@ test('the vessel source requests its snapshot from the app it serves', async () 
   });
   await services.vessels.getSnapshot();
   assert.equal(new URL(requested[0]).origin, 'http://127.0.0.1:4173');
-  assert.equal(new URL(requested[0]).pathname, '/api/ais-live');
+  assert.equal(new URL(requested[0]).pathname, '/api/vessels');
 });
 
 test('an imagery snapshot larger than the cap is refused', async () => {

@@ -10,6 +10,17 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-10-04
+
+Major release: the provider-named live feed routes `/api/opensky`,
+`/api/opensky-track`, `/api/adsblol/mil`, `/api/adsblol/trace` and
+`/api/ais-live` are removed in favor of `/api/flights`, `/api/military` and
+`/api/vessels` (see Changed), so a `VITE_AIS_LIVE_API_URL` or integration
+pointed at an old route must be updated. It also brings in upstream through
+`e1cc7af`: the shared tool catalog with a local stdio MCP server, an opt-in
+`/mcp` route and the live globe in MCP Apps clients, embed mode, views,
+vessels by area and the consolidated local request gate.
+
 ### Added
 
 - Embed mode: `?embed=1` shows the globe alone, with the HUD, panels, welcome
@@ -1840,5 +1851,6 @@ represent previously published GitHub Releases.
 
 - Initial project version.
 
-[Unreleased]: https://github.com/Jnolcox/vantage/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/Jnolcox/vantage/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/Jnolcox/vantage/compare/v1.0.0...v2.0.0
 [1.0.0]: https://github.com/Jnolcox/vantage/compare/0dbde1e36c0177b7664b47702d77ba50f11ddadc...v1.0.0

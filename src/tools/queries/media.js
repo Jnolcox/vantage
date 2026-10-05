@@ -8,7 +8,7 @@ import {
   distanceKm,
   resolveArea,
 } from '../area.js';
-import { LIMIT_SCHEMA, capRows, countNoun } from '../results.js';
+import { LIMIT_SCHEMA, capRows, countNoun, toBase64 } from '../results.js';
 
 const FRAME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const MAX_FRAME_BYTES = 3 * 1024 * 1024;
@@ -158,7 +158,7 @@ export const getCctvSnapshot = defineTool({
         mime_type: frame.contentType,
         bytes: frame.bytes.byteLength,
       },
-      images: [{ mimeType: frame.contentType, data: base64(frame.bytes) }],
+      images: [{ mimeType: frame.contentType, data: toBase64(frame.bytes) }],
     };
   },
 });
@@ -243,11 +243,3 @@ export const findRadioStations = defineTool({
     };
   },
 });
-
-/** Base64-encode bytes with the platform's btoa, in chunks. */
-function base64(bytes) {
-  let binary = '';
-  for (let offset = 0; offset < bytes.length; offset += 0x8000)
-    binary += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000));
-  return btoa(binary);
-}

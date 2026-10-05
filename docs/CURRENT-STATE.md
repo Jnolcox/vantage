@@ -486,7 +486,10 @@ area and reporting the ones that did not answer, road traffic
 stepping down to zoom 9 before refusing a larger area, and `unavailable` without
 a TomTom key),
 and, over the application request services and the layers' sources, weather
-(`get_weather`), regional briefs (`get_regional_brief`), tropical cyclones,
+(`get_weather`), weather map images (`get_weather_map`, the latest NOAA radar,
+satellite or lightning frame from `/api/weather` as MCP image content, in a
+window the image route accepts), wind (`get_wind`, sampled from the
+`/api/wind` GFS or IFS grid), regional briefs (`get_regional_brief`), tropical cyclones,
 fire perimeters, terrain height, mapped military installations and map
 features (`get_map_features`, `unavailable` without a configured Overpass
 instance), plus `situation_brief`, which runs weather, earthquake, fire,

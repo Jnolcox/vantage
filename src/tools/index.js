@@ -9,6 +9,7 @@ import {
   getAircraftInfo,
   getAircraftTrack,
 } from './queries/aviation.js';
+import { getWeatherMap, getWind } from './queries/atmosphere.js';
 import {
   getHudCaption,
   militaryAwareness,
@@ -91,6 +92,8 @@ export const coreTools = Object.freeze([
   getTransitVehicles,
   getTrafficFlow,
   getWeather,
+  getWeatherMap,
+  getWind,
   getRegionalBrief,
   getCyclones,
   getFirePerimeters,

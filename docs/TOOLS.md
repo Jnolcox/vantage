@@ -88,6 +88,12 @@ never expose the key. The `weather`, `regional`, `terrain`, `summary` and
 supplied and mark the others unavailable. A new tool adds the services it reads
 to `createToolServices`, so every surface composes the same set.
 
+`weatherMaps` and `wind` are the Weather and Wind layers' sources over
+`/api/weather` and `/api/wind`. `get_weather_map` asks for one 1024 by 512 image
+of the latest frame, in a 2:1 window snapped to 0.25° that the image route
+accepts, or the product's whole extent when no window can hold the area.
+`get_wind` samples the model grid with the layer's own sampling.
+
 `get_map_features` reads `/api/overpass`, which reaches only the Overpass
 instances an operator lists in `VANTAGE_OVERPASS_UPSTREAMS`. With none, the
 request services' one `/api/overpass/status` probe says so and the tool
@@ -192,6 +198,8 @@ process, on a tool call only, with the `vantage-mcp-tools` User-Agent from
 | `get_transit_vehicles`        | `transit`            | Live GTFS-Realtime vehicle positions in an area, optionally one route                       |
 | `get_traffic_flow`            | `traffic`            | TomTom flow in a city-sized area: speed vs free flow, congested and closed road             |
 | `get_weather`                 | `weather`            | Current conditions at a place or point                                                      |
+| `get_weather_map`             | `weatherMaps`        | The latest NOAA radar, satellite or lightning map image over an area                        |
+| `get_wind`                    | `wind`               | GFS or IFS model wind 10 m above ground at a location                                       |
 | `get_regional_brief`          | `regional`           | What and where a location is, its weather and recent headlines                              |
 | `get_cyclones`                | `cyclones`           | Active NHC/CPHC tropical cyclones, optionally in an area                                    |
 | `get_fire_perimeters`         | `perimeters`         | Mapped WFIGS wildfire perimeters in an area, largest first                                  |

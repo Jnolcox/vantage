@@ -274,7 +274,9 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   regional
   brief, tropical cyclone, fire perimeter, terrain height, military
   installation and map feature queries, a combined situation brief, military
-  awareness around a point and the HUD caption, over stdio to clients such as
+  awareness around a point, the HUD caption and a share link that shows an
+  area in Vantage with chosen layers on (`show_in_vantage`), over stdio to
+  clients such as
   Claude Code, reading from a running app at `http://127.0.0.1:4173`
   (`--api-base` selects another). Tools are defined once in `vantage/tools`,
   read the services `vantage/tools/services` builds from the layers' source

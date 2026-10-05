@@ -4,7 +4,8 @@
  * and routing services. `fetchImpl` must resolve the sources' relative
  * `/api/...` paths; in a browser the page's own fetch does, and elsewhere a
  * caller supplies a resolving fetch. `appUrl` is the address the app is
- * served from; the vessel source builds its snapshot URL against it.
+ * served from; the vessel source builds its snapshot URL against it, and
+ * `show_in_vantage` builds its links on it.
  */
 
 import { createAlprTileSource } from '../layers/alpr/source.js';
@@ -86,6 +87,7 @@ export function createToolServices({ fetchImpl, appUrl }) {
       tileFetchImpl: fetchImpl,
     }),
     places: createGeocodePlaceService({ fetchImpl }),
+    app: { baseUrl: appUrl },
   };
 }
 

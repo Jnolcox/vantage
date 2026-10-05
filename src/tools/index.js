@@ -40,6 +40,7 @@ import {
   getTransitVehicles,
 } from './queries/mobility.js';
 import { placesNearby, planRoute, searchPlaces } from './queries/places.js';
+import { showInVantage } from './queries/share.js';
 import {
   findCctvCameras,
   findRadioStations,
@@ -113,4 +114,5 @@ export const coreTools = Object.freeze([
   situationBrief,
   militaryAwareness,
   getHudCaption,
+  showInVantage,
 ]);

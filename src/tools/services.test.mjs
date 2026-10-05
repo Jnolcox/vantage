@@ -53,3 +53,15 @@ test('an imagery snapshot larger than the cap is refused', async () => {
     { code: 'RESPONSE_TOO_LARGE' },
   );
 });
+
+test('links to an area open the app the services were built for', async () => {
+  const services = createToolServices({
+    appUrl: 'http://127.0.0.1:4173',
+    fetchImpl: async () => {},
+  });
+  const catalog = composeCatalog({ tools: coreTools, services });
+  const result = await catalog.call('show_in_vantage', {
+    area: { lat: 30.27, lon: -97.74, radius_km: 5 },
+  });
+  assert.equal(new URL(result.data.url).origin, 'http://127.0.0.1:4173');
+});

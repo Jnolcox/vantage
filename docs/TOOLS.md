@@ -121,6 +121,13 @@ pack. `get_bhote_koshi_flood` answers with text and links only: witness posts ar
 returned as their source URLs, and no embed or image is loaded, so the page's
 click-to-load consent for witness clips is unaffected.
 
+`app` is `{ baseUrl }`, the `appUrl` passed to `createToolServices` (the MCP
+server's `--api-base`). `show_in_vantage` builds a version 2 share link on it,
+looking straight down on an area with an altitude chosen from the area's size,
+and writes any requested layers with the app's share-link layer codec; layer
+names are limited to the registered layer ids. The tool only returns the link:
+nothing is opened and no request is sent.
+
 `get_map_features` reads `/api/overpass`, which reaches only the Overpass
 instances an operator lists in `VANTAGE_OVERPASS_UPSTREAMS`. With none, the
 request services' one `/api/overpass/status` probe says so and the tool
@@ -242,3 +249,4 @@ process, on a tool call only, with the `vantage-mcp-tools` User-Agent from
 | `situation_brief`             | `weather`            | Weather, earthquakes, fires, aircraft, ships and cyclones for an area, by section           |
 | `military_awareness`          | `military`           | Military and other aircraft and military installations within 250 km of a point, by section |
 | `get_hud_caption`             | `weather`, `summary` | The app's heads-up display caption for an area                                              |
+| `show_in_vantage`             | `app`                | A share link looking straight down on an area, with chosen layers on                        |

@@ -284,8 +284,11 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   `VANTAGE_OVERPASS_UPSTREAMS` instance is configured, and the HUD caption
   sends the HUD's own label-only summary context, with each section's feed
   state taken from its result; as in the HUD, a caption that hides a
-  non-nominal state is replaced by the app's own line naming it (ported from
-  upstream, Sameh Khamis).
+  non-nominal state is replaced by the app's own line naming it. Answers say
+  when launches or satellite orbits come from a stale proxy copy, when
+  aircraft come from a regional fallback feed, when license plate camera
+  tiles were trimmed or failed, and that radio stations come from a directory
+  of popular stations (ported from upstream, Sameh Khamis).
 
 ### Changed
 

@@ -997,5 +997,6 @@
   "src/tools/views.test.mjs",
   "src/tools/localRoute.test.mjs",
   "src/app/embed.test.mjs",
-  "src/ui/styles/embed.css"
+  "src/ui/styles/embed.css",
+  "src/tools/queries/panelRequest.test.mjs"
 ]

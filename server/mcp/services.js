@@ -67,5 +67,6 @@ export function createLocalToolServices(options = {}) {
   return createToolServices({
     fetchImpl: createApiFetch(options),
     appUrl: options.apiBase ?? DEFAULT_API_BASE,
+    panelKey: options.panelKey,
   });
 }

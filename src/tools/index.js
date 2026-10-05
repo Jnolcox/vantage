@@ -39,6 +39,7 @@ import {
   getTrafficFlow,
   getTransitVehicles,
 } from './queries/mobility.js';
+import { panelRequest } from './queries/panelRequest.js';
 import { placesNearby, planRoute, searchPlaces } from './queries/places.js';
 import { showInVantage } from './queries/share.js';
 import {
@@ -122,4 +123,5 @@ export const coreTools = Object.freeze([
   militaryAwareness,
   getHudCaption,
   showInVantage,
+  panelRequest,
 ]);

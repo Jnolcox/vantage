@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
 import { createServer, request as httpRequest } from 'node:http';
 import test from 'node:test';
+import { fileURLToPath } from 'node:url';
+import { createLocalToolServices } from '../../server/mcp/services.js';
+import { catalogForSurface, composeCatalog, coreTools } from './index.js';
+import { createMcpServer } from './mcp/index.js';
 import {
   isLocalMcpRequest,
   isMcpHttpEnabled,
@@ -346,4 +350,102 @@ test('a client that stops sending its request body is answered with a timeout', 
   });
   assert.equal(answer.status, 408);
   assert.deepEqual(JSON.parse(answer.text), { error: 'Request timed out' });
+});
+
+test('panel requests cannot reach /mcp through a suffix the server routes to it', async (t) => {
+  const key = 'panel-key-for-tests';
+  const { createServer: createViteServer } = await import('vite');
+  const vite = await createViteServer({
+    root: fileURLToPath(new URL('../../', import.meta.url)),
+    configFile: false,
+    envFile: false,
+    publicDir: false,
+    logLevel: 'silent',
+    plugins: [
+      localMcpPlugin({
+        enabled: true,
+        createServer: ({ apiBase }) =>
+          createMcpServer({
+            catalog: catalogForSurface(
+              composeCatalog({
+                tools: coreTools,
+                services: createLocalToolServices({ apiBase, panelKey: key }),
+              }),
+              'mcp',
+            ),
+            name: 'vantage',
+            version: 'test',
+          }),
+      }),
+    ],
+    optimizeDeps: { noDiscovery: true, include: [] },
+    server: { host: '127.0.0.1', port: 0, hmr: false, watch: null },
+  });
+  await vite.listen();
+  t.after(() => vite.close());
+  const { port } = vite.httpServer.address();
+  const rpc = (path, message) =>
+    new Promise((resolve, reject) => {
+      const request = httpRequest(
+        {
+          host: '127.0.0.1',
+          port,
+          path,
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Host: `localhost:${port}`,
+          },
+        },
+        (response) => {
+          let text = '';
+          response.on('data', (chunk) => (text += chunk));
+          response.on('end', () =>
+            resolve({ status: response.statusCode, text }),
+          );
+        },
+      );
+      request.on('error', reject);
+      request.end(JSON.stringify(message));
+    });
+
+  // The hazard is real: the server routes /mcp.json to the MCP endpoint.
+  const direct = await rpc('/mcp.json', {
+    jsonrpc: '2.0',
+    id: 1,
+    method: 'ping',
+  });
+  assert.equal(direct.status, 200);
+  assert.deepEqual(JSON.parse(direct.text), {
+    jsonrpc: '2.0',
+    id: 1,
+    result: {},
+  });
+
+  const body = Buffer.from(
+    JSON.stringify({ jsonrpc: '2.0', id: 3, method: 'ping' }),
+  ).toString('base64');
+  for (const path of ['/mcp', '/mcp.json', '/MCP.json', '/mcp.anything']) {
+    const answer = JSON.parse(
+      (
+        await rpc('/mcp', {
+          jsonrpc: '2.0',
+          id: 4,
+          method: 'tools/call',
+          params: {
+            name: 'panel_request',
+            arguments: {
+              key,
+              path,
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body,
+            },
+          },
+        })
+      ).text,
+    );
+    assert.equal(answer.result.isError, true, path);
+    assert.match(answer.result.content[0].text, /is not available/, path);
+  }
 });

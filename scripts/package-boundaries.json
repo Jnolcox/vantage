@@ -3194,7 +3194,8 @@
       "src/tools/surfaces.js",
       "src/view/index.js",
       "src/view/styles.js",
-      "src/tools/views.js"
+      "src/tools/views.js",
+      "src/tools/queries/panelRequest.js"
     ],
     "external": ["satellite.js"]
   },

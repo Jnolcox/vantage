@@ -74,7 +74,10 @@ answer instead of failing the whole answer. `traffic` is the Street Traffic
 layer's source: `get_traffic_flow` reads TomTom flow tiles through
 `/api/tomtom/flow`, which spends the server's TomTom quota, so it reads at most
 the 16 tiles the flow source allows per request, stepping down from zoom 12 to 9
-for a larger area and refusing an area that still needs more. It answers
+for a larger area and refusing an area that still needs more. For a radius area
+it measures only the road inside the circle, and when a tile fails to load it
+says its figures are partial (`partial: true`); the flow source reports that per
+request through `fetchFlowDetail`, which the layer does not use. It answers
 `unavailable` when no TomTom key is configured. These are the app's own routes,
 so the tools inherit their limits: the Google routes keep their per-IP throttle
 (a `429` becomes `retry_later` with its wait), refuse proxied requests, and

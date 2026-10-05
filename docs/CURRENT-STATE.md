@@ -3827,6 +3827,15 @@ silently demoting every later lookup for the session.
 
 - Server-side `ws` websocket to `wss://stream.aisstream.io/v0/stream` maintained by Vite middleware; `AISSTREAM_API_KEY` never reaches the browser (AISStream has no browser CORS). The `ws` package is used rather than Node's built-in WebSocket specifically because only it can hard-abort a wedged socket (see the watchdog note in the delta block at the top).
 - Browser polls same-origin `/api/vessels` cache every 60s.
+- Each request names the area in view as `lat`, `lon` and `radius_km`
+  (centered on the middle of the screen, radius about the camera height,
+  10-450 km; a wider view sends no area and asks for every vessel). The
+  bundled server keeps every vessel and ignores the area. A camera move of a
+  quarter radius asks again only when the last request is at least
+  `VIEW_AREA_REFETCH_MIN_INTERVAL_MS` (the 60-second poll cadence) old;
+  otherwise the next poll carries the new area, so moving the camera adds no
+  requests to the poll cadence. `vessels_in_area` names its area the same
+  way.
 - The first enable in a session starts one 30-second client grace timer. Until
   an accepted vessel position arrives, `live`/`open`/`connecting` transport reports
   `LOADING`; the timer is not restarted by the 60-second poll. Expiry or a

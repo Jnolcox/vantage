@@ -383,6 +383,13 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
 
 ### Changed
 
+- The vessel layer and `vessels_in_area` ask for vessels by area: requests
+  carry `lat`, `lon` and `radius_km` for the area in view (none from high
+  enough up), so a server that answers by area can serve only that place.
+  The bundled server keeps every vessel and ignores the area. A camera move
+  asks again only when the last request is a full poll interval old;
+  otherwise the next poll carries the new area, so moving the camera adds no
+  requests (ported from upstream, Sameh Khamis).
 - Live feed routes are named for what they serve, not the provider behind
   them: `/api/flights` (track `/api/flights/track?icao24=`), `/api/military`
   (track `/api/military/track?hex=`) and `/api/vessels` (track

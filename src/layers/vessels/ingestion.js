@@ -1,10 +1,15 @@
 import { AIS_FIRST_CONNECT_LABEL } from './recordPolicy.js';
+import {
+  VIEW_AREA_REFETCH_MIN_INTERVAL_MS,
+  viewAreaMovedEnough,
+} from './viewArea.js';
 
 /** Own source requests and classified feed state through explicit operations. */
 export function createIngestion({
   feed,
   readSource,
   readViewer,
+  readArea = () => null,
   getRowLimit,
   readCount,
   applyRows,
@@ -34,8 +39,12 @@ export function createIngestion({
               AbortSignal.timeout(10000),
             ])
           : requestController.signal;
+      // Ask for the vessels in view; a wide view asks for every vessel.
+      const area = readArea(viewer);
+      feed.lastArea = area;
+      feed.lastRequestAt = now();
       const snapshot = await readSource().getSnapshot(
-        { maxRows: getRowLimit() },
+        { maxRows: getRowLimit(), ...(area ? { area } : {}) },
         { signal },
       );
       if (!ownsAisRequest(requestController, requestSessionId)) return;
@@ -169,6 +178,25 @@ export function createIngestion({
           : new Date(record.observedAtMs).toISOString(),
     };
   }
+  /**
+   * Ask again when the view moved away from the last area asked for. A move
+   * within the minimum interval of the last request waits for the next poll,
+   * which asks for the area in view then; the bundled server ignores the
+   * area, so moves must not add requests to the poll cadence.
+   */
+  function refreshIfMoved(viewer) {
+    if (!feed.enabled || feed.loading) return Promise.resolve();
+    if (
+      feed.lastRequestAt != null &&
+      now() - feed.lastRequestAt < VIEW_AREA_REFETCH_MIN_INTERVAL_MS
+    )
+      return Promise.resolve();
+    const active = viewer || readViewer();
+    if (!viewAreaMovedEnough(feed.lastArea ?? null, readArea(active)))
+      return Promise.resolve();
+    return loadLivePositions(active);
+  }
+
   const methods = {
     update(viewer) {
       if (!feed.enabled) return Promise.resolve();
@@ -178,6 +206,7 @@ export function createIngestion({
 
   return {
     loadLivePositions,
+    refreshIfMoved,
     ownsAisRequest,
     applyAisFeedSnapshot,
     vesselDisplayRow,
@@ -209,5 +238,11 @@ export function createVesselFeed() {
     firstConnectDeadline: null,
     firstConnectTimer: null,
     abort: null,
+    /** The area last asked for, null for every vessel. */
+    lastArea: null,
+    /** When the last request started, by the layer's clock. */
+    lastRequestAt: null,
+    /** Stops listening for camera moves. */
+    removeViewListener: null,
   };
 }

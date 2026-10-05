@@ -13,14 +13,6 @@ import {
   resolveArea,
   resolvePoint,
 } from '../area.js';
-import { aircraftInArea } from './aviation.js';
-import {
-  findMilitaryInstallations,
-  getCyclones,
-  getWeather,
-} from './environment.js';
-import { getActiveFires, getEarthquakes } from './hazards.js';
-import { vesselsInArea } from './maritime.js';
 
 const SECTION_LIMIT = 5;
 const AWARENESS_LIMIT = 10;
@@ -28,12 +20,12 @@ const AWARENESS_RADIUS_KM = 250;
 // Sections a fallback caption names, as the HUD's provenance tag does.
 const MAX_FLAGGED_SECTIONS = 2;
 
-/** Brief sections: the tool each one reuses and the services it needs. */
+/** Brief sections: the tool each one calls and the arguments it passes. */
 const SECTIONS = [
   {
     key: 'weather',
     label: 'Weather',
-    tool: getWeather,
+    tool: 'get_weather',
     args: (area, center) => ({
       location: area.argument.place
         ? { place: area.argument.place }
@@ -43,31 +35,31 @@ const SECTIONS = [
   {
     key: 'earthquakes',
     label: 'Earthquakes',
-    tool: getEarthquakes,
+    tool: 'get_earthquakes',
     args: (area) => ({ area: area.argument, limit: SECTION_LIMIT }),
   },
   {
     key: 'fires',
     label: 'Active fires',
-    tool: getActiveFires,
+    tool: 'get_active_fires',
     args: (area) => ({ area: area.argument, limit: SECTION_LIMIT }),
   },
   {
     key: 'aircraft',
     label: 'Aircraft',
-    tool: aircraftInArea,
+    tool: 'aircraft_in_area',
     args: (area) => ({ area: area.argument, limit: SECTION_LIMIT }),
   },
   {
     key: 'vessels',
     label: 'Ships',
-    tool: vesselsInArea,
+    tool: 'vessels_in_area',
     args: (area) => ({ area: area.argument, limit: SECTION_LIMIT }),
   },
   {
     key: 'cyclones',
     label: 'Tropical cyclones',
-    tool: getCyclones,
+    tool: 'get_cyclones',
     args: (area) => ({ area: area.argument }),
   },
 ];
@@ -76,7 +68,7 @@ const SECTIONS = [
 const AWARENESS_SECTIONS = [
   {
     key: 'military_aircraft',
-    tool: aircraftInArea,
+    tool: 'aircraft_in_area',
     args: (area) => ({
       area: area.argument,
       military: true,
@@ -85,12 +77,12 @@ const AWARENESS_SECTIONS = [
   },
   {
     key: 'aircraft',
-    tool: aircraftInArea,
+    tool: 'aircraft_in_area',
     args: (area) => ({ area: area.argument, limit: AWARENESS_LIMIT }),
   },
   {
     key: 'installations',
-    tool: findMilitaryInstallations,
+    tool: 'find_military_installations',
     args: (area) => ({ area: area.argument, limit: AWARENESS_LIMIT }),
   },
 ];
@@ -140,17 +132,16 @@ function sectionArea(resolved, original) {
 }
 
 /**
- * Run every section whose services are supplied. A failing section is
- * reported as unavailable instead of failing the whole answer.
+ * Run every section whose tool the catalog offers, through the catalog so
+ * replaced tools and interceptors apply. A failing section is reported as
+ * unavailable instead of failing the whole answer.
  */
-async function runSections(all, area, { services, signal }) {
+async function runSections(all, area, { tools, signal }) {
   const center = areaCenter(area);
-  const sections = all.filter(({ tool }) =>
-    tool.requires.every((key) => services[key] != null),
-  );
+  const sections = all.filter(({ tool }) => tools.has(tool));
   const results = await Promise.allSettled(
     sections.map(({ tool, args: build }) =>
-      tool.run(build(area, center), { services, signal }),
+      tools.call(tool, build(area, center)),
     ),
   );
   signal?.throwIfAborted();
@@ -172,7 +163,7 @@ async function runSections(all, area, { services, signal }) {
   return { center, answers, lines };
 }
 
-async function buildBrief(args, { services, signal }) {
+async function buildBrief(args, { services, signal, tools }) {
   // Sections receive a named place by name (lookups are cached) and other
   // areas as the resolved box or circle.
   const area = sectionArea(
@@ -180,7 +171,7 @@ async function buildBrief(args, { services, signal }) {
     args.area,
   );
   const { center, answers, lines } = await runSections(SECTIONS, area, {
-    services,
+    tools,
     signal,
   });
   return { area, center, brief: answers, lines };
@@ -315,7 +306,7 @@ export const militaryAwareness = defineTool({
     additionalProperties: false,
   },
   requires: ['military'],
-  async run(args, { services, signal }) {
+  async run(args, { services, signal, tools }) {
     const point = await resolvePoint(args.location, { services, signal });
     const radiusKm = args.radius_km ?? AWARENESS_RADIUS_KM;
     const area = sectionArea(
@@ -325,7 +316,7 @@ export const militaryAwareness = defineTool({
       ),
     );
     const { answers, lines } = await runSections(AWARENESS_SECTIONS, area, {
-      services,
+      tools,
       signal,
     });
     return {

@@ -32,8 +32,8 @@ dynamic imports only, so they stay out of the page's startup graph.
 validates and freezes a tool. `kind` is `query` (answers from data, read-only)
 or `action`. `inputSchema` uses a JSON Schema subset that `src/tools/schema.js`
 checks completely; unsupported keywords are rejected at definition time.
-`run(args, { services, signal })` resolves to `{ summary, data }`: one sentence
-for people and a structured object for programs. A tool may also return
+`run(args, { services, signal, tools })` resolves to `{ summary, data }`: one
+sentence for people and a structured object for programs. A tool may also return
 `images`, each `{ mimeType, data }` with base64 data; the MCP adapter sends
 them as image content. MCP results carry the summary and the data as JSON
 text, plus the data as `structuredContent`, for clients that read only one of
@@ -47,14 +47,20 @@ them.
   whose services are not supplied are left out.
 - **Interceptors**: `(call, next) => next(call)` functions wrap every call,
   outermost first. They can observe, reject or change a call.
+- **Composite tools**: `run` receives `tools`, with `has(name)` and
+  `call(name, args)`, to call other tools through the same catalog, so
+  replaced tools and interceptors apply. Interceptors see such calls with
+  `parent`, the calling tool's name.
 
 ### Surfaces
 
 `src/tools/surfaces.js` lists which tools MCP and voice offer. A tool is on
 both unless `TOOL_SURFACES` turns it off; edit an entry to turn a tool on or
-off for one surface. `toolsForSurface(tools, surface, overrides)` gives a
-surface's selection in the original order, and an override naming an unknown
-tool or surface throws. Voice leaves out tools that answer with images, link
+off for one surface. `catalogForSurface(catalog, surface, overrides)` is the
+view a surface exposes: it lists and calls only the tools it offers, while
+composite tools still reach the whole catalog. `toolsForSurface` gives the
+same selection as a list of definitions, such as for the voice session's tool
+list; an override naming an unknown tool or surface throws. Voice leaves out tools that answer with images, link
 to the app, or repeat what its app actions answer.
 
 Expected failures throw `ToolError` with one of `invalid_arguments`,
@@ -98,9 +104,11 @@ so the tools inherit their limits: the Google routes keep their per-IP throttle
 never expose the key. The `weather`, `regional`, `terrain`, `summary` and
 `features` services are the application request services from
 `src/services/requests.js`, the same ones the HUD and cockpit use.
-`situation_brief` and `military_awareness` run each section whose services are
-supplied and mark the others unavailable. A new tool adds the services it reads
-to `createToolServices`, so every surface composes the same set.
+`situation_brief` and `military_awareness` run each section the catalog has,
+through the catalog, and mark failed ones unavailable; a composite offered on
+a surface keeps sections that surface does not list. A new tool adds the
+services it reads to `createToolServices`, so every surface composes the same
+set.
 
 `weatherMaps` and `wind` are the Weather and Wind layers' sources over
 `/api/weather` and `/api/wind`. `get_weather_map` asks for one 1024 by 512 image

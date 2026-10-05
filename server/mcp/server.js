@@ -4,7 +4,7 @@ import { PACKAGE_VERSION } from '../../src/sources/version.js';
 import {
   composeCatalog,
   coreTools,
-  toolsForSurface,
+  catalogForSurface,
 } from '../../src/tools/index.js';
 import { createMcpServer } from '../../src/tools/mcp/index.js';
 import { DEFAULT_API_BASE, createLocalToolServices } from './services.js';
@@ -20,10 +20,13 @@ export function createLocalMcpServer({
   fetchImpl,
 } = {}) {
   return createMcpServer({
-    catalog: composeCatalog({
-      tools: toolsForSurface(coreTools, 'mcp'),
-      services: createLocalToolServices({ apiBase, fetchImpl }),
-    }),
+    catalog: catalogForSurface(
+      composeCatalog({
+        tools: coreTools,
+        services: createLocalToolServices({ apiBase, fetchImpl }),
+      }),
+      'mcp',
+    ),
     name: 'vantage',
     version: PACKAGE_VERSION,
     instructions: INSTRUCTIONS,

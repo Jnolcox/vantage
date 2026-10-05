@@ -521,12 +521,18 @@ regional fallback feed, ALPR answers say when tiles failed or were trimmed, and
 radio answers say they come from a directory of popular stations.
 Live-source failures become tool errors with the matching code. Tools take a
 shared `area` argument (place name, bounding box, or point and radius) and cap
-lists at 25 rows by default. Voice offers the same queries next to its app
-actions: the session lists them, and the browser runs them through the same
-catalog, loaded on the first query voice calls. Outside `src/tools/`, only
-voice reaches the tools (`check:boundaries` enforces it): the voice runner
-imports the function-calling adapter, and `src/standalone/toolCatalog.js`
-loads the catalog with a dynamic import, so page load is unchanged. See
+lists at 25 rows by default. `src/tools/surfaces.js` chooses which surfaces
+offer each tool: MCP leaves out place search, routing, plain weather and wind,
+the regional brief, the HUD caption, radio, bike share and transit, and voice
+leaves out image answers, `show_in_vantage`, the HUD caption and the aircraft,
+ship, hazard, infrastructure and satellite queries its app actions answer;
+composites such as `situation_brief` still reach every tool. Voice offers its
+queries next to its app actions: the session lists them, and the browser runs
+them through the same catalog, loaded on the first query voice calls. Outside
+`src/tools/`, only voice reaches the tools (`check:boundaries` enforces it):
+the voice runner imports the function-calling adapter, and
+`src/standalone/toolCatalog.js` loads the catalog with a dynamic import, so
+page load is unchanged. See
 [tools and the MCP server](TOOLS.md).
 
 ## Vessel components and sources

@@ -299,7 +299,12 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   `next_satellite_pass` and `analyst_query` stay the actions.
   `src/tools/surfaces.js` chooses per tool whether MCP, voice or both offer
   it; voice leaves out tools that answer with images, link to the app, or
-  repeat what its actions answer, which keeps the session's tool list lean
+  repeat what its actions answer, which keeps the session's tool list lean.
+  MCP leads with what the globe shows: it no longer lists place search,
+  routing, plain weather and wind, the regional brief, the HUD caption,
+  radio, bike share and transit, which assistants already cover or which add
+  little without the globe; voice keeps them (except the HUD caption, which
+  the app shows itself), and tools that combine others still reach them
   (ported from upstream, Sameh Khamis).
 
 ### Changed

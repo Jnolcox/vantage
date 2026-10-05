@@ -60,8 +60,15 @@ off for one surface. `catalogForSurface(catalog, surface, overrides)` is the
 view a surface exposes: it lists and calls only the tools it offers, while
 composite tools still reach the whole catalog. `toolsForSurface` gives the
 same selection as a list of definitions, such as for the voice session's tool
-list; an override naming an unknown tool or surface throws. Voice leaves out tools that answer with images, link
-to the app, or repeat what its app actions answer.
+list; an override naming an unknown tool or surface throws. Voice leaves out
+tools that answer with images, link to the app, or repeat what its app actions
+answer. MCP leads with what the globe shows: it leaves out `search_places`,
+`places_nearby`, `plan_route`, `get_weather`, `get_wind`, `get_regional_brief`,
+`find_radio_stations`, `get_bike_share` and `get_transit_vehicles`, which
+assistants already cover or which add little without the globe. Neither lists
+`get_hud_caption`: the app shows its caption itself, and assistants write
+their own. Tools off a surface stay reachable from composites, such as
+`situation_brief` using `get_weather`.
 
 Expected failures throw `ToolError` with one of `invalid_arguments`,
 `unavailable`, `unsupported`, `malformed` or `retry_later`. Failures the live

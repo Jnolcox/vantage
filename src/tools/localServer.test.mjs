@@ -20,7 +20,7 @@ import {
   parseArgs,
   serveStdio,
 } from '../../server/mcp/stdio.js';
-import { coreTools } from './index.js';
+import { composeCatalog, coreTools, toolsForSurface } from './index.js';
 
 const usgs = {
   type: 'FeatureCollection',
@@ -198,7 +198,7 @@ test('the stdio server answers newline-delimited requests using only its data so
   // Every Core tool's services are composed locally.
   assert.deepEqual(
     byId.get(2).result.tools.map((tool) => tool.name),
-    coreTools.map((tool) => tool.name),
+    toolsForSurface(coreTools, 'mcp').map((tool) => tool.name),
   );
   assert.equal(
     byId.get(3).result.content[0].text,
@@ -273,7 +273,7 @@ test('a failed tool call is logged with its error code, not its message', async 
   ]);
 });
 
-test('search_places through the real keyless Google route reports that no key is configured', async (t) => {
+test('search_places over the local services and the real keyless Google route reports that no key is configured', async (t) => {
   const routes = new Map();
   googlePlacesContextProxy({ resolveApiKey: () => '' }).configureServer({
     middlewares: { use: (path, handler) => routes.set(path, handler) },
@@ -293,19 +293,20 @@ test('search_places through the real keyless Google route reports that no key is
   });
   await new Promise((resolve) => app.listen(0, '127.0.0.1', resolve));
   t.after(() => app.close());
-  const server = createLocalMcpServer({
-    apiBase: `http://127.0.0.1:${app.address().port}`,
+  // MCP does not list search_places; voice does, over the same services.
+  const catalog = composeCatalog({
+    tools: coreTools,
+    services: createLocalToolServices({
+      apiBase: `http://127.0.0.1:${app.address().port}`,
+    }),
   });
-  const response = await server.handle({
-    jsonrpc: '2.0',
-    id: 1,
-    method: 'tools/call',
-    params: {
-      name: 'search_places',
-      arguments: { query: 'tea', area: { bbox: [-0.2, 51.4, 0, 51.6] } },
-    },
-  });
-  assert.equal(response.result.isError, true);
-  assert.equal(response.result.structuredContent.error, 'unavailable');
-  assert.match(response.result.content[0].text, /needs a Google Places key/);
+  await assert.rejects(
+    catalog.call('search_places', {
+      query: 'tea',
+      area: { bbox: [-0.2, 51.4, 0, 51.6] },
+    }),
+    (error) =>
+      error.code === 'unavailable' &&
+      /needs a Google Places key/.test(error.message),
+  );
 });

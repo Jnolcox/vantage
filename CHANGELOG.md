@@ -454,6 +454,10 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
 
 ### Fixed
 
+- Voice: "show me vessels" no longer turns on a visual style or another
+  layer. "Vessels" is easily heard as "visuals"; the instructions now say a
+  vessels request without a style name means the ships layer, and a style
+  needs its name (ported from upstream, Sameh Khamis).
 - A stalled OpenSky global snapshot no longer holds `/api/opensky` for over
   a minute. Each attempt gets 10 seconds, a timed-out or failed attempt is
   retried once, and a second failure is answered from the stale cache or the

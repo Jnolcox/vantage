@@ -100,6 +100,11 @@ granules with the Recent Imagery layer's `searchHls`, ranks days with its
 (`wvsSnapshotUrl`), at most 8 MB per image. These keyless NASA services are read
 directly, not through `/api`.
 
+`cables` is the Submarine Cables layer's bundled TeleGeography source. The
+stdio server's fetch reads those `file:` URLs from `src/data/local_data/` on
+disk and answers 404 for any other `file:` URL, including one that climbs out
+with `..`.
+
 `get_map_features` reads `/api/overpass`, which reaches only the Overpass
 instances an operator lists in `VANTAGE_OVERPASS_UPSTREAMS`. With none, the
 request services' one `/api/overpass/status` probe says so and the tool
@@ -208,6 +213,7 @@ process, on a tool call only, with the `vantage-mcp-tools` User-Agent from
 | `get_weather_map`             | `weatherMaps`        | The latest NOAA radar, satellite or lightning map image over an area                        |
 | `get_wind`                    | `wind`               | GFS or IFS model wind 10 m above ground at a location                                       |
 | `get_recent_imagery`          | `imagery`            | The most recent clear Landsat/Sentinel-2 image of an area (VIIRS fallback)                  |
+| `find_submarine_cables`       | `cables`             | TeleGeography cables and landing points by area or name (CC BY-NC-SA 3.0)                   |
 | `get_regional_brief`          | `regional`           | What and where a location is, its weather and recent headlines                              |
 | `get_cyclones`                | `cyclones`           | Active NHC/CPHC tropical cyclones, optionally in an area                                    |
 | `get_fire_perimeters`         | `perimeters`         | Mapped WFIGS wildfire perimeters in an area, largest first                                  |

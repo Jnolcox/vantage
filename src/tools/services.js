@@ -17,6 +17,7 @@ import { createInstallationSource } from '../layers/installations/source.js';
 import { createLaunchSource } from '../layers/launches/source.js';
 import { createWfigsPerimeterSource } from '../layers/perimeters/source.js';
 import { createRadioSource } from '../layers/radio/source.js';
+import { createBundledCableSource } from '../layers/submarineCables/bundledSource.js';
 import { searchHls } from '../layers/recentImagery/catalog.js';
 import { rankLatest, wvsSnapshotUrl } from '../layers/recentImagery/model.js';
 import { createSatelliteSource } from '../layers/satellites/source.js';
@@ -67,6 +68,7 @@ export function createToolServices({ fetchImpl, appUrl }) {
     weatherMaps: createWeatherSource({ fetchImpl }),
     wind: createWindSource({ fetchImpl }),
     imagery: createImageryService({ fetchImpl }),
+    cables: createBundledCableSource({ fetchImpl }),
     regional: requests.regional,
     terrain: requests.terrain,
     summary: requests.summary,

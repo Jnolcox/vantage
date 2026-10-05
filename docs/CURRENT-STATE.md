@@ -492,7 +492,9 @@ window the image route accepts), wind (`get_wind`, sampled from the
 `/api/wind` GFS or IFS grid), the most recent satellite image of an area
 (`get_recent_imagery`, the Recent Imagery layer's CMR search and ranking with
 the chosen day read from Worldview Snapshots, at most 8 MB, falling back to the
-VIIRS daily overview), regional briefs (`get_regional_brief`), tropical cyclones,
+VIIRS daily overview), submarine cables (`find_submarine_cables`, over the
+bundled TeleGeography data, which the stdio server's fetch reads from
+`src/data/local_data/` only), regional briefs (`get_regional_brief`), tropical cyclones,
 fire perimeters, terrain height, mapped military installations and map
 features (`get_map_features`, `unavailable` without a configured Overpass
 instance), plus `situation_brief`, which runs weather, earthquake, fire,

@@ -61,10 +61,16 @@ routes those paths. `createGeocodePlaceService` resolves place names through
 `/api/geocode`; `createPlaceSearchService` searches `/api/google/*` and reports
 when no search key is configured, which `search_places` and `places_nearby`
 answer as `unavailable` rather than as an empty result; `createRouteService`
-plans routes through `/api/route`. These are the app's own routes, so the
-tools inherit their limits: the Google routes keep their per-IP throttle (a
-`429` becomes `retry_later` with its wait), refuse proxied requests, and never
-expose the key. The `weather`, `regional`, `terrain`, `summary` and
+plans routes through `/api/route`. The `bikeshare` service is
+`{ systems, getStations }`, the system registry and the GBFS source, which reads
+station documents through `/api/gbfs`; `transit` is the transit layer's source
+over `/api/transit`. `get_bike_share` and `get_transit_vehicles` read at most
+the three systems or feeds nearest the area whose coverage reaches it, and
+report any that did not answer instead of failing the whole answer. These are
+the app's own routes, so the tools inherit their limits: the Google routes keep
+their per-IP throttle (a `429` becomes `retry_later` with its wait), refuse
+proxied requests, and never expose the key. The `weather`, `regional`,
+`terrain`, `summary` and
 `features` services are the application request services from
 `src/services/requests.js`, the same ones the HUD and cockpit use.
 `situation_brief` and `military_awareness` run each section whose services are
@@ -168,6 +174,8 @@ process, on a tool call only, with the `vantage-mcp-tools` User-Agent from
 | `search_places`               | `placeSearch`        | Points of interest matching a query within an area (Google Places)                          |
 | `places_nearby`               | `placeSearch`        | Notable places around a place or point (Google Places)                                      |
 | `plan_route`                  | `routing`            | Walking, driving or cycling route over OpenStreetMap, with a simplified path                |
+| `get_bike_share`              | `bikeshare`          | Live GBFS stations in an area, with bikes and docks available                               |
+| `get_transit_vehicles`        | `transit`            | Live GTFS-Realtime vehicle positions in an area, optionally one route                       |
 | `get_weather`                 | `weather`            | Current conditions at a place or point                                                      |
 | `get_regional_brief`          | `regional`           | What and where a location is, its weather and recent headlines                              |
 | `get_cyclones`                | `cyclones`           | Active NHC/CPHC tropical cyclones, optionally in an area                                    |

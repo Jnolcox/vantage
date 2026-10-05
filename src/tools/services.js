@@ -6,6 +6,8 @@
  * caller supplies a resolving fetch.
  */
 
+import { GBFS_CITY_REGISTRY } from '../layers/bikeshare/registry.js';
+import { createBikeshareSource } from '../layers/bikeshare/source.js';
 import { createCctvSource } from '../layers/cctv/source.js';
 import { createCycloneSource } from '../layers/cyclones/source.js';
 import { createUsgsEarthquakeSource } from '../layers/earthquakes/source.js';
@@ -15,6 +17,7 @@ import { createLaunchSource } from '../layers/launches/source.js';
 import { createWfigsPerimeterSource } from '../layers/perimeters/source.js';
 import { createRadioSource } from '../layers/radio/source.js';
 import { createSatelliteSource } from '../layers/satellites/source.js';
+import { createTransitSource } from '../layers/transit/source.js';
 import {
   createAdsbLolSource,
   createOpenSkySource,
@@ -42,6 +45,11 @@ export function createToolServices({ fetchImpl }) {
     radio: createRadioSource({ fetchImpl }),
     placeSearch: createPlaceSearchService({ fetchImpl }),
     routing: createRouteService({ fetchImpl }),
+    bikeshare: {
+      systems: GBFS_CITY_REGISTRY,
+      getStations: createBikeshareSource({ fetchImpl }).getStations,
+    },
+    transit: createTransitSource({ fetchImpl }),
     weather: requests.weather,
     regional: requests.regional,
     terrain: requests.terrain,

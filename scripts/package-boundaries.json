@@ -3155,6 +3155,8 @@
       "src/tools/queries/aviation.js",
       "src/tools/queries/media.js",
       "src/tools/queries/places.js",
+      "src/tools/queries/mobility.js",
+      "src/sources/gbfsStations.js",
       "src/sources/tle.js",
       "src/data/satellitePass.js",
       "src/tools/queries/environment.js",
@@ -3218,7 +3220,11 @@
       "src/data/bundledJson.js",
       "src/data/retryableLoad.js",
       "src/data/militaryNames.js",
-      "src/layers/installations/source.js"
+      "src/layers/installations/source.js",
+      "src/layers/bikeshare/registry.js",
+      "src/layers/bikeshare/source.js",
+      "src/layers/transit/source.js",
+      "src/sources/transitHistory.js"
     ],
     "external": ["@mapbox/vector-tile", "pbf"]
   }

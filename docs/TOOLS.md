@@ -116,6 +116,11 @@ analyst query's `mapAnalystRecord` from `src/sources/infrastructureData.js`, so
 `find_infrastructure` and `analyst_query` describe a site with the same fields.
 Each file is read once per process, on the first call that needs it.
 
+`events` reads an event pack the app serves at `/events/<id>/event.json`, once per
+pack. `get_bhote_koshi_flood` answers with text and links only: witness posts are
+returned as their source URLs, and no embed or image is loaded, so the page's
+click-to-load consent for witness clips is unaffected.
+
 `get_map_features` reads `/api/overpass`, which reaches only the Overpass
 instances an operator lists in `VANTAGE_OVERPASS_UPSTREAMS`. With none, the
 request services' one `/api/overpass/status` probe says so and the tool
@@ -227,6 +232,7 @@ process, on a tool call only, with the `vantage-mcp-tools` User-Agent from
 | `get_recent_imagery`          | `imagery`            | The most recent clear Landsat/Sentinel-2 image of an area (VIIRS fallback)                  |
 | `find_submarine_cables`       | `cables`             | TeleGeography cables and landing points by area or name (CC BY-NC-SA 3.0)                   |
 | `find_infrastructure`         | `infrastructure`     | OpenStreetMap datacenters or dams in an area, nearest first (ODbL)                          |
+| `get_bhote_koshi_flood`       | `events`             | 2026 Bhote Koshi flood: evidence trail, flood path and imagery dates (CC BY-NC 4.0)         |
 | `get_regional_brief`          | `regional`           | What and where a location is, its weather and recent headlines                              |
 | `get_cyclones`                | `cyclones`           | Active NHC/CPHC tropical cyclones, optionally in an area                                    |
 | `get_fire_perimeters`         | `perimeters`         | Mapped WFIGS wildfire perimeters in an area, largest first                                  |

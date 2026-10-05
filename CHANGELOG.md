@@ -269,7 +269,9 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   (Harmonized Landsat and Sentinel-2, VIIRS fallback; read from NASA directly
   with the `vantage-mcp-tools` User-Agent), submarine cable (bundled
   TeleGeography data, read from disk), datacenter and dam (bundled
-  OpenStreetMap data, with the analyst query's fields), regional
+  OpenStreetMap data, with the analyst query's fields), Bhote Koshi flood
+  event (evidence trail, flood path and imagery dates, as text and links),
+  regional
   brief, tropical cyclone, fire perimeter, terrain height, military
   installation and map feature queries, a combined situation brief, military
   awareness around a point and the HUD caption, over stdio to clients such as

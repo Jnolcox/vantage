@@ -497,7 +497,10 @@ the chosen day read from Worldview Snapshots, at most 8 MB, falling back to the
 VIIRS daily overview), submarine cables (`find_submarine_cables`, over the
 bundled TeleGeography data, which the stdio server's fetch reads from
 `src/data/local_data/` only), datacenters and dams (`find_infrastructure`, over
-the bundled layer files with the analyst query's record mapping), regional briefs (`get_regional_brief`), tropical cyclones,
+the bundled layer files with the analyst query's record mapping), the Bhote
+Koshi flood event (`get_bhote_koshi_flood`, the pack's evidence trail, flood
+path and imagery dates from `/events/bhote-koshi-2026/event.json`, as text and
+links with no embed loaded), regional briefs (`get_regional_brief`), tropical cyclones,
 fire perimeters, terrain height, mapped military installations and map
 features (`get_map_features`, `unavailable` without a configured Overpass
 instance), plus `situation_brief`, which runs weather, earthquake, fire,

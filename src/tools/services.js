@@ -33,6 +33,7 @@ import {
 } from '../sources/live/standalone.js';
 import { createApplicationRequestServices } from '../services/requests.js';
 import { readResponseBytesCapped } from '../sources/httpBody.js';
+import { createEventPackSource } from '../sources/eventPacks.js';
 import { createInfrastructureSource } from '../sources/infrastructureData.js';
 import {
   createGeocodePlaceService,
@@ -73,6 +74,7 @@ export function createToolServices({ fetchImpl, appUrl }) {
     cables: createBundledCableSource({ fetchImpl }),
     alpr: createAlprTileSource({ tileFetchImpl: fetchImpl }),
     infrastructure: createInfrastructureSource({ fetchImpl }),
+    events: createEventPackSource({ fetchImpl }),
     regional: requests.regional,
     terrain: requests.terrain,
     summary: requests.summary,

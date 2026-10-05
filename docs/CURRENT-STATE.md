@@ -525,10 +525,14 @@ the app's own line naming it. The caption and regional brief spend provider
 quota under those routes' throttles, on a tool call only; the HUD's Live/Local
 toggle governs only the page's own periodic lookups. `show_in_vantage` returns
 a version 2 share link on the app's address (`--api-base`) for a view built by
-the pure `src/view/index.js`: an area framed from above or a camera, with
-registered layers, style, map, an aircraft or satellite to follow and
-annotation marks (the bounded `an` parameter; the page does not yet draw marks
-from a restored link).
+the pure `src/view/index.js`: another answer's view, an area framed from above
+or a camera, with registered layers, style, map, an aircraft (optionally in
+its cockpit view, which links cannot carry) or satellite to follow, and
+annotation marks (the bounded `an` parameter). A view that only follows an
+aircraft is framed where a feed reports it now. In clients that display MCP
+Apps it also shows the view as live Vantage in the conversation: the tool
+names the `ui://vantage/globe` resource, which the local MCP server serves
+(`resources/list`, `resources/read`).
 Answers with something to show also carry `data.view`, the view that shows
 them and its link (`src/tools/views.js`); no request is sent to build it.
 Launch and satellite answers say when the proxy served its last copy
@@ -555,7 +559,27 @@ page load is unchanged. See
 (`vantage:view`) from its parent page; links that carry annotations draw them
 once restored. The page loads that code (`src/app/embed.js`) only for those
 two cases. Framing is off unless `VANTAGE_EMBED_FRAME_ANCESTORS` lists the
-framing page's origin; only explicit `http(s)` origins are accepted.
+framing page's origin; only explicit `http(s)` origins are accepted. A
+followed aircraft owns the camera, so a view flies the camera only while its
+entity is not there yet, then enters cockpit view when asked.
+
+The globe panel (`src/tools/globePanel.js`, with the page script
+`src/app/globePanelRuntime.js`, exported as `vantage/tools/panel`) runs the
+app's panel build inline in embed mode inside the MCP host's page. The
+build, from the opt-in `npm run build:panel`, is written to `dist/panel` and
+served by the development server at `/panel/` behind the `Host` check; `npm
+run build` and the app's page never load it. It is keyless unless
+`VANTAGE_PANEL_GOOGLE_MAPS_API_KEY` or `VANTAGE_PANEL_CESIUM_ION_TOKEN` is set
+for that command, which then warns. The panel never requests the app's server
+itself: it loads the build and the app's data through `panel_request`, an
+app-only tool that needs the key each MCP server puts in its panel page (not
+access control), stays on the app's origin without following redirects, reads
+at most 64 MiB per response within 60 s, runs six requests at once per server
+with up to 256 waiting, and refuses, in any case, encoding or dot suffix,
+`/api/setup`, `/api/realtime`, `/api/openai`, `/mcp`, `/@…`, `/__…`,
+`/api/local-receivers`, `/api/google` and `/api/overpass`. The origins the
+panel declares to its host are derived from `CSP_ORIGINS` (`connect-src` and
+`img-src`, without OpenAI, which the panel cannot use). See [MCP setup](MCP_SETUP.md).
 
 ## Vessel components and sources
 

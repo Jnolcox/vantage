@@ -4,6 +4,8 @@ Tools answer questions from Vantage data for language-model clients. They are
 defined once and exposed through adapters: the Model Context Protocol (MCP)
 and function calling, which voice uses.
 
+To use them from Claude or Codex, see [MCP setup](MCP_SETUP.md).
+
 ## Layers
 
 | Owner                                                              | Responsibility                                                                                   |
@@ -150,12 +152,15 @@ pack. `get_bhote_koshi_flood` answers with text and links only: witness posts ar
 returned as their source URLs, and no embed or image is loaded, so the page's
 click-to-load consent for witness clips is unaffected.
 
-`app` is `{ baseUrl }`, the `appUrl` passed to `createToolServices` (the MCP
-server's `--api-base`). `show_in_vantage` builds a version 2 share link on it
-from a [view](#views): an area framed from above with an altitude chosen from
-the area's size, or a camera, plus layers, style, map and something to follow.
-Layer names are limited to the registered layer ids. The tool only returns the
-link: nothing is opened and no request is sent.
+`app` is `{ baseUrl, fetch, panelKey }`: the `appUrl` passed to
+`createToolServices` (the MCP server's `--api-base`), the fetch that requests
+the app's own paths, and the key the [panel](#the-vantage-panel) page
+carries. `show_in_vantage` builds a version 2 share link on `baseUrl` from a
+[view](#views): an area framed from above with an altitude chosen from the
+area's size, or a camera, plus layers, style, map and something to follow.
+Layer names are limited to the registered layer ids. The tool returns the
+link and the view, which MCP Apps clients show in the panel; the tool itself
+opens nothing.
 
 `get_map_features` reads `/api/overpass`, which reaches only the Overpass
 instances an operator lists in `VANTAGE_OVERPASS_UPSTREAMS`. With none, the
@@ -188,7 +193,9 @@ aircraft or satellite to follow. `createView` builds and bounds one,
 `viewToParams` and `viewFromParams` write and read it in the share-link
 format the app restores, and `viewUrl` gives the address that opens it. The
 style names are the ones share links use. Ships cannot be followed from a
-link yet. The module is pure (no DOM, no network), so the app imports it too:
+link yet. An aircraft's `follow` may ask for its cockpit view
+(`cockpit: true`); links cannot carry that and open the app following it.
+The module is pure (no DOM, no network), so the app imports it too:
 `src/sharelink.js` takes its style names from it.
 
 A view can also carry `annotations`, the marks the app's `annotate_map`
@@ -202,11 +209,14 @@ restores. Labels are untrusted text from whoever wrote the link; the
 annotation renderers draw them as text (`textContent` or Cesium labels), never as
 markup.
 
-Tools take a view as `VIEW_ARGUMENTS`: an `area` to frame, or a `camera`, plus
-`layers`, `style`, `map`, `follow` and `annotations`. An area alone is framed
-from above; with a heading or pitch the camera is placed behind its center so
-the area stays in the middle of the frame. Camera lat and lon given with an
-area override its framing. `resolveViewArguments` turns them into a view.
+Tools take a view as `VIEW_ARGUMENTS`: a `view` another answer returned, an
+`area` to frame, or a `camera`, plus `layers`, `style`, `map`, `follow` and
+`annotations`, which change that part of a given view. An area alone is
+framed from above; with a heading or pitch the camera is placed behind its
+center so the area stays in the middle of the frame. Camera lat and lon given
+with an area override its framing. A view that only follows an aircraft is
+framed where a feed reports it now. `resolveViewArguments` turns them into a
+view.
 
 Answers that have something to show include `data.view`: the view that
 shows them, with the matching layers on, an area framed from above, and a
@@ -214,14 +224,95 @@ single aircraft or satellite followed, plus `url` to open it (null when the
 app's address is not configured). `suggestView` in `src/tools/views.js`
 builds one.
 
+### The Vantage panel
+
+`show_in_vantage` names an MCP Apps view (`io.modelcontextprotocol/ui`):
+`_meta.ui.resourceUri` (and the older flat `ui/resourceUri` key) is
+`ui://vantage/globe`, a `text/html;profile=mcp-app` resource from
+`createGlobePanelResource({ runtime, panelKey, connectDomains, resourceDomains })`
+in `src/tools/globePanel.js`, with the panel's script from
+`src/app/globePanelRuntime.js`. `vantage/tools/panel` exports both for other
+MCP servers that compose Core's tools. Clients that display apps render it
+inside the conversation. The panel completes the MCP Apps handshake
+(`ui/initialize`, `ui/notifications/initialized`,
+`ui/notifications/size-changed`), and for each
+`ui/notifications/tool-result` carrying a view it loads the app in inline
+embed mode the first time and posts later views to that same app, so the
+globe changes without reloading. Its "Open in Vantage" button asks the host
+to open the link (`ui/open-link`), and "Expand" asks for fullscreen where
+the host offers it.
+
+Hosts serve panels from their own sites and may refuse other addresses;
+Codex, for one, refuses any address on the user's machine. So the panel
+never requests the app's server itself. It loads everything from the app's
+own paths through `panel_request`, a tool meant for the panel: it is
+marked `_meta.ui.visibility: ["app"]`, and each call must carry the key each
+MCP server makes for its panel page. Any client can read that page, so the
+key keeps the tool from clients that only list it, and is not access control.
+The MCP server requests the path from the app's server and returns the
+response, gzipped when that helps and in 512 KiB parts when large. A path is
+resolved against the app's origin and refused if it leaves it; redirects are
+not followed; a response is read up to 64 MiB; each request has a 60-second
+deadline; six requests run at once per server and up to 256 more wait.
+`panel_request` refuses, in any letter case, encoding or dot suffix,
+Provider Settings (`/api/setup`), credential and model endpoints
+(`/api/realtime`, `/api/openai`), `/mcp`, the development server's internal
+routes (`/@…`, `/__…`), the user's own LAN receiver data
+(`/api/local-receivers`), Google place search (`/api/google`, which spends
+quota and has no search box in the panel) and the operator's Overpass
+instances (`/api/overpass`).
+
+Only map imagery, tiles and terrain load directly, from the origins the
+resource's `csp` lists. The local server derives them from the page's own
+policy (`CSP_ORIGINS` in `build/content-security-policy.js`):
+`connectDomains` from `connect-src` and `resourceDomains` from `img-src`.
+Script, frame and font origins are not declared, and neither is OpenAI:
+voice needs a token from `/api/realtime`, which the panel cannot request.
+
+The panel loads the app's panel build, which `npm run build:panel` writes to
+`dist/panel` and the development server serves at `/panel/`, behind the
+request guard's `Host` check (a path that does not decode answers `400`):
+one app script, one stylesheet, and Cesium's script, which carries its
+workers and starts them from memory (`CESIUM_WORKERS`). Files those workers
+load themselves are embedded in a prelude the panel runs ahead of them,
+since a worker's requests reach the panel page's own site. Rebuild it after
+changing the app. `npm run build` does not produce it, and the app's page
+never loads it.
+
+The panel build is keyless by default: the app's `GOOGLE_MAPS_API_KEY` and
+`CESIUM_ION_TOKEN` never go into it, since it runs in the MCP host's page,
+and it shows the keyless globe. `VANTAGE_PANEL_GOOGLE_MAPS_API_KEY` and
+`VANTAGE_PANEL_CESIUM_ION_TOKEN`, read by `npm run build:panel` only, put
+keys meant for the panel in; restrict them separately to the hosts that
+show it. The build then warns, naming the settings.
+
+Hosts differ in ways the panel works around, all inside the panel only:
+images and stylesheet files arrive as `data:` URLs, since some hosts refuse
+`blob:` images, and only the panel build's own files are kept converted;
+code that needs an https address for the app gets `VANTAGE_APP_BASE_URL`
+(`https://app.vantage.invalid/`, a name that never resolves), since some
+hosts serve the page from their own scheme; the globe keeps drawing from a
+timer when the host reports the panel hidden and stops animation frames;
+and 2D canvases are kept in memory (`willReadFrequently`), since a host that
+treats the panel as off screen may drop their GPU contents and show the
+overlays as black over the globe.
+
+Tools declare a UI resource with `defineTool({ ui: { resourceUri } })`, and
+an app-only tool with `ui: { visibility: ['app'] }`, which `tools/call`
+answers without the JSON text copy meant for models;
+`createMcpServer({ resources })` serves `resources/list` and
+`resources/read`.
+
 ### Embed mode
 
 `?embed=1` shows only the globe: clean view, with the HUD, panels, welcome
 and setup prompts hidden; provider attribution stays. A page that frames it
 changes the view by posting `{ type: 'vantage:view', id, view }` to the
 frame. The app applies it through its own actions (style, map, exactly the
-view's layers, annotations, the camera, then the followed entity, retried
-until its layer has it) and answers
+view's layers, annotations, then the followed entity, retried until its
+layer has it, or the camera when nothing is followed or the entity is not
+there yet, since a camera flight would end the follow; then cockpit view
+when asked) and answers
 `{ type: 'vantage:view-applied', id, ok, steps }` to the origin that sent
 the view. It posts `{ type: 'vantage:ready' }` once it can take views. Only
 its parent page can send them, a parent with an opaque origin is ignored,
@@ -266,8 +357,9 @@ and report `total`, `returned` and `truncated`.
 
 ## MCP
 
-`createMcpServer({ catalog, name, version, instructions, descriptions, decorate })`
-implements `initialize`, `ping`, `tools/list` and `tools/call` for protocol
+`createMcpServer({ catalog, name, version, instructions, descriptions, decorate, resources })`
+implements `initialize`, `ping`, `tools/list`, `tools/call`, and, when it has
+resources, `resources/list` and `resources/read`, for protocol
 revisions 2025-11-25, 2025-06-18 and 2025-03-26. `descriptions` overrides a
 tool's title or description for this surface; `decorate(definition, tool)`
 merges extra fields into each listed definition. `createMcpHttpHandler(server)`
@@ -365,6 +457,11 @@ checks sit behind the server-wide `Host` check. This is local transport safety, 
 A request body must arrive within 30 seconds (`408` otherwise) and stay
 under 1 MiB (`413`), and a client that disconnects cancels its tool call.
 
+The panel's `panel_request` also requests the app's own files and data
+routes, for the panel only: it requires the key in the panel's page, and
+refuses the routes listed under [the Vantage panel](#the-vantage-panel) to
+every caller. See [SECURITY.md](../SECURITY.md#mcp-server).
+
 A few sources fetch a public feed directly instead of through `/api`
 (`get_earthquakes` reads the USGS feed; `get_recent_imagery` reads NASA's CMR
 catalog and Worldview Snapshots). Those requests leave from the stdio
@@ -414,4 +511,5 @@ process, on a tool call only, with the `vantage-mcp-tools` User-Agent from
 | `situation_brief`             | `weather`            | Weather, earthquakes, fires, aircraft, ships and cyclones for an area, by section                            |
 | `military_awareness`          | `military`           | Military and other aircraft and military installations within 250 km of a point, by section                  |
 | `get_hud_caption`             | `weather`, `summary` | The app's heads-up display caption for an area                                                               |
-| `show_in_vantage`             | `app`                | A share link to a view: an area or camera, layers, style, map, marks, and an aircraft or satellite to follow |
+| `show_in_vantage`             | `app`                | A view in Vantage: the live panel in clients with MCP Apps, and a link everywhere; takes another answer's view or an area or camera, layers, style, map, marks and something to follow |
+| `panel_request`               | `app`                | Panel only: loads a path from the app's server for the Vantage panel                                         |

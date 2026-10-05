@@ -249,6 +249,8 @@ Thirty app actions plus read-only world queries (weather, places, routes, traffi
 
 _Ask for radio near anywhere and the globe starts broadcasting — every station is a real place you can fly to._
 
+**Or ask from Claude and Codex.** Vantage is also an MCP server: ask Claude Desktop, Codex or ChatGPT desktop to show a place, and the live globe opens right in the conversation. See [docs/MCP_SETUP.md](docs/MCP_SETUP.md).
+
 ---
 
 ## 🛰️ What's on the Globe
@@ -598,7 +600,14 @@ Calgary, and the DelDOT camera list `tmc.deldot.gov`); the Radio Browser directo
 The local MCP server (`npm run mcp`, see [docs/TOOLS.md](docs/TOOLS.md)) opens
 no port: the MCP client that launches it talks to it over stdin and stdout,
 and apart from the MCP stdio rows above it reaches only the app's loopback
-`/api`, as any local process can.
+`/api`, as any local process can. In clients that show MCP Apps, the globe
+panel runs in the client's own page: it loads the app and its data through
+the MCP server (`panel_request`), and only map imagery, tiles and terrain
+come straight from the providers in the table above, which the panel
+declares from this app's Content-Security-Policy. The panel build
+(`npm run build:panel`) is keyless unless you set
+`VANTAGE_PANEL_GOOGLE_MAPS_API_KEY` or `VANTAGE_PANEL_CESIUM_ION_TOKEN`
+(see [SECURITY.md](SECURITY.md#mcp-server)).
 
 **What can reach the server.** The dev and preview servers listen on
 `127.0.0.1` unless you opt into LAN mode (`VANTAGE_HOST=0.0.0.0`). The MCP

@@ -357,6 +357,29 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   (`408` otherwise), and a client that disconnects cancels its tool call. Over
   stdio, a client's `notifications/cancelled` now aborts the named request,
   which then gets no response (ported from upstream, Sameh Khamis).
+- Vantage inside AI conversations. `show_in_vantage` shows a view as the live
+  globe in clients that display MCP Apps, such as Claude Desktop and the Codex
+  and ChatGPT desktop apps, and as a link everywhere else; it also takes a
+  view another answer returned, and a view may ride in an aircraft's cockpit.
+  The MCP server serves the panel as a `ui://vantage/globe` resource
+  (`resources/list`, `resources/read`), and `vantage/tools/panel` exports it
+  for other MCP servers. The panel runs the app's panel build, written by the
+  opt-in `npm run build:panel` to `dist/panel` and served at `/panel/` behind
+  the `Host` check, and loads it and the app's data through `panel_request`,
+  an app-only tool, so a local server needs no HTTPS or tunnel. Unlike
+  upstream, the panel build is keyless unless
+  `VANTAGE_PANEL_GOOGLE_MAPS_API_KEY` or `VANTAGE_PANEL_CESIUM_ION_TOKEN` is
+  set for that command (it then warns), and the origins the panel declares to
+  its host are derived from the page's own Content-Security-Policy list.
+  `panel_request` needs the key each server puts in its panel page, stays on
+  the app's server without following redirects, reads at most 64 MiB in
+  60 seconds, runs six requests at once per server with 256 waiting, and
+  refuses Provider Settings, credential and model endpoints, `/mcp`,
+  development server routes, LAN receiver data (`/api/local-receivers`),
+  Google place search (`/api/google`) and Overpass (`/api/overpass`) in any
+  letter case, encoding or dot suffix. [docs/MCP_SETUP.md](docs/MCP_SETUP.md)
+  covers Claude Code, Claude Desktop and Codex (ported from upstream, Sameh
+  Khamis).
 
 ### Changed
 

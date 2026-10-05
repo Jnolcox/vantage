@@ -513,8 +513,9 @@ and, as the HUD does, replaces a caption that hides a non-nominal state with
 the app's own line naming it. The caption and regional brief spend provider
 quota under those routes' throttles, on a tool call only; the HUD's Live/Local
 toggle governs only the page's own periodic lookups. `show_in_vantage` returns
-a version 2 share link on the app's address (`--api-base`) looking straight down
-on an area, optionally with registered layers turned on.
+a version 2 share link on the app's address (`--api-base`) for a view built by
+the pure `src/view/index.js`: an area framed from above or a camera, with
+registered layers, style, map and an aircraft or satellite to follow.
 Launch and satellite answers say when the proxy served its last copy
 (`X-Vantage-Cache` or `x-tle-cache` of `STALE-ERROR`), aircraft answers name a
 regional fallback feed, ALPR answers say when tiles failed or were trimmed, and

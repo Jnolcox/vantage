@@ -992,5 +992,6 @@
   "src/tools/queries/events.test.mjs",
   "src/tools/queries/share.test.mjs",
   "src/tools/functions.test.mjs",
-  "src/tools/surfaces.test.mjs"
+  "src/tools/surfaces.test.mjs",
+  "src/view/index.test.mjs"
 ]

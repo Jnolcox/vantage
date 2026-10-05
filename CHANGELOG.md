@@ -308,6 +308,13 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
   little without the globe; voice keeps them (except the HUD caption, which
   the app shows itself), and tools that combine others still reach them
   (ported from upstream, Sameh Khamis).
+- Views: `vantage/view` describes what the app shows (camera, data layers,
+  visual style, map imagery and an aircraft, military aircraft or satellite
+  to follow) and writes and reads it in the share-link format the app
+  already restores. It is pure, and share links take their style names from
+  it. `show_in_vantage` now builds its link from a full view: an area framed
+  from above or a camera, plus layers, style, map and something to follow
+  (ported from upstream, Sameh Khamis).
 
 ### Changed
 

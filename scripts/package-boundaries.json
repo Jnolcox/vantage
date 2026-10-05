@@ -2078,7 +2078,8 @@
       "src/data/local_data/us_census_counties/counties.json",
       "src/sources/infrastructureData.js",
       "src/tools/functions.js",
-      "src/voice/actionNames.js"
+      "src/voice/actionNames.js",
+      "src/view/styles.js"
     ],
     "external": [
       "hls.js",
@@ -3187,7 +3188,9 @@
       "src/tools/queries/events.js",
       "src/data/bhoteKoshiFloodPath.js",
       "src/tools/functions.js",
-      "src/tools/surfaces.js"
+      "src/tools/surfaces.js",
+      "src/view/index.js",
+      "src/view/styles.js"
     ],
     "external": ["satellite.js"]
   },
@@ -3267,5 +3270,15 @@
       "src/sources/eventPacks.js"
     ],
     "external": ["@mapbox/vector-tile", "pbf"]
+  },
+  "view": {
+    "exports": ["./view"],
+    "modules": [
+      "src/view/index.js",
+      "src/view/styles.js",
+      "src/data/layerState.js",
+      "src/data/layerStateTokenReservations.json"
+    ],
+    "external": []
   }
 }

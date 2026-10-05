@@ -12,6 +12,13 @@ current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md).
 
 ### Added
 
+- Embed mode: `?embed=1` shows the globe alone, with the HUD, panels, welcome
+  and setup prompts hidden and provider attribution kept. The parent page
+  sends views with `postMessage` (`vantage:view`); the app applies each
+  through its own actions and answers `vantage:view-applied` with every
+  step. Annotations in any link are drawn once it restores. The code loads
+  only for an embed-mode page or an annotated link, so a normal page load
+  pays nothing for it (ported from upstream, Sameh Khamis).
 - MODIS NRT (Terra + Aqua, ~1 km) detections join the three VIIRS NRT sources
   in the Active Fires layer. They share the existing `FIRMS_MAP_KEY`, the
   30-minute proxy cache and the trailing-24-hour clamp; MODIS confidence is

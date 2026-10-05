@@ -214,6 +214,24 @@ single aircraft or satellite followed, plus `url` to open it (null when the
 app's address is not configured). `suggestView` in `src/tools/views.js`
 builds one.
 
+### Embed mode
+
+`?embed=1` shows only the globe: clean view, with the HUD, panels, welcome
+and setup prompts hidden; provider attribution stays. A page that frames it
+changes the view by posting `{ type: 'vantage:view', id, view }` to the
+frame. The app applies it through its own actions (style, map, exactly the
+view's layers, annotations, the camera, then the followed entity, retried
+until its layer has it) and answers
+`{ type: 'vantage:view-applied', id, ok, steps }`. It posts
+`{ type: 'vantage:ready' }` once it can take views, and only its parent page
+can send them. Annotations in any link are drawn once the link has been
+restored, embedded or not. See `src/app/embed.js`; the main path loads it
+only for an embed-mode page or a link that carries annotations
+(`src/app/embedMode.js`).
+
+Every document, embed-mode ones included, keeps `X-Frame-Options: DENY` and
+`frame-ancestors 'none'`.
+
 ## The `area` argument
 
 Location-scoped tools take `area` as exactly one of a `place` name, a `bbox`

@@ -995,5 +995,7 @@
   "src/tools/surfaces.test.mjs",
   "src/view/index.test.mjs",
   "src/tools/views.test.mjs",
-  "src/tools/localRoute.test.mjs"
+  "src/tools/localRoute.test.mjs",
+  "src/app/embed.test.mjs",
+  "src/ui/styles/embed.css"
 ]

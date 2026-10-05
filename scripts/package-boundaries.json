@@ -1401,6 +1401,8 @@
       "src/app/stateChannel.js",
       "src/app/surfaceServices.js",
       "src/app/tools.js",
+      "src/app/embed.js",
+      "src/app/embedMode.js",
       "src/app/viewer.js",
       "src/app/atmosphereCompat.js",
       "src/bloom.js",
@@ -2079,7 +2081,8 @@
       "src/sources/infrastructureData.js",
       "src/tools/functions.js",
       "src/voice/actionNames.js",
-      "src/view/styles.js"
+      "src/view/styles.js",
+      "src/view/index.js"
     ],
     "external": [
       "hls.js",
